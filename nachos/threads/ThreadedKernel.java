@@ -49,6 +49,7 @@ public class ThreadedKernel extends Kernel {
 	KThread.selfTest();
 	Semaphore.selfTest();
 	SynchList.selfTest();
+	ThreadJoinTest.Test();
 	if (Machine.bank() != null) {
 	    ElevatorBank.selfTest();
 	}
