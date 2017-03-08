@@ -11,4 +11,49 @@ nachos.threads.Condition2.java
 
 Correctness Criteria:
 
+-Wait(lock) method should:
+--atomically release lock and make thread go to sleep (same time)
+--re-acquire lock before returning
+
+-Signal() method should:
+--wake up a thread on the queue waitint for condition variable, if any
+
+-Broadcast() method should: 
+--wake up all waiters
+
+For using the condition variable:
+-thread should always hold lock before touching condition variables
+
 Test Cases:
+
+
+Notes:
+-Mesa scheduling- Signal()er puts waiting thread on ready queue(),
+so not necessarily run immediately; the awoken thread needs to re-check
+condition variable when it is woken
+-Hoare scheduling - Signal()er gives lock and CPU immediately to waiter,
+so it runs immediately
+-Nachos uses Mesa scheduling
+
+Example usage, synchronized queue:
+
+Lock lock;
+Condition dataready;
+Queue queue;
+
+AddToQueue(item){
+	lock.Acquire();			//Get Lock
+	queue.enqueue(item);	//Add item
+	dataready.signal();		//Signal any waiters
+	lock.Release();			//Release Lock
+}
+
+RemoveFromQueue(){
+	lock.Acquire();			//Get Lock
+	while(queue.isEmpty()){	//need to use while loop because a thread earlier on ready queue might have emptied it
+		dataready.wait(lock);	//if nothing, sleep
+	}
+	item = queue.dequeue();	//Get next item
+	lock.Release();			//Release Lock
+	return(tem);
+}
