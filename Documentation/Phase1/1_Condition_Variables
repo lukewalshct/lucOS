@@ -1,0 +1,14 @@
+Implementing Condition Variables in Nachos:
+
+Summary:
+
+Nachos does not come with condition variables implemented. This
+task is to implement condition variables in Nachos.
+
+Code Location:
+
+nachos.threads.Condition2.java
+
+Correctness Criteria:
+
+Test Cases:
