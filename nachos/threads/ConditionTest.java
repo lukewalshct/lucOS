@@ -22,6 +22,10 @@ public class ConditionTest {
 		
 		//set up consumer threads
 		KThread[] consumers = getConsumers(5);
+		
+		runThreads(consumers);
+		
+		runThreads(producers);
 	}
 	
 	public void TestCondition2(){
@@ -34,7 +38,7 @@ public class ConditionTest {
 		
 		for(int i = 0; i < numToCreate; i++)
 		{
-			producers[i] = new KThread(new Producer("Producer #" + i + " message", 10));
+			producers[i] = new KThread(new Producer(i, 10));
 		}
 		
 		return producers;
@@ -52,23 +56,34 @@ public class ConditionTest {
 		return consumers;
 		
 	}
+	
+	private void runThreads(KThread[] threads)
+	{
+		for(int i = 0; i < threads.length; i++)
+		{
+			threads[i].fork();
+		}
+	}
+	
 	/*
 	 * Continuously adds a string n times to a synchronized 
 	 * queue object, yielding after each addition.
 	 */
 	public class Producer implements Runnable{
 		
-		private String _message;
+		private int _id;
 		private int _numIterations;
 		
-		public Producer(String message, int numIterations)
+		public Producer(int id, int numIterations)
 		{
-			_message = message;
+			_id = id;
 			_numIterations = numIterations;
 		}
 		
 		public void run(){
+			System.out.println("Producer # " + _id + " starting");
 			
+			System.out.println("Producer # " + _id + " ending");
 		}
 	}
 	
@@ -86,7 +101,9 @@ public class ConditionTest {
 		}
 		
 		public void run(){
+			System.out.println("Consumer # " + _id + " starting");
 			
+			System.out.println("Consumer # " + _id + " ending");
 		}
 	}
 	
