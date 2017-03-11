@@ -12,15 +12,83 @@ import java.util.*;
 public class ConditionTest {
 	
 	public void TestCondition(){
+		//Set up synchronized queue
 		Lock lock = new Lock();
 		ICondition c = new Condition(lock);
 		SyncQueue queue = new SyncQueue(lock, c);
+		
+		//set up producer threads
+		KThread[] producers = getProducers(10);
+		
+		//set up consumer threads
+		KThread[] consumers = getConsumers(5);
 	}
 	
 	public void TestCondition2(){
 		
 	}
 	
+	private KThread[] getProducers(int numToCreate)
+	{		
+		KThread[] producers = new KThread[numToCreate];
+		
+		for(int i = 0; i < numToCreate; i++)
+		{
+			producers[i] = new KThread(new Producer("Producer #" + i + " message", 10));
+		}
+		
+		return producers;
+	}
+	
+	private KThread[] getConsumers(int numToCreate)
+	{
+		KThread[] consumers = new KThread[numToCreate];
+		
+		for(int i = 0; i < numToCreate; i++)
+		{
+			consumers[i] = new KThread(new Consumer(i));
+		}
+		
+		return consumers;
+		
+	}
+	/*
+	 * Continuously adds a string n times to a synchronized 
+	 * queue object, yielding after each addition.
+	 */
+	public class Producer implements Runnable{
+		
+		private String _message;
+		private int _numIterations;
+		
+		public Producer(String message, int numIterations)
+		{
+			_message = message;
+			_numIterations = numIterations;
+		}
+		
+		public void run(){
+			
+		}
+	}
+	
+	/*
+	 * Continuously removes a string from a synchronized
+	 * queue object, yielding after each removal.
+	 */
+	public class Consumer implements Runnable{
+		
+		private int _id;
+		
+		public Consumer(int id)
+		{
+			_id = id;
+		}
+		
+		public void run(){
+			
+		}
+	}
 	
 	/*
 	 * A synchronized queue used for testing.
