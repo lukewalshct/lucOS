@@ -1,9 +1,26 @@
 package nachos.threads;
 
+/*
+ * A class that tests both Condition.java and Condition2.java
+ * by using a synchronized queue that utilizes these condition 
+ * variables. Tests to see if consumer/producer threads work
+ * together using each condition variable implementation.
+ */
+
 import java.util.*;
 
 public class ConditionTest {
-
+	
+	public void TestCondition(){
+		Lock lock = new Lock();
+		ICondition c = new Condition(lock);
+		SyncQueue queue = new SyncQueue(lock, c);
+	}
+	
+	public void TestCondition2(){
+		
+	}
+	
 	
 	/*
 	 * A synchronized queue used for testing.
@@ -11,14 +28,14 @@ public class ConditionTest {
 	public class SyncQueue{
 		
 		private Lock _lock;
-		private Condition _dataready;
+		private ICondition _dataready;
 		private Queue<Object> _queue;
 		
-		public SyncQueue()
-		{
-			_queue = new LinkedList<Object>();
-			_lock = new Lock();
-			_dataready = new Condition(_lock);			
+		public SyncQueue(Lock lock, ICondition condition)
+		{			
+			_lock = lock;
+			_dataready = condition;
+			_queue = new LinkedList<Object>();	
 		}
 		
 		public void AddToQueue(Object item){

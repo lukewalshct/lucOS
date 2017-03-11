@@ -49,7 +49,7 @@ import java.util.LinkedList;
  * gets a chance to run. The advance to Mesa-style semantics is that it is a
  * lot easier to implement.
  */
-public class Condition {
+public class Condition implements ICondition {
     /**
      * Allocate a new condition variable.
      *
