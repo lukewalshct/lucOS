@@ -102,12 +102,14 @@ public class ConditionTest {
 		
 		public boolean AllProducersCompleted()
 		{
-			return _numRemaining == 0;
+			return _numRemaining <= 0;
 		}
 		
 		public void ProducerComplete()
 		{
 			_numRemaining--;
+			
+			System.out.println("Producers remaining: " + _numRemaining);
 		}
 	}
 	
@@ -144,12 +146,17 @@ public class ConditionTest {
 			{
 				String message = "Producer # " + _id + " message # " + i;
 				
-				_queue.AddToQueue(message);
+				if(i+1 == _numIterations)
+				{
+					_queue.AddToQueue(message, _listener);
+				}
+				else
+				{
+					_queue.AddToQueue(message);
+				}				
 				
 				KThread.yield();
 			}
-			
-			_listener.ProducerComplete();
 		}
 		
 	}
@@ -217,9 +224,10 @@ public class ConditionTest {
 			return _queue.peek() == null;
 		}
 		
-		public void AddToQueue(Object item){
+		public void AddToQueue(Object item, ProducerListener listener = null){
 			_lock.acquire();			//Get Lock
 			_queue.add(item);	//Add item
+			if(listener != null) listener.ProducerComplete();
 			_dataready.wake();		//Signal any waiters
 			_lock.release();			//Release Lock
 		}
