@@ -11,7 +11,7 @@ import nachos.machine.*;
  *
  * @see	nachos.threads.Condition
  */
-public class Condition2 {
+public class Condition2 implements ICondition {
     /**
      * Allocate a new condition variable.
      *

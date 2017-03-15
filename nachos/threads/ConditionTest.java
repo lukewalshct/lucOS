@@ -35,7 +35,24 @@ public class ConditionTest {
 	}
 	
 	public void TestCondition2(){
+		Lock queueLock = new Lock(); 					//lock for accessing the synchronized queue
+		ICondition dataReady = new Condition2(queueLock);		//condition representing when data is on the queue
+		SyncQueue queue = new SyncQueue(queueLock, dataReady);	//the queue in common with producers and consumers
 		
+		//set up producer threads
+		ProducerListener listener = new ProducerListener(); //keeps track of # producers still alive and producing
+		KThread[] producers = getProducers(3, queue, listener);
+		
+		//set up consumer threads
+		KThread[] consumers = getConsumers(3, queue, listener);
+		
+		runThreads(consumers);
+		
+		runThreads(producers);
+		
+		try{
+			joinThreads(consumers);
+		} catch(Exception ex){}
 	}
 	
 	/*
@@ -93,23 +110,79 @@ public class ConditionTest {
 	 */
 	public class ProducerListener
 	{
-		private int _numRemaining;
+		private int _numProducersAlive;
+		private int _numItemsToBeProcessed;
+		private int _numConsumers;
+		private Lock _lock;
 			
+		public ProducerListener()
+		{
+			_lock = new Lock();
+		}
+		
 		public void AddProducer()
 		{
-			_numRemaining++;			
+			_lock.acquire();
+			_numProducersAlive++;
+			_lock.release();
+		}
+		
+		public void AddConsumer()
+		{
+			_lock.acquire();
+			_numConsumers++;			
+			_lock.release();
+		}
+		
+		public void RemoveConsumer()
+		{
+			_lock.acquire();
+			_numConsumers--;			
+			_lock.release();
 		}
 		
 		public boolean AllProducersCompleted()
+		{			
+			return _numProducersAlive <= 0;			
+		}
+		
+		public void ItemAdded()
 		{
-			return _numRemaining <= 0;
+			_lock.acquire();
+			_numItemsToBeProcessed++;
+			_lock.release();
+		}
+		
+		public void ItemRemoved()
+		{
+			_lock.acquire();
+			_numItemsToBeProcessed--;
+			_lock.release();
 		}
 		
 		public void ProducerComplete()
 		{
-			_numRemaining--;
+			_lock.acquire();
+			_numProducersAlive--;
 			
-			System.out.println("Producers remaining: " + _numRemaining);
+			System.out.println("Producers remaining: " + _numProducersAlive);
+			_lock.release();
+		}
+		
+		public boolean RetireConsumers()
+		{
+			_lock.acquire();
+			
+			 boolean retire = AllProducersCompleted() && _numItemsToBeProcessed <= _numConsumers;
+			 
+			 if(retire)
+			 {
+				 _numConsumers--;
+				 _numItemsToBeProcessed--;
+			 }
+			_lock.release();
+			
+			return retire;
 		}
 	}
 	
@@ -146,14 +219,7 @@ public class ConditionTest {
 			{
 				String message = "Producer # " + _id + " message # " + i;
 				
-				if(i+1 == _numIterations)
-				{
-					_queue.AddToQueue(message, _listener);
-				}
-				else
-				{
-					_queue.AddToQueue(message);
-				}				
+				_queue.AddToQueue(message, _listener, i + 1 == _numIterations);			
 				
 				KThread.yield();
 			}
@@ -176,6 +242,7 @@ public class ConditionTest {
 			_id = id;
 			_queue = queue;
 			_listener = listener;
+			_listener.AddConsumer();
 		}
 		
 		public void run(){
@@ -190,12 +257,16 @@ public class ConditionTest {
 		{
 			while(!_listener.AllProducersCompleted() || !_queue.IsEmpty())
 			{		
+				boolean retire = _listener.RetireConsumers();
+
 				if(!_queue.IsEmpty())
 				{				
-					String message = (String) _queue.RemoveFromQueue();
+					String message = (String) _queue.RemoveFromQueue(_listener, retire);
 					
 					System.out.println(message);
 				}
+			
+				if(retire) return;
 				
 				KThread.yield();
 			}
@@ -224,20 +295,31 @@ public class ConditionTest {
 			return _queue.peek() == null;
 		}
 		
-		public void AddToQueue(Object item, ProducerListener listener = null){
+		public void AddToQueue(Object item)
+		{
+			AddToQueue(item, null, false);
+		}
+		
+		public void AddToQueue(Object item, ProducerListener listener, boolean producerTerminating){
 			_lock.acquire();			//Get Lock
 			_queue.add(item);	//Add item
-			if(listener != null) listener.ProducerComplete();
+			if(listener != null)
+			{
+				listener.ItemAdded();
+				if(producerTerminating) listener.ProducerComplete();
+			}
 			_dataready.wake();		//Signal any waiters
 			_lock.release();			//Release Lock
 		}
 
-		public Object RemoveFromQueue(){
+		public Object RemoveFromQueue(ProducerListener listener, boolean isRetiring){
 			_lock.acquire();			//Get Lock
-			while(_queue.isEmpty()){	//need to use while loop because a thread earlier on ready queue might have emptied it
+			while(_queue.isEmpty()){ //need to use while loop because a thread earlier on ready queue might have emptied it
+				
 				_dataready.sleep();		//if nothing, sleep
 			}
 			Object item = _queue.remove();	//Get next item
+			if(!isRetiring) listener.ItemRemoved();
 			_lock.release();			//Release Lock
 			return(item);
 		}
