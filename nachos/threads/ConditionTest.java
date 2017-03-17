@@ -40,7 +40,7 @@ public class ConditionTest {
 	
 	public void TestCondition2(){
 		
-		System.out.println("\n\nnENTERING CONDITION 2 TEST\n\n");
+		System.out.println("\n\nENTERING CONDITION 2 TEST\n\n");
 		
 		Lock queueLock = new Lock(); 					//lock for accessing the synchronized queue
 		ICondition dataReady = new Condition2(queueLock);		//condition representing when data is on the queue
