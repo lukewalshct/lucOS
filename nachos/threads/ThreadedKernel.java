@@ -49,6 +49,7 @@ public class ThreadedKernel extends Kernel {
     ThreadJoinTest.Test();
     ConditionTest conditionTest = new ConditionTest();
     conditionTest.TestCondition();
+    conditionTest.TestCondition2();
     KThread.selfTest();
 	Semaphore.selfTest();
 	SynchList.selfTest();	

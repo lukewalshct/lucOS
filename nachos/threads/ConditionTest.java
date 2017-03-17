@@ -13,6 +13,8 @@ public class ConditionTest {
 	
 	public void TestCondition(){
 		
+		System.out.println("\n\nnENTERING CONDITION TEST\n\n");
+		
 		//Set up synchronized queue
 		Lock queueLock = new Lock(); 					//lock for accessing the synchronized queue
 		ICondition dataReady = new Condition(queueLock);		//condition representing when data is on the queue
@@ -32,9 +34,14 @@ public class ConditionTest {
 		try{
 			joinThreads(consumers);
 		} catch(Exception ex){}
+		
+		System.out.println("\n\nEXITING CONDITION TEST\n\n");
 	}
 	
 	public void TestCondition2(){
+		
+		System.out.println("\n\nnENTERING CONDITION 2 TEST\n\n");
+		
 		Lock queueLock = new Lock(); 					//lock for accessing the synchronized queue
 		ICondition dataReady = new Condition2(queueLock);		//condition representing when data is on the queue
 		SyncQueue queue = new SyncQueue(queueLock, dataReady);	//the queue in common with producers and consumers
@@ -53,6 +60,8 @@ public class ConditionTest {
 		try{
 			joinThreads(consumers);
 		} catch(Exception ex){}
+		
+		System.out.println("\n\nEXITING CONDITION 2 TEST\n\n");
 	}
 	
 	/*
