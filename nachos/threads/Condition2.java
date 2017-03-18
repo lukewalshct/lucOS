@@ -55,6 +55,8 @@ public class Condition2 implements ICondition {
     public void wake() {
     	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
     	
+    	Machine.interrupt().disable();
+    	
     	if(!_waitQueue.isEmpty()){
     		_waitQueue.remove().ready();
     	}
