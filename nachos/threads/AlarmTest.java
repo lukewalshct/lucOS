@@ -15,22 +15,28 @@ public class AlarmTest {
 		Alarm alarm = new Alarm();
 		
 		KThread t1 = new KThread(new Runnable() { 
-			public void run() { AssertWaitTimeIsCorrect(alarm, 10000); } 
+			public void run() { AssertWaitTimeIsCorrect(alarm, 100000); } 
 			});
 		KThread t2 = new KThread(new Runnable() { 
-			public void run() { AssertWaitTimeIsCorrect(alarm, 30000); } 
+			public void run() { AssertWaitTimeIsCorrect(alarm, 300000); } 
+			});
+		KThread t3 = new KThread(new Runnable() { 
+			public void run() { AssertWaitTimeIsCorrect(alarm, 50000); } 
 			});
 		
 		t1.setName("ALARM TEST Thread 1");
 		t2.setName("ALARM TEST Thread 2");
+		t3.setName("ALARM TEST Thread 3");
 		
 		t1.fork();
 		t2.fork();
+		t3.fork();
 		
 		try
 		{
 			t1.join();
 			t2.join();
+			t3.join();
 		}catch(Exception e){}
 	}
 	
