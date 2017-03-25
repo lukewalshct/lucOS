@@ -2,6 +2,7 @@ package nachos.threads;
 
 import nachos.machine.*;
 import java.lang.Math;
+import java.util.PriorityQueue;
 
 /**
  * Uses the hardware timer to provide preemption, and to allow threads to sleep
@@ -9,7 +10,10 @@ import java.lang.Math;
  */
 public class Alarm {
     
+	//lock that must be held in order to add threads to wait queue
+	private Lock _queueLock;
 	
+	private PriorityQueue<KThreadWaiting> _waitQueue;
 	/**
      * Allocate a new Alarm. Set the machine's timer interrupt handler to this
      * alarm's callback.
@@ -18,9 +22,14 @@ public class Alarm {
      * alarm.
      */
     public Alarm() {
-	Machine.timer().setInterruptHandler(new Runnable() {
-		public void run() { timerInterrupt(); }
-	    });
+    	
+    	_queueLock = new Lock();
+    	
+    	_waitQueue = new PriorityQueue<KThreadWaiting>();
+    	
+		Machine.timer().setInterruptHandler(new Runnable() {
+			public void run() { timerInterrupt(); }
+		    });
     }
 
     /**
@@ -30,7 +39,27 @@ public class Alarm {
      * that should be run.
      */
     public void timerInterrupt() {
-	KThread.currentThread().yield();
+    	
+    	//place any threads that have passed their wait time
+    	//onto the ready queue
+    	Machine.interrupt().disable();
+    	
+    	_queueLock.acquire();  	
+    	
+    	while(_waitQueue.peek() != null && 
+    			_waitQueue.peek().WakeTime <= Machine.timer().getTime())
+    	{
+    		KThreadWaiting threadToWake = _waitQueue.poll();
+    		
+    		threadToWake.WaitingThread.ready();
+    	}
+    	
+    	_queueLock.release();
+    	
+    	Machine.interrupt().enable();
+    	
+    	//yield current thread
+    	KThread.currentThread().yield();
     }
 
     /**
@@ -48,10 +77,25 @@ public class Alarm {
      * @see	nachos.machine.Timer#getTime()
      */
     public void waitUntil(long x) {
-	// for now, cheat just to get something working (busy waiting is bad)
-	long wakeTime = Machine.timer().getTime() + x;
-	while (wakeTime > Machine.timer().getTime())
-	    KThread.yield();
+    	
+    	_queueLock.acquire();   	
+    	
+    	KThread curThread = KThread.currentThread();
+    	
+    	//get time to be worken
+    	long wakeTime = Machine.timer().getTime() + x;
+    	
+    	KThreadWaiting threadToWait = new KThreadWaiting(curThread, wakeTime);
+		
+    	//add thread to queue waiting for timer interrupt
+    	_waitQueue.add(threadToWait);
+    	
+    	_queueLock.release();
+    	
+    	Machine.interrupt().disable();
+    	
+    	//sleep thread - will be woken by timer interrupt
+    	KThread.sleep();
     }
     
     /*
@@ -65,7 +109,7 @@ public class Alarm {
     private class KThreadWaiting implements Comparable<KThreadWaiting>
     {
     	//the waiting thread
-    	private KThread _waitingThread;
+    	public KThread WaitingThread;
     	
     	//the machine timer's number of cycles to wait unil (note NOT
     	//the same as the value passed into waitUntil()
@@ -76,7 +120,7 @@ public class Alarm {
     	 */
     	public KThreadWaiting(KThread thread, long wakeTime)
     	{
-    		_waitingThread = thread;
+    		WaitingThread = thread;
     		
     		WakeTime = wakeTime;
     	}
