@@ -1,13 +1,16 @@
 package nachos.threads;
 
 import nachos.machine.*;
+import java.lang.Math;
 
 /**
  * Uses the hardware timer to provide preemption, and to allow threads to sleep
  * until a certain time.
  */
 public class Alarm {
-    /**
+    
+	
+	/**
      * Allocate a new Alarm. Set the machine's timer interrupt handler to this
      * alarm's callback.
      *
@@ -49,5 +52,45 @@ public class Alarm {
 	long wakeTime = Machine.timer().getTime() + x;
 	while (wakeTime > Machine.timer().getTime())
 	    KThread.yield();
+    }
+    
+    /*
+     * Class that represents a KThread that is waiting. We use this
+     * new class to be able to use a comparator for the priority queue.
+     * 
+     * The WakeTime represents the number of clock cycles at which point
+     * the thread should be awoken from waiting. This will be used to 
+     * maintain sorted priority in the queue.
+     */
+    private class KThreadWaiting implements Comparable<KThreadWaiting>
+    {
+    	//the waiting thread
+    	private KThread _waitingThread;
+    	
+    	//the machine timer's number of cycles to wait unil (note NOT
+    	//the same as the value passed into waitUntil()
+    	public long WakeTime;
+
+    	/*
+    	 * Constructor
+    	 */
+    	public KThreadWaiting(KThread thread, long wakeTime)
+    	{
+    		_waitingThread = thread;
+    		
+    		WakeTime = wakeTime;
+    	}
+    	
+    	/*
+    	 * Compares to another KThreadWaiting, based on the wake 
+    	 * time)
+    	 */
+    	@Override
+    	public int compareTo(KThreadWaiting other)
+    	{
+    		//returns sign of subtraction (-1, 0, or 1)
+    		return (int) Math.signum(this.WakeTime - other.WakeTime);    		
+    	}
+    	
     }
 }
