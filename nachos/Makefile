@@ -21,7 +21,8 @@ threads =	ThreadedKernel KThread Alarm \
 		Semaphore Lock Condition SynchList \
 		Condition2 Communicator Rider ElevatorController \
 		PriorityScheduler LotteryScheduler Boat \
-		ThreadJoinTest ConditionTest AlarmTest
+		ThreadJoinTest ConditionTest AlarmTest \
+		CommunicatorTest
 
 userprog =	UserKernel UThread UserProcess SynchConsole
 

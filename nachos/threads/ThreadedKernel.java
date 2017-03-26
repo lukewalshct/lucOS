@@ -52,6 +52,8 @@ public class ThreadedKernel extends Kernel {
     conditionTest.TestCondition2();
     AlarmTest alarmTest = new AlarmTest();
     alarmTest.TestWaitUntil();
+    CommunicatorTest comTest = new CommunicatorTest();
+    comTest.Test();
     KThread.selfTest();
 	Semaphore.selfTest();
 	SynchList.selfTest();	
