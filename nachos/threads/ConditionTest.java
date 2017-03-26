@@ -9,7 +9,7 @@ package nachos.threads;
 
 import java.util.*;
 
-public class ConditionTest {
+public class ConditionTest extends KernelTestBase{
 	
 	public void TestCondition(){
 		
@@ -97,21 +97,6 @@ public class ConditionTest {
 		
 	}
 	
-	private void runThreads(KThread[] threads)
-	{
-		for(int i = 0; i < threads.length; i++)
-		{
-			threads[i].fork();
-		}
-	}
-	
-	private void joinThreads(KThread[] threads) throws InterruptedException
-	{
-		for(int i = 0; i< threads.length; i++)
-		{
-			threads[i].join();
-		}
-	}
 	/*
 	 * A simplified version of a listener that keeps track of
 	 * when all the producers are finished. When each producer finishes

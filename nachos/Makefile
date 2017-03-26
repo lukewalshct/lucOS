@@ -22,7 +22,7 @@ threads =	ThreadedKernel KThread Alarm \
 		Condition2 Communicator Rider ElevatorController \
 		PriorityScheduler LotteryScheduler Boat \
 		ThreadJoinTest ConditionTest AlarmTest \
-		CommunicatorTest
+		CommunicatorTest KernelTestBase
 
 userprog =	UserKernel UThread UserProcess SynchConsole
 

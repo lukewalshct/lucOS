@@ -25,7 +25,7 @@ public class CommunicatorTest {
 	
 	public void Test()
 	{
-		System.out.println("COMMUNICATOR TEST BEGINNING\n");
+		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
 		
 		_numSpeakers = 3;
 		
