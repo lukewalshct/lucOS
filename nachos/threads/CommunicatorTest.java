@@ -7,7 +7,7 @@ import java.util.Arrays;
  * speakers and listeners and ensuring that all communications are sent/
  * received successfully.
  */
-public class CommunicatorTest {
+public class CommunicatorTest extends KernelTestBase {
 
 	private int[] _messagesToSend; // we'll check these are all equal to 0 after communications sent
 	
@@ -27,9 +27,9 @@ public class CommunicatorTest {
 	{
 		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
 		
-		_numSpeakers = 3;
+		Communicator communicator = new Communicator();
 		
-		_numListeners = 5;
+		_numMsgLock = new Lock();
 		
 		//create messages to send (will all be equal to numSpeakers) 
 		_messagesToSend = new int[NUM_MSG_PER_SPEAKER];
@@ -38,19 +38,49 @@ public class CommunicatorTest {
 		
 		_messagesReceived = new int [NUM_MSG_PER_SPEAKER];
 		
-		KThread[] speakers = getSpeakers(_numSpeakers);
+		KThread[] speakers = getSpeakers(3, communicator);
 		
-		KThread[] listeners = getListeners(_numListeners); 
+		KThread[] listeners = getListeners(5, communicator); 
+		
+		runThreads(listeners);
+		
+		runThreads(speakers);
+		
+		try{
+			joinThreads(listeners);
+		}catch(Exception ex) {}
+		
+		//TODO: add verification/accounting for all messages sent/received
+		
+		System.out.println("\nCOMMUNICATOR TEST ENDING\n");
 	}
 	
-	private KThread[] getSpeakers(int quantity)
+	private KThread[] getSpeakers(int quantity, Communicator c)
 	{
-		return null;
+		KThread[] speakers = new KThread[quantity];
+		
+		for(int i = 0; i < quantity; i++)
+		{
+			speakers[i] = new KThread(new Speaker(c, NUM_MSG_PER_SPEAKER));
+			
+			_numSpeakers++;
+		}
+		
+		return speakers;
 	}
 	
-	private KThread[] getListeners(int quantity)
+	private KThread[] getListeners(int quantity, Communicator c)
 	{
-		return null;
+		KThread[] listeners = new KThread[quantity];
+		
+		for(int i = 0; i < quantity; i++)
+		{
+			listeners[i] = new KThread(new Listener(c));
+			
+			_numListeners++;
+		}
+		
+		return listeners;
 	}
 	
 	private class Speaker implements Runnable {
@@ -99,6 +129,11 @@ public class CommunicatorTest {
 	private class Listener implements Runnable {
 		
 		private Communicator _communicator;
+		
+		public Listener(Communicator communicator)
+		{
+			_communicator = communicator;
+		}
 		
 		public void run()
 		{
