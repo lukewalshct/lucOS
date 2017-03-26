@@ -34,13 +34,13 @@ public class CommunicatorTest extends KernelTestBase {
 		//create messages to send (will all be equal to numSpeakers) 
 		_messagesToSend = new int[NUM_MSG_PER_SPEAKER];
 		
-		Arrays.fill(_messagesToSend,  _numSpeakers);
-		
 		_messagesReceived = new int [NUM_MSG_PER_SPEAKER];
 		
 		KThread[] speakers = getSpeakers(3, communicator);
 		
 		KThread[] listeners = getListeners(5, communicator); 
+		
+		Arrays.fill(_messagesToSend,  _numSpeakers);
 		
 		runThreads(listeners);
 		
@@ -85,7 +85,7 @@ public class CommunicatorTest extends KernelTestBase {
 	
 	private class Speaker implements Runnable {
 		
-		private int _numMessages;
+		private int _numMsgToSend;
 		
 		private Communicator _communicator;
 		
@@ -93,7 +93,7 @@ public class CommunicatorTest extends KernelTestBase {
 		{
 			_communicator = communicator;
 			
-			_numMessages = numMessages;				
+			_numMsgToSend = numMessages;				
 		}
 		
 		public void run()
@@ -103,7 +103,7 @@ public class CommunicatorTest extends KernelTestBase {
 		
 		private void speakMessages()
 		{
-			for(int i = 0; i < _numMessages; i++)
+			for(int i = 0; i < _numMsgToSend; i++)
 			{
 				_numMsgLock.acquire();
 				
@@ -111,7 +111,7 @@ public class CommunicatorTest extends KernelTestBase {
 				_numMessages++;
 				
 				//if it's the last item, the speaker will "retire"; decrement num speakers
-				if(i+1 == _numMessages) _numSpeakers--;
+				if(i+1 == _numMsgToSend) _numSpeakers--;
 				
 				_numMsgLock.release();
 				
