@@ -22,12 +22,20 @@ public class Communicator {
 	//speak a message
 	private ICondition _speakerReady;
 	
-	private int _speakers;
+	private ICondition _speakerSlotOpen;
 	
-	private int _listeners;
+	private ICondition _listenerSlotOpen;
+	
+	private ICondition _messageSet;
+	
+	private ICondition _messageReceived;
 	
 	//lock for accessing _curMessage
 	private Lock _curMessageLock;
+	
+	private int _speakers;
+	
+	private int _listeners;
 	
     /**
      * Allocate a new communicator.
@@ -39,6 +47,14 @@ public class Communicator {
     	_listenerReady = new Condition2(_curMessageLock);
     	
     	_speakerReady = new Condition2(_curMessageLock);
+    	
+    	_messageSet = new Condition2(_curMessageLock);
+    	
+    	_messageReceived = new Condition2(_curMessageLock);
+    	
+    	_speakerSlotOpen = new Condition2(_curMessageLock);
+    	
+    	_listenerSlotOpen = new Condition2(_curMessageLock);
     }
 
     /**
@@ -58,21 +74,32 @@ public class Communicator {
     	//get the lock for the message
     	_curMessageLock.acquire();
     	
+    	if(_speakers > 0) _speakerSlotOpen.sleep();
+    	
     	_speakers++;
     	
-    	//wait until there is a listener that can take the message
     	while(_listeners <= 0)
-    	{    	        	        	
+    	{
+    		//wait until there is a listener that can take the message      	        	
     		_listenerReady.sleep();
-    	} 
+    	}
+    	
+    	System.out.println("speaker setting word");
+    	
+    	//let any listeners know there's a speaker ready
+    	_speakerReady.wake();
     	
     	//set the message
     	_curMessage = word;   
     	
     	//wake up the listener to let it knows the message is ready
-    	_speakerReady.wake();
+    	_messageSet.wake();
     	
-    	_listeners--;
+    	_messageReceived.sleep();
+    	
+    	_speakers--;
+    	
+    	_speakerSlotOpen.wake();
     	
     	_curMessageLock.release();
     	
@@ -92,21 +119,32 @@ public class Communicator {
     	//get lock for the message
     	_curMessageLock.acquire();
     	
+    	if(_listeners > 0) _listenerSlotOpen.sleep();
+    	
     	_listeners++;
     	
     	while(_speakers <= 0)
-    	{       	
-        	//wait until message has been set
-        	_speakerReady.sleep();	
-    	}
+    	{
+    		//wait until speaker present
+    		_speakerReady.sleep();
+    	}    	
     	
     	//let any speakers know that a listener is now present
     	_listenerReady.wake();
     	
+        //wait until message has been set
+        _messageSet.sleep();	
+    	
+        System.out.println("getting msg");
+        
     	//once speaker has set message, get the message
     	int msg = _curMessage;   	
     	
-    	_speakers--;
+    	_messageReceived.wake();
+    	
+    	_listeners--;
+    	
+    	_listenerSlotOpen.wake();
     	
     	_curMessageLock.release();   	
     	
