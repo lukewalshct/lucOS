@@ -11,7 +11,7 @@ public class CommunicatorTest extends KernelTestBase {
 
 	private int[] _messagesToSend; // we'll check these are all equal to 0 after communications sent
 	
-	private int[] _messagesReceived; //we'll check these are all equal to 1 after communications sent
+	private int[] _messagesReceived; //we'll check these are all equal to 3 (original # speakers0 after communications sent
 	
 	private int _numMessages; //represents num remaining messages - num remaining listeners
 	
@@ -40,6 +40,9 @@ public class CommunicatorTest extends KernelTestBase {
 		
 		KThread[] listeners = getListeners(5, communicator); 
 		
+		//"stock" the _messagesToSend array with one message per
+		//speaker; the speakers will "take" (decrement) one of these
+		//slots as it loops through its array
 		Arrays.fill(_messagesToSend,  _numSpeakers);
 		
 		runThreads(listeners);
@@ -146,6 +149,8 @@ public class CommunicatorTest extends KernelTestBase {
 			{
 				//get message
 				int msg = _communicator.listen();
+				
+				System.out.println(msg);
 				
 				//account for the message
 				_messagesReceived[msg]++;
