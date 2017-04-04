@@ -44,17 +44,17 @@ public class Communicator {
     	
     	_curMessageLock = new Lock();
     	
-    	_listenerReady = new Condition2(_curMessageLock);
+    	_listenerReady = new Condition(_curMessageLock);
     	
-    	_speakerReady = new Condition2(_curMessageLock);
+    	_speakerReady = new Condition(_curMessageLock);
     	
-    	_messageSet = new Condition2(_curMessageLock);
+    	_messageSet = new Condition(_curMessageLock);
     	
-    	_messageReceived = new Condition2(_curMessageLock);
+    	_messageReceived = new Condition(_curMessageLock);
     	
-    	_speakerSlotOpen = new Condition2(_curMessageLock);
+    	_speakerSlotOpen = new Condition(_curMessageLock);
     	
-    	_listenerSlotOpen = new Condition2(_curMessageLock);
+    	_listenerSlotOpen = new Condition(_curMessageLock);
     }
 
     /**
@@ -74,20 +74,19 @@ public class Communicator {
     	//get the lock for the message
     	_curMessageLock.acquire();
     	
+    	//if there's already an "active" speaker, wait until it is finished
     	if(_speakers > 0) _speakerSlotOpen.sleep();
     	
+    	//increment num speakers
     	_speakers++;
-    	
-    	while(_listeners <= 0)
-    	{
-    		//wait until there is a listener that can take the message      	        	
-    		_listenerReady.sleep();
-    	}
-    	
-    	System.out.println("speaker setting word");
     	
     	//let any listeners know there's a speaker ready
     	_speakerReady.wake();
+    	
+    	//wait until there is a listener that can take the message      	        	
+    	_listenerReady.sleep();
+    	
+    	System.out.println(KThread.currentThread().getName() + " speaker setting word");
     	
     	//set the message
     	_curMessage = word;   
@@ -95,13 +94,16 @@ public class Communicator {
     	//wake up the listener to let it knows the message is ready
     	_messageSet.wake();
     	
+    	//wait until message is received by listener
     	_messageReceived.sleep();
-    	
+    
+    	//OK to exit - decrement the num speakers and wake the next one
     	_speakers--;
     	
     	_speakerSlotOpen.wake();
     	
-    	_curMessageLock.release();
+    	//release lock
+       	_curMessageLock.release();   	
     	
     	System.out.println(KThread.currentThread().getName() + " exiting speak");
     }
@@ -119,15 +121,16 @@ public class Communicator {
     	//get lock for the message
     	_curMessageLock.acquire();
     	
+    	//if there's already an active listener, wait until it's finished
     	if(_listeners > 0) _listenerSlotOpen.sleep();
     	
+    	//increment num listeners
     	_listeners++;
     	
-    	while(_speakers <= 0)
-    	{
-    		//wait until speaker present
-    		_speakerReady.sleep();
-    	}    	
+    	//wait until speaker present
+    	_speakerReady.sleep();    	   	
+    	
+    	System.out.println("listener ready");
     	
     	//let any speakers know that a listener is now present
     	_listenerReady.wake();
@@ -135,21 +138,26 @@ public class Communicator {
         //wait until message has been set
         _messageSet.sleep();	
     	
-        System.out.println("getting msg");
+        System.out.println(KThread.currentThread().getName() + " getting msg");
         
     	//once speaker has set message, get the message
     	int msg = _curMessage;   	
     	
-    	_messageReceived.wake();
-    	
+    	//OK to exit critical section: decrement num listeners
     	_listeners--;
     	
+    	//wake next listener
     	_listenerSlotOpen.wake();
     	
+    	//let the speaker know the message was received
+    	_messageReceived.wake();    	
+    	
+    	//exit critical section
     	_curMessageLock.release();   	
     	
     	System.out.println(KThread.currentThread().getName() + " exiting listen");
     	
+    	//return message
     	return msg;
     }
 }
