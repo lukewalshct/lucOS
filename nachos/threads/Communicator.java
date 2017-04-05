@@ -14,13 +14,11 @@ public class Communicator {
 	//the current message; essentially is a buffer of length 1
 	private int _curMessage;
 	
-	//condition variable that indicates a listener is ready
-	//to receive message
-	private ICondition _listenerReady;
+	//condition variable that indicates a listener is present
+	private ICondition _listenerPresent;
 	
-	//condition variable that indicates a speaker is ready to
-	//speak a message
-	private ICondition _speakerReady;
+	//condition variable that indicates a speaker is present
+	private ICondition _speakerPresent;
 	
 	private ICondition _speakerSlotOpen;
 	
@@ -44,9 +42,9 @@ public class Communicator {
     	
     	_curMessageLock = new Lock();
     	
-    	_listenerReady = new Condition(_curMessageLock);
+    	_listenerPresent = new Condition(_curMessageLock);
     	
-    	_speakerReady = new Condition(_curMessageLock);
+    	_speakerPresent = new Condition(_curMessageLock);
     	
     	_messageSet = new Condition(_curMessageLock);
     	
@@ -81,10 +79,10 @@ public class Communicator {
     	_speakers++;
     	
     	//let any listeners know there's a speaker ready
-    	_speakerReady.wake();
+    	_speakerPresent.wake();
     	
     	//wait until there is a listener that can take the message      	        	
-    	_listenerReady.sleep();
+    	_listenerPresent.sleep();
     	
     	System.out.println(KThread.currentThread().getName() + " speaker setting word");
     	
@@ -128,12 +126,12 @@ public class Communicator {
     	_listeners++;
     	
     	//wait until speaker present
-    	_speakerReady.sleep();    	   	
+    	_speakerPresent.sleep();    	   	
     	
     	System.out.println("listener ready");
     	
     	//let any speakers know that a listener is now present
-    	_listenerReady.wake();
+    	_listenerPresent.wake();
     	
         //wait until message has been set
         _messageSet.sleep();	
