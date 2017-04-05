@@ -53,7 +53,8 @@ public class ThreadedKernel extends Kernel {
     AlarmTest alarmTest = new AlarmTest();
     alarmTest.TestWaitUntil();
     CommunicatorTest comTest = new CommunicatorTest();
-    comTest.Test();
+    comTest.TestListenersFirst();
+	comTest.TestSpeakersFirst();
     KThread.selfTest();
 	Semaphore.selfTest();
 	SynchList.selfTest();	

@@ -23,7 +23,7 @@ public class CommunicatorTest extends KernelTestBase {
 	
 	private final int NUM_MSG_PER_SPEAKER = 3;
 	
-	public void Test()
+	public void TestListenersFirst()
 	{
 		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
 		
@@ -45,9 +45,46 @@ public class CommunicatorTest extends KernelTestBase {
 		//slots as it loops through its array
 		Arrays.fill(_messagesToSend,  _numSpeakers);
 		
+		//run listeners first
 		runThreads(listeners);
 		
 		runThreads(speakers);
+		
+		try{
+			joinThreads(listeners);
+		}catch(Exception ex) {}
+		
+		//TODO: add verification/accounting for all messages sent/received
+		
+		System.out.println("\nCOMMUNICATOR TEST ENDING\n");
+	}
+	
+	public void TestSpeakersFirst()
+	{
+		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
+		
+		Communicator communicator = new Communicator();
+		
+		_numMsgLock = new Lock();
+		
+		//create messages to send (will all be equal to numSpeakers) 
+		_messagesToSend = new int[NUM_MSG_PER_SPEAKER];
+		
+		_messagesReceived = new int [NUM_MSG_PER_SPEAKER];
+		
+		KThread[] speakers = getSpeakers(3, communicator);
+		
+		KThread[] listeners = getListeners(5, communicator); 
+		
+		//"stock" the _messagesToSend array with one message per
+		//speaker; the speakers will "take" (decrement) one of these
+		//slots as it loops through its array
+		Arrays.fill(_messagesToSend,  _numSpeakers);
+
+		//run speakers first
+		runThreads(speakers);
+		
+		runThreads(listeners);
 		
 		try{
 			joinThreads(listeners);
@@ -67,6 +104,8 @@ public class CommunicatorTest extends KernelTestBase {
 			speakers[i] = new KThread(new Speaker(c, NUM_MSG_PER_SPEAKER));
 			
 			_numSpeakers++;
+			
+			speakers[i].setName("Speaker #" + i);
 		}
 		
 		return speakers;
@@ -81,6 +120,8 @@ public class CommunicatorTest extends KernelTestBase {
 			listeners[i] = new KThread(new Listener(c));
 			
 			_numListeners++;
+			
+			listeners[i].setName("Listener #" + i);
 		}
 		
 		return listeners;
@@ -150,7 +191,7 @@ public class CommunicatorTest extends KernelTestBase {
 				//get message
 				int msg = _communicator.listen();
 				
-				System.out.println(msg);
+				System.out.println("message: " + msg);
 				
 				//account for the message
 				_messagesReceived[msg]++;
