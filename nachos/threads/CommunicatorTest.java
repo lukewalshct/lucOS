@@ -25,7 +25,7 @@ public class CommunicatorTest extends KernelTestBase {
 	
 	public void TestListenersFirst()
 	{
-		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
+		System.out.println("\nCOMMUNICATOR TEST BEGINNING (Listener first) \n");
 		
 		Communicator communicator = new Communicator();
 		
@@ -61,7 +61,7 @@ public class CommunicatorTest extends KernelTestBase {
 	
 	public void TestSpeakersFirst()
 	{
-		System.out.println("\nCOMMUNICATOR TEST BEGINNING\n");
+		System.out.println("\nCOMMUNICATOR TEST BEGINNING (Speaker first)\n");
 		
 		Communicator communicator = new Communicator();
 		
@@ -167,6 +167,8 @@ public class CommunicatorTest extends KernelTestBase {
 				
 				KThread.yield();
 			}
+			
+			if(_numSpeakers == 0) System.out.println("ALL SPEAKERS FINISHED");
 		}
 	}
 	
@@ -197,7 +199,9 @@ public class CommunicatorTest extends KernelTestBase {
 				_messagesReceived[msg]++;
 				
 				KThread.yield();
-			}
+			}	
+
+			if(_numListeners == 0) System.out.println("ALL LISTENERS FINISHED");
 		}
 		
 	}
@@ -218,7 +222,7 @@ public class CommunicatorTest extends KernelTestBase {
 			 _numListeners--;
 		 }
 		 
-		 _numMsgLock.release();
+		 _numMsgLock.release();	 
 		
 		return shouldContinue;
 	}	
