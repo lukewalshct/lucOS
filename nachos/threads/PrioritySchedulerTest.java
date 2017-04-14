@@ -66,13 +66,20 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		public void GetLock()
 		{
-			_lock.acquire();
+			_lock.acquire();			
 			
 			System.out.println("Thread #" + _threadNum + " acquired lock. Priority is " + _priority);
 			
 			_lock.release();
 		}
 		
+		private void simulateWork()
+		{
+			for(int i = 0; i < 3; i++)
+			{
+				KThread.yield();
+			}
+		}
 		
 	}
 
