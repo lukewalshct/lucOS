@@ -146,7 +146,7 @@ public class PriorityScheduler extends Scheduler {
 	    getThreadState(thread).acquire(this);
 	}
 
-	public void add(ThreadState threadState) //temp to mimic RR
+	protected void add(ThreadState threadState) //temp to mimic RR
 	{
 		waitQueue.add(threadState); // temp to mimic RR
 	}
