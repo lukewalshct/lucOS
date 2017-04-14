@@ -1,4 +1,7 @@
 package nachos.threads;
+
+import nachos.machine.*;
+
 /*
  * A class that tests PriorityScheduler.java.
  * 
@@ -29,7 +32,15 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		for(int i = 0; i < numThreads; i++)
 		{
-			testThreads[i] = new KThread(new TestThread(i, lock, i % NUM_PRIORITIES));
+			int priority = i % NUM_PRIORITIES;
+			
+			testThreads[i] = new KThread(new TestThread(i, lock, priority));
+			
+			boolean intStatus = Machine.interrupt().disable();
+			
+			scheduler.setPriority(testThreads[i], priority);
+			
+			Machine.interrupt().restore(intStatus);
 		}
 
 		//fork all threads
