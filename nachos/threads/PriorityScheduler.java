@@ -127,13 +127,23 @@ public class PriorityScheduler extends Scheduler {
      * A <tt>ThreadQueue</tt> that sorts threads by priority.
      */
     protected class PriorityQueue extends ThreadQueue {
-		
-	private LinkedList<ThreadState> waitQueue;
+	
+	private Object[] waitQueue;
 	
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
 		
-		this.waitQueue = new LinkedList<ThreadState>();
+		int numPriorities = (priorityMaximum - priorityMinimum) + 1;
+		
+		//initialize waitQueue as an array or "buckets" of priorities
+		//threads that have a certain priority will be sorted within that 
+		//bucket based on their time waiting
+		this.waitQueue = new Object[numPriorities];
+		
+		for(int i = 0; i < numPriorities; i++)
+		{			
+			this.waitQueue[i] = new java.util.PriorityQueue<ThreadState>();; 
+		}
 	}
 
 	public void waitForAccess(KThread thread) {
@@ -148,18 +158,51 @@ public class PriorityScheduler extends Scheduler {
 
 	protected void add(ThreadState threadState) //temp to mimic RR
 	{
-		waitQueue.add(threadState); // temp to mimic RR
+		int priority = threadState.getPriority();
+		
+		((java.util.PriorityQueue<ThreadState>)waitQueue[priority]).add(threadState); // temp to mimic RR
 	}
 	
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
+		
 	    // implement me
-		if (waitQueue.isEmpty()) //temp to mimic RR
-		return null; //temp to mimic RR
-
-	    return (KThread) waitQueue.removeFirst().thread; //temp to mimic RR
+		int curPriority = priorityMaximum;
+		
+		logQ();
+		
+		while(curPriority >= priorityMinimum)
+		{			
+			//if there are no threads for the priority, check the next bucket
+			if(((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).size() == 0)
+			{
+				curPriority--;
+				
+				continue;
+			}			
+			else
+			{									
+				//otherwise return the highest priority/time in that bucket
+				KThread t = ((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).poll().thread;
+				
+				System.out.println(t.getName());
+				
+				return t;
+			}		
+		}
+		
+		return null;
 	}
 
+	private void logQ()
+	{
+		for(int i = 0; i < waitQueue.length; i++)
+		{
+			java.util.PriorityQueue<ThreadState> q = (java.util.PriorityQueue<ThreadState>)waitQueue[i];
+			
+			System.out.println("Priority " + i + ": " + q.size());
+		}
+	}
 	/**
 	 * Return the next thread that <tt>nextThread()</tt> would return,
 	 * without modifying the state of this queue.
@@ -171,13 +214,27 @@ public class PriorityScheduler extends Scheduler {
 	    // implement me
 		
 		Lib.assertTrue(Machine.interrupt().disabled()); //temp to mimic RR
-		       
-	    if (waitQueue.isEmpty()) //temp to mimic RR
-		return null; //temp to mimic RR
-
-	    return (ThreadState) waitQueue.removeFirst(); //temp to mimic RR
+		 
+		int curPriority = priorityMaximum;
 		
-	    //return null;
+		while(curPriority >= priorityMinimum)
+		{
+			//if there are no threads for the priority, check the next bucket
+			if(((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).size() == 0)
+			{
+				curPriority--;
+				
+				continue;
+			}			
+			else
+			{
+				//otherwise return the highest priority/time in that bucket
+				return ((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).peek();
+			}		
+		}
+	    
+		return null;	
+	    
 	}
 	
 	public void print() {
@@ -199,19 +256,36 @@ public class PriorityScheduler extends Scheduler {
      *
      * @see	nachos.threads.KThread#schedulingState
      */
-    protected class ThreadState {
+    protected class ThreadState implements Comparable<ThreadState>{
 	/**
 	 * Allocate a new <tt>ThreadState</tt> object and associate it with the
 	 * specified thread.
 	 *
 	 * @param	thread	the thread this state belongs to.
 	 */
-	public ThreadState(KThread thread) {
+	public ThreadState(KThread thread)
+	{
 	    this.thread = thread;
 	    
 	    setPriority(priorityDefault);
 	}
 
+	@Override
+	public int compareTo(ThreadState other)
+	{
+		if (this.getPriority() > other.getPriority())
+		{
+			return 1;
+		}
+		else if (this.getPriority() < other.getPriority())
+		{
+			return -1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
 	/**
 	 * Return the priority of the associated thread.
 	 *
