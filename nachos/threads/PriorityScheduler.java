@@ -5,6 +5,7 @@ import nachos.machine.*;
 import java.util.TreeSet;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * A scheduler that chooses threads based on their priorities.
@@ -126,8 +127,13 @@ public class PriorityScheduler extends Scheduler {
      * A <tt>ThreadQueue</tt> that sorts threads by priority.
      */
     protected class PriorityQueue extends ThreadQueue {
+		
+	private LinkedList<ThreadState> waitQueue;
+	
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
+		
+		this.waitQueue = new LinkedList<ThreadState>();
 	}
 
 	public void waitForAccess(KThread thread) {
@@ -140,10 +146,18 @@ public class PriorityScheduler extends Scheduler {
 	    getThreadState(thread).acquire(this);
 	}
 
+	public void add(ThreadState threadState) //temp to mimic RR
+	{
+		waitQueue.add(threadState); // temp to mimic RR
+	}
+	
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
 	    // implement me
-	    return null;
+		if (waitQueue.isEmpty()) //temp to mimic RR
+		return null; //temp to mimic RR
+
+	    return (KThread) waitQueue.removeFirst().thread; //temp to mimic RR
 	}
 
 	/**
@@ -155,7 +169,15 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	protected ThreadState pickNextThread() {
 	    // implement me
-	    return null;
+		
+		Lib.assertTrue(Machine.interrupt().disabled()); //temp to mimic RR
+		       
+	    if (waitQueue.isEmpty()) //temp to mimic RR
+		return null; //temp to mimic RR
+
+	    return (ThreadState) waitQueue.removeFirst(); //temp to mimic RR
+		
+	    //return null;
 	}
 	
 	public void print() {
@@ -236,7 +258,9 @@ public class PriorityScheduler extends Scheduler {
 	 * @see	nachos.threads.ThreadQueue#waitForAccess
 	 */
 	public void waitForAccess(PriorityQueue waitQueue) {
-	    // implement me
+	    
+		//implement me
+		waitQueue.add(this); //temp to mimic roundrobin scheduler
 	}
 
 	/**
@@ -250,7 +274,8 @@ public class PriorityScheduler extends Scheduler {
 	 * @see	nachos.threads.ThreadQueue#nextThread
 	 */
 	public void acquire(PriorityQueue waitQueue) {
-	    // implement me
+	    // implement me      
+	    
 	}	
 
 	/** The thread with which this object is associated. */	   
