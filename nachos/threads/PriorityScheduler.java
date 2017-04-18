@@ -128,22 +128,14 @@ public class PriorityScheduler extends Scheduler {
      */
     protected class PriorityQueue extends ThreadQueue {
 	
-	private Object[] waitQueue;
+	private java.util.PriorityQueue<ThreadState> waitQueue;
 	
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
 		
 		int numPriorities = (priorityMaximum - priorityMinimum) + 1;
-		
-		//initialize waitQueue as an array or "buckets" of priorities
-		//threads that have a certain priority will be sorted within that 
-		//bucket based on their time waiting
-		this.waitQueue = new Object[numPriorities];
-		
-		for(int i = 0; i < numPriorities; i++)
-		{			
-			this.waitQueue[i] = new java.util.PriorityQueue<ThreadState>();; 
-		}
+
+		this.waitQueue = new java.util.PriorityQueue<ThreadState>();
 	}
 
 	public void waitForAccess(KThread thread) {
@@ -160,7 +152,7 @@ public class PriorityScheduler extends Scheduler {
 	{
 		int priority = threadState.getPriority();
 		
-		((java.util.PriorityQueue<ThreadState>)waitQueue[priority]).add(threadState); // temp to mimic RR
+		this.waitQueue.add(threadState); //temp to mimic RR
 	}
 	
 	public KThread nextThread() {
@@ -169,40 +161,18 @@ public class PriorityScheduler extends Scheduler {
 	    // implement me
 		int curPriority = priorityMaximum;
 		
-		logQ();
+		ThreadState ts = this.waitQueue.poll();
 		
-		while(curPriority >= priorityMinimum)
-		{			
-			//if there are no threads for the priority, check the next bucket
-			if(((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).size() == 0)
-			{
-				curPriority--;
-				
-				continue;
-			}			
-			else
-			{									
-				//otherwise return the highest priority/time in that bucket
-				KThread t = ((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).poll().thread;
-				
-				System.out.println(t.getName());
-				
-				return t;
-			}		
+		if (ts != null)
+		{
+			KThread t = ts.thread;
+			
+			System.out.println(t.getName());		
 		}
 		
 		return null;
 	}
 
-	private void logQ()
-	{
-		for(int i = 0; i < waitQueue.length; i++)
-		{
-			java.util.PriorityQueue<ThreadState> q = (java.util.PriorityQueue<ThreadState>)waitQueue[i];
-			
-			System.out.println("Priority " + i + ": " + q.size());
-		}
-	}
 	/**
 	 * Return the next thread that <tt>nextThread()</tt> would return,
 	 * without modifying the state of this queue.
@@ -215,25 +185,7 @@ public class PriorityScheduler extends Scheduler {
 		
 		Lib.assertTrue(Machine.interrupt().disabled()); //temp to mimic RR
 		 
-		int curPriority = priorityMaximum;
-		
-		while(curPriority >= priorityMinimum)
-		{
-			//if there are no threads for the priority, check the next bucket
-			if(((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).size() == 0)
-			{
-				curPriority--;
-				
-				continue;
-			}			
-			else
-			{
-				//otherwise return the highest priority/time in that bucket
-				return ((java.util.PriorityQueue<ThreadState>)waitQueue[curPriority]).peek();
-			}		
-		}
-	    
-		return null;	
+		return this.waitQueue.peek();	
 	    
 	}
 	
