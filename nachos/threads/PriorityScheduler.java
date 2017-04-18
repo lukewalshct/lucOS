@@ -231,11 +231,11 @@ public class PriorityScheduler extends Scheduler {
 	{
 		if (this.getPriority() > other.getPriority())
 		{
-			return 1;
+			return -1;
 		}
 		else if (this.getPriority() < other.getPriority())
 		{
-			return -1;
+			return 1;
 		}
 		else
 		{
