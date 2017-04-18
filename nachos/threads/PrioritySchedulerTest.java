@@ -83,6 +83,8 @@ public class PrioritySchedulerTest extends KernelTestBase {
 			
 			System.out.println("Thread #" + _threadNum + " acquired lock. Priority is " + _priority);
 			
+			simulateWork();
+			
 			_lock.release();
 		}
 		

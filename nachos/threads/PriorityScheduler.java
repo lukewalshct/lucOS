@@ -163,13 +163,22 @@ public class PriorityScheduler extends Scheduler {
 		
 		System.out.println("q length: " + this.waitQueue.size());
 		
+		System.out.println("t waiting: ");
+		
+		Iterator it = this.waitQueue.iterator();
+		
+		while (it.hasNext())
+		{
+			System.out.print(((ThreadState)it.next()).thread.getName() + " ");
+		}
+		
 		ThreadState ts = this.waitQueue.poll();
 		
 		if (ts != null)
 		{
 			KThread t = ts.thread;
 			
-			System.out.println(t.getName());
+			System.out.println("\nnext up: " + t.getName());
 
 			return t;
 		}
