@@ -161,13 +161,17 @@ public class PriorityScheduler extends Scheduler {
 	    // implement me
 		int curPriority = priorityMaximum;
 		
+		System.out.println("q length: " + this.waitQueue.size());
+		
 		ThreadState ts = this.waitQueue.poll();
 		
 		if (ts != null)
 		{
 			KThread t = ts.thread;
 			
-			System.out.println(t.getName());		
+			System.out.println(t.getName());
+
+			return t;
 		}
 		
 		return null;

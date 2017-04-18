@@ -77,6 +77,8 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		public void GetLock()
 		{
+			System.out.println("Thread #" + _threadNum + " attempting to acquire lock. Priority is " + _priority);
+			
 			_lock.acquire();			
 			
 			System.out.println("Thread #" + _threadNum + " acquired lock. Priority is " + _priority);
