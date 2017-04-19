@@ -131,7 +131,7 @@ public class PriorityScheduler extends Scheduler {
 	private java.util.PriorityQueue<ThreadState> waitQueue;
 	
 	//represents the thread that actively holds the resource (i.e. not on the queue)
-	private KThread activeThread;
+	private ThreadState activeThreadState;
 	
 	//represents the maximum effective priority of the queue
 	private int maxEffPriority;
@@ -159,6 +159,15 @@ public class PriorityScheduler extends Scheduler {
 		//int effPriority = threadState.getEffectivePriority();
 		
 		this.waitQueue.add(threadState); //temp to mimic RR
+	}
+	
+	/**
+	 * Updates the priority queue's active thread state
+	 * to the new one.
+	 */
+	protected void setActiveThreadState(ThreadState ts)
+	{
+		this.activeThreadState = ts;
 	}
 	
 	public KThread nextThread() {
@@ -287,7 +296,7 @@ public class PriorityScheduler extends Scheduler {
 		//donation, and this thread currently holds that resource, get the 
 		//max effective priority from the waitQueue
 		if(this.waitQueue != null && this.waitQueue.transferPriority &&
-			this.waitQueue.activeThread == this.thread)
+			this.waitQueue.activeThreadState.thread == this.thread)
 		{
 			return this.waitQueue.getMaxEffPriority();
 		}
@@ -348,8 +357,8 @@ public class PriorityScheduler extends Scheduler {
 	 * @see	nachos.threads.ThreadQueue#nextThread
 	 */
 	public void acquire(PriorityQueue waitQueue) {
-	    // implement me      
-	    
+	    // implement me     
+		waitQueue.setActiveThreadState(this);	    
 	}
 
 	@Override
