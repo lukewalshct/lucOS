@@ -251,12 +251,8 @@ public class PriorityScheduler extends Scheduler {
 	protected KThread thread;
 	/** The priority of the associated thread. */
 	protected int priority;
-	/**The cached effective priority */
-	protected int effPriority;
 	/**The priority queue the thread is waiting on (null if it isn't) */
 	protected PriorityQueue waitQueue;
-	/**Indicates whether the thread is using donated priority to calculate its effective priority */
-	protected boolean isDonatedPriority;
 	
 	/**
 	 * Allocate a new <tt>ThreadState</tt> object and associate it with the
@@ -269,9 +265,6 @@ public class PriorityScheduler extends Scheduler {
 	    this.thread = thread;
 	    
 	    setPriority(priorityDefault);
-		
-		//when first created, the effective priority should equal priority
-		this.effPriority = this.priority;
 	}
 
 	/**
@@ -313,21 +306,16 @@ public class PriorityScheduler extends Scheduler {
 	    if (this.priority == priority)
 		return;
 	    
+		boolean priorityChanged = this.priority != priority;
+		
 	    this.priority = priority;
 	    
-		//if this thread's effective priority is from donation and the new priority
-		//is higher, of if the thread isn't using donated priority, update
-		//its effective priority		
-		if((this.isDonatedPriority && this.priority > this.effPriority) ||
-			(!this.isDonatedPriority)
-			)
+		//if the thread is on a wait queue that allows for priority donation,
+		//notify the queue that the thread's priority changed
+		if(priorityChanged && this.waitQueue != null && this.waitQueue.transferPriority)
 		{
-			this.effPriority = this.priority;
-			
-			//if the thread is on a wait queue, notify the queue that the
-			//priority has changed, so that it can donate its priority if enabled
-			if(this.waitQueue != null) this.waitQueue.notifyPriorityUpdate(this);			
-		}	    
+			this.waitQueue.notifyPriorityUpdate(this);
+		}  
 	}
 
 	/**
