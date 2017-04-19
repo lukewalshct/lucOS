@@ -46,8 +46,12 @@ public class ThreadedKernel extends Kernel {
      * tests here.
      */	
     public void selfTest() {
-    PrioritySchedulerTest pSchedTest = new PrioritySchedulerTest();
-    pSchedTest.RunTests();
+    if(Config.getString("ThreadedKernel.scheduler") == "PriorityScheduler")
+	{
+		PrioritySchedulerTest pSchedTest = new PrioritySchedulerTest();
+		pSchedTest.RunTests();
+	}
+	
     ThreadJoinTest.Test();
     ConditionTest conditionTest = new ConditionTest();
     conditionTest.TestCondition();
