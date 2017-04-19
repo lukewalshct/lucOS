@@ -130,6 +130,12 @@ public class PriorityScheduler extends Scheduler {
 	
 	private java.util.PriorityQueue<ThreadState> waitQueue;
 	
+	//represents the thread that actively holds the resource (i.e. not on the queue)
+	private KThread activeThread;
+	
+	//represents the maximum effective priority of the queue
+	private int maxEffPriority;
+	
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
 		
@@ -150,7 +156,7 @@ public class PriorityScheduler extends Scheduler {
 
 	protected void add(ThreadState threadState) //temp to mimic RR
 	{
-		int effPriority = threadState.getEffectivePriority();
+		//int effPriority = threadState.getEffectivePriority();
 		
 		this.waitQueue.add(threadState); //temp to mimic RR
 	}
@@ -197,6 +203,15 @@ public class PriorityScheduler extends Scheduler {
 	}
 	
 	/**
+	 * Returns the maximum effective priority of the queue.
+	 */
+	public int getMaxEffPriority()
+	{
+		//TODO: implement
+		return this.maxEffPriority;
+	}
+	
+	/**
 	 * Return the next thread that <tt>nextThread()</tt> would return,
 	 * without modifying the state of this queue.
 	 *
@@ -208,8 +223,7 @@ public class PriorityScheduler extends Scheduler {
 		
 		Lib.assertTrue(Machine.interrupt().disabled()); //temp to mimic RR
 		 
-		return this.waitQueue.peek();	
-	    
+		return this.waitQueue.peek();		    
 	}
 	
 	public void print() {
@@ -274,8 +288,20 @@ public class PriorityScheduler extends Scheduler {
 	 *
 	 * @return	the effective priority of the associated thread.
 	 */
-	public int getEffectivePriority() {	    
-	    return this.isDonatedPriority ? this.effPriority : this.priority;
+	public int getEffectivePriority() {
+
+		//if the thread is on a wait queue, the wait queue allows for priority
+		//donation, and this thread currently holds that resource, get the 
+		//max effective priority from the waitQueue
+		if(this.waitQueue != null && this.waitQueue.transferPriority &&
+			this.waitQueue.activeThread == this.thread)
+		{
+			return this.waitQueue.getMaxEffPriority();
+		}
+		else
+		{
+			return this.priority;
+		}	    
 	}
 
 	/**
@@ -320,7 +346,7 @@ public class PriorityScheduler extends Scheduler {
 	    
 		this.waitQueue = waitQueue;
 		
-		waitQueue.add(this);
+		waitQueue.add(this);	
 	}
 
 	/**
