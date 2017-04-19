@@ -24,7 +24,7 @@ public class Condition2 implements ICondition {
     public Condition2(Lock conditionLock) {
     	this.conditionLock = conditionLock;
     	
-    	this._waitQueue = new LinkedList<KThread>();
+    	this._waitQueue = ThreadedKernel.scheduler.newThreadQueue(true);
     }
 
     /**
@@ -41,7 +41,7 @@ public class Condition2 implements ICondition {
 		
 		conditionLock.release();
 		
-		_waitQueue.add(KThread.currentThread());
+		_waitQueue.waitForAccess(KThread.currentThread());
 		
 		KThread.currentThread().sleep();
 	
@@ -57,9 +57,10 @@ public class Condition2 implements ICondition {
     	
     	Machine.interrupt().disable();
     	
-    	if(!_waitQueue.isEmpty()){
-    		_waitQueue.remove().ready();
-    	}
+		KThread thread;
+		
+		if ((thread= _waitQueue.nextThread()) != null)
+			thread.ready();
     }
 
     /**
@@ -69,11 +70,13 @@ public class Condition2 implements ICondition {
     public void wakeAll() {
     	Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 	
-    	while(!_waitQueue.isEmpty()){
-    		wake();    		
+		KThread thread;
+		
+    	while((thread = _waitQueue.nextThread()) != null){
+    		thread.ready();    		
     	}
     }
 
     private Lock conditionLock;
-    private Queue<KThread> _waitQueue;
+    private ThreadQueue _waitQueue;
 }
