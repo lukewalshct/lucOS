@@ -46,7 +46,7 @@ public class ThreadedKernel extends Kernel {
      * tests here.
      */	
     public void selfTest() {
-    if(Config.getString("ThreadedKernel.scheduler") == "PriorityScheduler")
+    if(Config.getString("ThreadedKernel.scheduler") == "nachos.threads.PriorityScheduler")
 	{
 		PrioritySchedulerTest pSchedTest = new PrioritySchedulerTest();
 		pSchedTest.RunTests();
