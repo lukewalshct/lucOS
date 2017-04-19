@@ -150,7 +150,7 @@ public class PriorityScheduler extends Scheduler {
 
 	protected void add(ThreadState threadState) //temp to mimic RR
 	{
-		int priority = threadState.getPriority();
+		int effPriority = threadState.getEffectivePriority();
 		
 		this.waitQueue.add(threadState); //temp to mimic RR
 	}
@@ -318,8 +318,9 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void waitForAccess(PriorityQueue waitQueue) {
 	    
-		//implement me
-		waitQueue.add(this); //temp to mimic roundrobin scheduler
+		this.waitQueue = waitQueue;
+		
+		waitQueue.add(this);
 	}
 
 	/**
@@ -340,11 +341,11 @@ public class PriorityScheduler extends Scheduler {
 	@Override
 	public int compareTo(ThreadState other)
 	{
-		if (this.getPriority() > other.getPriority())
+		if (this.getEffectivePriority() > other.getEffectivePriority())
 		{
 			return -1;
 		}
-		else if (this.getPriority() < other.getPriority())
+		else if (this.getEffectivePriority() < other.getEffectivePriority())
 		{
 			return 1;
 		}
