@@ -144,7 +144,11 @@ public class KThread {
 		  "Forking thread: " + toString() + " Runnable: " + target);
 
 	boolean intStatus = Machine.interrupt().disable();
-
+	
+	//"acquire" the thread join queue so that any threads joining on it later
+	//can donate their priority
+	this.threadJoinQueue.acquire(this);
+	
 	tcb.start(new Runnable() {
 		public void run() {
 		    runThread();
