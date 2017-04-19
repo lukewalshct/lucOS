@@ -185,7 +185,17 @@ public class PriorityScheduler extends Scheduler {
 		
 		return null;
 	}
-
+	
+	/**
+	 * If a thread's priority has been updated, notify this queue
+	 * so that the effective priority of the thread holding the 
+	 * resource may be updated if necessary
+	 */
+	public void notifyPriorityUpdate(ThreadState threadState)
+	{
+		//TODO: implement
+	}
+	
 	/**
 	 * Return the next thread that <tt>nextThread()</tt> would return,
 	 * without modifying the state of this queue.
@@ -222,6 +232,18 @@ public class PriorityScheduler extends Scheduler {
      * @see	nachos.threads.KThread#schedulingState
      */
     protected class ThreadState implements Comparable<ThreadState>{
+			
+	/** The thread with which this object is associated. */	   
+	protected KThread thread;
+	/** The priority of the associated thread. */
+	protected int priority;
+	/**The cached effective priority */
+	protected int effPriority;
+	/**The priority queue the thread is waiting on (null if it isn't) */
+	protected PriorityQueue waitQueue;
+	/**Indicates whether the thread is using donated priority to calculate its effective priority */
+	protected boolean isDonatedPriority;
+	
 	/**
 	 * Allocate a new <tt>ThreadState</tt> object and associate it with the
 	 * specified thread.
@@ -233,24 +255,11 @@ public class PriorityScheduler extends Scheduler {
 	    this.thread = thread;
 	    
 	    setPriority(priorityDefault);
+		
+		//when first created, the effective priority should equal priority
+		this.effPriority = this.priority;
 	}
 
-	@Override
-	public int compareTo(ThreadState other)
-	{
-		if (this.getPriority() > other.getPriority())
-		{
-			return -1;
-		}
-		else if (this.getPriority() < other.getPriority())
-		{
-			return 1;
-		}
-		else
-		{
-			return 0;
-		}
-	}
 	/**
 	 * Return the priority of the associated thread.
 	 *
@@ -265,9 +274,8 @@ public class PriorityScheduler extends Scheduler {
 	 *
 	 * @return	the effective priority of the associated thread.
 	 */
-	public int getEffectivePriority() {
-	    // implement me
-	    return priority;
+	public int getEffectivePriority() {	    
+	    return effPriority;
 	}
 
 	/**
@@ -281,7 +289,19 @@ public class PriorityScheduler extends Scheduler {
 	    
 	    this.priority = priority;
 	    
-	    // implement me
+		//if this thread's effective priority is from donation and the new priority
+		//is higher, of if the thread isn't using donated priority, update
+		//its effective priority		
+		if((this.isDonatedPriority && this.priority > this.effPriority) ||
+			(!this.isDonatedPriority)
+			)
+		{
+			this.effPriority = this.priority;
+			
+			//if the thread is on a wait queue, notify the queue that the
+			//priority has changed, so that it can donate its priority if enabled
+			if(this.waitQueue != null) this.waitQueue.notifyPriorityUpdate(this);			
+		}	    
 	}
 
 	/**
@@ -315,11 +335,23 @@ public class PriorityScheduler extends Scheduler {
 	public void acquire(PriorityQueue waitQueue) {
 	    // implement me      
 	    
-	}	
+	}
 
-	/** The thread with which this object is associated. */	   
-	protected KThread thread;
-	/** The priority of the associated thread. */
-	protected int priority;
+	@Override
+	public int compareTo(ThreadState other)
+	{
+		if (this.getPriority() > other.getPriority())
+		{
+			return -1;
+		}
+		else if (this.getPriority() < other.getPriority())
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}	
     }
 }
