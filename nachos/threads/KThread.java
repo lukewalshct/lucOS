@@ -57,6 +57,7 @@ public class KThread {
 
 	    createIdleThread();
 	}
+	this.threadJoinQueue = ThreadedKernel.scheduler.newThreadQueue(true);
     }
 
     /**
@@ -194,6 +195,9 @@ public class KThread {
 
 	currentThread.status = statusFinished;
 	
+	//wake all threads waiting on the thread join
+	currentThread.WakeAllThreadsWaitingOnJoin();
+	
 	sleep();
     }
 
@@ -260,6 +264,7 @@ public class KThread {
 	Lib.assertTrue(status != statusReady);
 	
 	status = statusReady;
+	
 	if (this != idleThread)
 	    readyQueue.waitForAccess(this);
 	
@@ -275,15 +280,39 @@ public class KThread {
     public void join() throws InterruptedException {
 		Lib.debug(dbgThread, "Joining to thread: " + toString());
 	
-		Lib.assertTrue(this != currentThread);
+		Lib.assertTrue(this != currentThread);		
+			
+		//sleep until this thread is finished
+		if(this.status != statusFinished) { 
 		
-		//wait until this thread is finished
-		while(this.status != statusFinished) { 
-			yield(); 
+			Machine.interrupt().disable();
+			
+			this.threadJoinQueue.waitForAccess(currentThread);
+			
+			sleep();			 
 		}
 
     }
+	
+	/**
+	 * Wakes all threads waiting to join when this thread completes and
+	 * places them on the ready queue.
+	 */
+	public void WakeAllThreadsWaitingOnJoin()
+	{
+		KThread thread;
+		
+		boolean intStatus = Machine.interrupt().disable();
 
+		while((thread = this.threadJoinQueue.nextThread()) != null)
+		{
+			thread.ready();
+		}
+	
+		Machine.interrupt().restore(intStatus);	
+
+	}
+	
     /**
      * Create the idle thread. Whenever there are no threads ready to be run,
      * and <tt>runNextThread()</tt> is called, it will run the idle thread. The
@@ -414,6 +443,11 @@ public class KThread {
 
     private static final char dbgThread = 't';
 
+	/**
+	 * Queue for threads waiting to join on this thread
+	 */
+	 
+	private ThreadQueue threadJoinQueue;
     /**
      * Additional state used by schedulers.
      *
@@ -448,5 +482,5 @@ public class KThread {
     private static ThreadQueue readyQueue = null;
     private static KThread currentThread = null;
     private static KThread toBeDestroyed = null;
-    private static KThread idleThread = null;
+    private static KThread idleThread = null;	
 }
