@@ -275,7 +275,7 @@ public class PriorityScheduler extends Scheduler {
 	 * @return	the effective priority of the associated thread.
 	 */
 	public int getEffectivePriority() {	    
-	    return effPriority;
+	    return this.isDonatedPriority ? this.effPriority : this.priority;
 	}
 
 	/**
