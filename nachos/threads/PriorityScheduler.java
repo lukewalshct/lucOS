@@ -412,6 +412,8 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void acquire(PriorityQueue waitQueue) {
 	    // implement me     
+		this.waitQueue = waitQueue;
+		
 		waitQueue.setActiveThreadState(this);	    
 	}
 
