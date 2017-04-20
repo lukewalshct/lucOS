@@ -291,6 +291,8 @@ public class PriorityScheduler extends Scheduler {
 	protected KThread thread;
 	/** The priority of the associated thread. */
 	protected int priority;
+	/** The 'cached' effective priority */
+	protected int highestDonatedPriority;
 	/**The priority queue the thread is waiting on (null if it isn't) */
 	protected PriorityQueue waitQueue;
 	/** Represents a max-effective-priority-on-top heap of threads donating priority*/
@@ -326,29 +328,36 @@ public class PriorityScheduler extends Scheduler {
 	 * @return	the effective priority of the associated thread.
 	 */
 	public int getEffectivePriority() {
-
-		ThreadState highestDonor = this.donorThreads.peek();
-
-		if(highestDonor != null)
-		{
-			int highestDonorPriority = highestDonor.getEffectivePriority(); //TODO: cache eff priority to optimize
-			
-			return this.priority > highestDonorPriority ? this.priority : highestDonorPriority; 
-		}
-		else
-		{
-			return this.priority;
-		}	    
+		
+		return this.priority > this.highestDonatedPriority ? this.priority : this.highestDonatedPriority;
 	}
 
 	protected void addDonor(ThreadState threadState)
 	{
-		this.donorThreads.add(threadState);
+		this.donorThreads.add(threadState);			
+		
+		updateEffectivePriority();
 	}
 	
 	protected void removeDonor(ThreadState threadState)
 	{
 		this.donorThreads.remove(threadState);
+		
+		updateEffectivePriority();
+	}
+	
+	private void updateEffectivePriority()
+	{
+		ThreadState highestDonor = this.donorThreads.peek();
+		
+		if(highestDonor != null)
+		{		
+			this.highestDonatedPriority = highestDonor.getEffectivePriority();
+		}	
+		else
+		{
+			this.highestDonatedPriority = priorityMinimum;
+		}
 	}
 	
 	/**
