@@ -154,11 +154,51 @@ public class PriorityScheduler extends Scheduler {
 	    getThreadState(thread).acquire(this);
 	}
 
-	protected void add(ThreadState threadState) //temp to mimic RR
-	{
-		//int effPriority = threadState.getEffectivePriority();
+	/**
+	 * Adds a new thread to the wait queue. If the new thread's effective
+	 * priority is greater than the active thread's effective priority,
+	 * update the active thread's effective priority
+	 */
+	protected void add(ThreadState threadState) 
+	{		
+		boolean intStatus = Machine.interrupt().disable();
+
+		//get the thread that's currently next in line
+		ThreadState origNextThread = this.waitQueue.peek();
 		
-		this.waitQueue.add(threadState); //temp to mimic RR
+		//add the new thread state to the queue
+		this.waitQueue.add(threadState); 			
+		
+		//handle priority donation
+		updateActiveThreadEffectivePriority(origNextThread);
+
+		Machine.interrupt().restore(intStatus);
+	}
+	
+	private void updateActiveThreadEffectivePriority(ThreadState origNextThread)
+	{
+		if(!this.transferPriority) return;
+		
+		//get the active thread
+		ThreadState activeThreadState = this.activeThreadState;
+		
+		//get the next thread in line
+		ThreadState firstInLineThreadState = this.waitQueue.peek();
+		
+		//if the next thread in line is equal to the "original" next thread, 
+		//no update is needed so just return
+		if(origNextThread == firstInLineThreadState || activeThreadState == null)
+		{
+			return;
+		}
+		else
+		{
+			//remove the original next thread from the active thread's donor list
+			if(origNextThread != null) activeThreadState.removeDonor(origNextThread);
+			
+			//add the new highest priority thread to 
+			activeThreadState.addDonor(firstInLineThreadState);
+		}
 	}
 	
 	/**
@@ -212,15 +252,6 @@ public class PriorityScheduler extends Scheduler {
 	}
 	
 	/**
-	 * Returns the maximum effective priority of the queue.
-	 */
-	public int getMaxEffPriority()
-	{
-		//TODO: implement
-		return this.maxEffPriority;
-	}
-	
-	/**
 	 * Return the next thread that <tt>nextThread()</tt> would return,
 	 * without modifying the state of this queue.
 	 *
@@ -262,6 +293,8 @@ public class PriorityScheduler extends Scheduler {
 	protected int priority;
 	/**The priority queue the thread is waiting on (null if it isn't) */
 	protected PriorityQueue waitQueue;
+	/** Represents a max-effective-priority-on-top heap of threads donating priority*/
+	private java.util.PriorityQueue<ThreadState> donorThreads;
 	
 	/**
 	 * Allocate a new <tt>ThreadState</tt> object and associate it with the
@@ -274,6 +307,8 @@ public class PriorityScheduler extends Scheduler {
 	    this.thread = thread;
 	    
 	    setPriority(priorityDefault);
+		
+		this.donorThreads = new java.util.PriorityQueue<ThreadState>();
 	}
 
 	/**
@@ -292,13 +327,13 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public int getEffectivePriority() {
 
-		//if the thread is on a wait queue, the wait queue allows for priority
-		//donation, and this thread currently holds that resource, get the 
-		//max effective priority from the waitQueue
-		if(this.waitQueue != null && this.waitQueue.transferPriority &&
-			this.waitQueue.activeThreadState.thread == this.thread)
+		ThreadState highestDonor = this.donorThreads.peek();
+
+		if(highestDonor != null)
 		{
-			return this.waitQueue.getMaxEffPriority();
+			int highestDonorPriority = highestDonor.getEffectivePriority(); //TODO: cache eff priority to optimize
+			
+			return this.priority > highestDonorPriority ? this.priority : highestDonorPriority; 
 		}
 		else
 		{
@@ -306,6 +341,16 @@ public class PriorityScheduler extends Scheduler {
 		}	    
 	}
 
+	protected void addDonor(ThreadState threadState)
+	{
+		this.donorThreads.add(threadState);
+	}
+	
+	protected void removeDonor(ThreadState threadState)
+	{
+		this.donorThreads.remove(threadState);
+	}
+	
 	/**
 	 * Set the priority of the associated thread to the specified value.
 	 *
