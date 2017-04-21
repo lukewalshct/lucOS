@@ -38,9 +38,7 @@ public class PrioritySchedulerTest extends KernelTestBase {
 			
 			testThreads[i] = new KThread(new TestThread(i, lock, priority));
 			
-			boolean intStatus = Machine.interrupt().disable();
-			
-			scheduler.setPriority(testThreads[i], priority);
+			boolean intStatus = Machine.interrupt().disable();		
 			
 			Machine.interrupt().restore(intStatus);
 		}
@@ -72,7 +70,7 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		t3.fork();
 		
 		//create high priority thread that will try to access lock
-		KThread t4 = new KThread(new TestThread(3, lock, 5));
+		KThread t4 = new KThread(new TestThread(3, lock, 5));		
 		
 		//run high priority thread (result is that it should donate its priority to 
 		//the low priority lock holding the thread)
@@ -109,6 +107,14 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		public void run()
 		{
+			boolean intStatus = Machine.interrupt().disable();
+			
+			PriorityScheduler scheduler = (PriorityScheduler) ThreadedKernel.scheduler;
+			
+			scheduler.setPriority(KThread.currentThread(), _priority);
+			
+			Machine.interrupt().restore(intStatus);
+			
 			GetLock();
 		}
 		
@@ -129,6 +135,14 @@ public class PrioritySchedulerTest extends KernelTestBase {
 			simulateWork();
 			
 			_lock.release();
+			
+			intStatus = Machine.interrupt().disable();
+	
+			System.out.println("Thread #" + _threadNum + 
+				" released lock. \nPriority is " + _priority + 
+				"\nEff priority is now " + ThreadedKernel.scheduler.getEffectivePriority(KThread.currentThread()));
+			
+			Machine.interrupt().restore(intStatus);		
 		}
 		
 		private void simulateWork()

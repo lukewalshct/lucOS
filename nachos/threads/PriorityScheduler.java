@@ -172,28 +172,21 @@ public class PriorityScheduler extends Scheduler {
 	
 	private void updateActiveThreadEffectivePriority(ThreadState origNextThread)
 	{
-		if(!this.transferPriority) return;
-		
 		//get the active thread
 		ThreadState activeThreadState = this.activeThreadState;
+		
+		if(!this.transferPriority || activeThreadState == null) return;	
 		
 		//get the next thread in line
 		ThreadState firstInLineThreadState = this.waitQueue.peek();
 		
-		//if the next thread in line is equal to the "original" next thread, 
-		//no update is needed so just return
-		if(origNextThread == firstInLineThreadState || activeThreadState == null)
-		{
-			return;
-		}
-		else
-		{
-			//remove the original next thread from the active thread's donor list
-			if(origNextThread != null) activeThreadState.removeDonor(origNextThread);
-			
-			//add the new highest priority thread to 
-			activeThreadState.addDonor(firstInLineThreadState);
-		}
+		//remove the original next thread from the active thread's donor list
+		if(origNextThread != null) activeThreadState.removeDonor(origNextThread);
+		
+		System.out.println("adding donor with priority = " + firstInLineThreadState.getEffectivePriority());
+		
+		//add the new highest priority thread to 
+		activeThreadState.addDonor(firstInLineThreadState);
 	}
 	
 	/**
@@ -242,6 +235,7 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void notifyPriorityUpdate(ThreadState threadState)
 	{
+		//remove the thread and reinsert it into the queue
 		this.waitQueue.remove(threadState);
 		
 		this.waitQueue.add(threadState);
