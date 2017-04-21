@@ -17,7 +17,7 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		PriorityScheduler scheduler = (PriorityScheduler) ThreadedKernel.scheduler;
 		
-		runLockTest1(scheduler, 20);
+		//runLockTest1(scheduler, 20);
 		
 		runLockTest2(scheduler);
 		
@@ -114,6 +114,8 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		public void GetLock()
 		{				
+			System.out.println("Thread #" + _threadNum + " waiting for lock");
+			
 			_lock.acquire();			
 			
 			boolean intStatus = Machine.interrupt().disable();

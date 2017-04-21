@@ -139,7 +139,7 @@ public class PriorityScheduler extends Scheduler {
 		this.waitQueue = new java.util.PriorityQueue<ThreadState>();
 	}
 
-	public void waitForAccess(KThread thread) {
+	public void waitForAccess(KThread thread) {		
 	    Lib.assertTrue(Machine.interrupt().disabled());
 	    getThreadState(thread).waitForAccess(this);
 	}
@@ -242,7 +242,9 @@ public class PriorityScheduler extends Scheduler {
 	 */
 	public void notifyPriorityUpdate(ThreadState threadState)
 	{
-		//TODO: implement
+		this.waitQueue.remove(threadState);
+		
+		this.waitQueue.add(threadState);
 	}
 	
 	/**
