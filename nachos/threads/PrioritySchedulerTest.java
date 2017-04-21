@@ -17,14 +17,16 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		PriorityScheduler scheduler = (PriorityScheduler) ThreadedKernel.scheduler;
 		
-		runLockTest(scheduler, 20);
+		runLockTest1(scheduler, 20);
+		
+		runLockTest2(scheduler);
 		
 		System.out.println("\n\nPriorityScheduler tests complete.\n");
 	}
 	
-	private void runLockTest(PriorityScheduler scheduler, int numThreads)
+	private void runLockTest1(PriorityScheduler scheduler, int numThreads)
 	{
-		System.out.println("entering lock test");
+		System.out.println("entering lock test 1");
 		
 		Lock lock = new Lock();
 		
@@ -50,7 +52,42 @@ public class PrioritySchedulerTest extends KernelTestBase {
 			joinThreads(testThreads);
 		}catch(Exception ex) {}
 		
-		System.out.println("exiting lock test");
+		System.out.println("exiting lock test 1");
+	}
+	
+	private void runLockTest2(PriorityScheduler scheduler)
+	{
+		System.out.println("\nentering lock test 2");
+		
+		Lock lock = new Lock();		
+				
+		//create three new low priority threads that will try to access lock
+		KThread t1 = new KThread(new TestThread(0, lock, 0));
+		KThread t2 = new KThread(new TestThread(1, lock, 0));
+		KThread t3 = new KThread(new TestThread(2, lock, 0));
+		
+		//fork low priority threads
+		t1.fork();
+		t2.fork();
+		t3.fork();
+		
+		//create high priority thread that will try to access lock
+		KThread t4 = new KThread(new TestThread(3, lock, 5));
+		
+		//run high priority thread (result is that it should donate its priority to 
+		//the low priority lock holding the thread)
+		t4.fork();
+		
+		//join on all threads
+		try{
+			t1.join();
+			t2.join();
+			t3.join();
+			t4.join();	
+		}catch(Exception ex) {}
+
+		
+		System.out.println("\nexiting lock test 2");
 	}
 	
 	private class TestThread implements Runnable
@@ -79,7 +116,13 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		{				
 			_lock.acquire();			
 			
-			System.out.println("Thread #" + _threadNum + " acquired lock. Priority is " + _priority);
+			boolean intStatus = Machine.interrupt().disable();
+	
+			System.out.println("Thread #" + _threadNum + 
+				" acquired lock. \nPriority is " + _priority + 
+				"\nEff priority is " + ThreadedKernel.scheduler.getEffectivePriority(KThread.currentThread()));
+			
+			Machine.interrupt().restore(intStatus);		
 			
 			simulateWork();
 			
