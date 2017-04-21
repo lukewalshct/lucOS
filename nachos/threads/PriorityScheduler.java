@@ -133,9 +133,6 @@ public class PriorityScheduler extends Scheduler {
 	//represents the thread that actively holds the resource (i.e. not on the queue)
 	private ThreadState activeThreadState;
 	
-	//represents the maximum effective priority of the queue
-	private int maxEffPriority;
-	
 	PriorityQueue(boolean transferPriority) {
 	    this.transferPriority = transferPriority;
 		
