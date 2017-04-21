@@ -131,8 +131,19 @@ public class PrioritySchedulerTest extends KernelTestBase {
 		
 		private void simulateWork()
 		{
-			for(int i = 0; i < 3; i++)
+			int numWork = 10;
+			
+			for(int i = 0; i < numWork; i++)
 			{
+				boolean intStatus = Machine.interrupt().disable();
+				
+				System.out.println("Thread #" + _threadNum + 
+				" doing work (round " + (i + 1) + " of " + numWork +")" +
+				"\nPriority is " + _priority + 
+				"\nEff priority is " + ThreadedKernel.scheduler.getEffectivePriority(KThread.currentThread()));
+				
+				Machine.interrupt().restore(intStatus);
+				
 				KThread.yield();
 			}
 		}
