@@ -134,9 +134,7 @@ public class PriorityScheduler extends Scheduler {
 	private ThreadState activeThreadState;
 	
 	PriorityQueue(boolean transferPriority) {
-	    this.transferPriority = transferPriority;
-		
-		int numPriorities = (priorityMaximum - priorityMinimum) + 1;
+	    this.transferPriority = transferPriority;			
 
 		this.waitQueue = new java.util.PriorityQueue<ThreadState>();
 	}
@@ -210,32 +208,31 @@ public class PriorityScheduler extends Scheduler {
 	public KThread nextThread() {
 	    Lib.assertTrue(Machine.interrupt().disabled());
 		
-	    // implement me
-		int curPriority = priorityMaximum;
+		KThread nextThread = null;
 		
-		System.out.println("q length: " + this.waitQueue.size());
+		ThreadState activeThreadState = this.activeThreadState;
 		
-		System.out.println("t waiting: ");
+		ThreadState nextThreadState = this.waitQueue.poll();
 		
-		Iterator it = this.waitQueue.iterator();
-		
-		while (it.hasNext())
+		if (nextThreadState != null)
 		{
-			System.out.print(((ThreadState)it.next()).thread.getName() + " ");
+			nextThread = nextThreadState.thread;
 		}
 		
-		ThreadState ts = this.waitQueue.poll();
-		
-		if (ts != null)
+		//if priority donations are enabled, handle priority donation
+		if(this.transferPriority && nextThreadState != null)
 		{
-			KThread t = ts.thread;
-			
-			System.out.println("\nnext up: " + t.getName());
+			//remove the 'original' next thread from the active thread's donor list
+			if(activeThreadState != null )
+			{
+				activeThreadState.removeDonor(nextThreadState);
+			}
 
-			return t;
+			//add the 'new' next thread to the 'new' active thread's donor list
+			nextThreadState.addDonor(this.waitQueue.peek());
 		}
 		
-		return null;
+		return nextThread;
 	}
 	
 	/**
@@ -331,6 +328,8 @@ public class PriorityScheduler extends Scheduler {
 
 	protected void addDonor(ThreadState threadState)
 	{
+		if(threadState == null) return;
+		
 		this.donorThreads.add(threadState);			
 		
 		updateEffectivePriority();
