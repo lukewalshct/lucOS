@@ -8,7 +8,7 @@ Special thanks to professor John Kubiatowicz and the University of Berkeley for 
 
 ## Status
 
-LucOS is currently in Phase 1 of the following general phases of devlopment:
+LucOS is currently in Phase 2 of the following general phases of devlopment:
 
 1. Implement Threading
 2. Implement Multiprogramming
