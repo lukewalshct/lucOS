@@ -12,7 +12,7 @@ public class AlarmTest {
 
 	public void TestWaitUntil()
 	{
-		Alarm alarm = new Alarm();
+		Alarm alarm = ThreadedKernel.alarm;
 		
 		KThread t1 = new KThread(new Runnable() { 
 			public void run() { AssertWaitTimeIsCorrect(alarm, 100000); } 
