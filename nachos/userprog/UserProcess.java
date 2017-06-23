@@ -345,6 +345,21 @@ public class UserProcess {
 	Lib.assertNotReached("Machine.halt() did not halt machine!");
 	return 0;
     }
+    
+    
+    private int handleCreate()
+    {
+    	Lib.debug('s', "Handling create syscall...");
+    	
+    	return -1;
+    }
+    
+    private int handleExit()
+    {
+    	Lib.debug('s', "Handling exit syscall...");
+    	
+    	return 0;
+    }
 
 
     private static final int
@@ -391,7 +406,10 @@ public class UserProcess {
 	switch (syscall) {
 	case syscallHalt:
 	    return handleHalt();
-
+	case syscallCreate:
+		return handleCreate();
+	case syscallExit:
+		return handleExit();
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
