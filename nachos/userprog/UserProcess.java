@@ -367,6 +367,20 @@ public class UserProcess {
     	
     	return -1;
     }
+    
+    private int handleWrite(int a0, int a1, int a2)
+    {
+    	String s = readVirtualMemoryString(a1, a2);
+    	
+    	byte[] sBytes = s.getBytes();
+    	
+    	if(a2 > sBytes.length) return -1;
+    	
+    	for(int i = 0; i < a2; i++)
+    		UserKernel.console.writeByte(sBytes[i]);
+    	
+    	return a2;
+    }
 
 
     private static final int
@@ -420,7 +434,7 @@ public class UserProcess {
 	case syscallOpen:
 		return handleOpen();
 	case syscallWrite:
-		return -1;
+		return handleWrite(a0, a1, a2);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
