@@ -349,16 +349,23 @@ public class UserProcess {
     
     private int handleCreate()
     {
-    	Lib.debug('s', "Handling create syscall...");
+    	Lib.debug('s', "UserProcess handling create syscall...");
     	
     	return -1;
     }
     
     private int handleExit()
     {
-    	Lib.debug('s', "Handling exit syscall...");
+    	Lib.debug('s', "UserProcess handling exit syscall...");
     	
     	return 0;
+    }
+    
+    private int handleOpen()
+    {
+    	Lib.debug('s', "UserProcess handling open...");
+    	
+    	return -1;
     }
 
 
@@ -410,6 +417,10 @@ public class UserProcess {
 		return handleCreate();
 	case syscallExit:
 		return handleExit();
+	case syscallOpen:
+		return handleOpen();
+	case syscallWrite:
+		return -1;
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
