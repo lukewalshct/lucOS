@@ -21,6 +21,13 @@ import java.io.EOFException;
 public class UserProcess {
 	
 	private final int MAX_FILE_NAME_BYTES = 256;
+	
+	private final int MAX_OPEN_FILES = 16;
+	
+	private int numOpenFiles;
+	
+	private OpenFile[] openFiles;
+	
     /**
      * Allocate a new process.
      */
@@ -29,6 +36,7 @@ public class UserProcess {
 	pageTable = new TranslationEntry[numPhysPages];
 	for (int i=0; i<numPhysPages; i++)
 	    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+	openFiles = new OpenFile[MAX_OPEN_FILES];
     }
     
     /**
@@ -358,11 +366,43 @@ public class UserProcess {
     	
     	if(fileName == null || fileName.length() == 0) return -1;
     	
+    	//if file already exists, return that file handle
+    	int fileHandle = open(fileName);
+    	
+    	if(fileHandle != -1) return fileHandle;
+    	
+    	//file doesn't exist so let's create it
     	FileSystem fileSys = Machine.stubFileSystem();
     	
-    	fileSys.open(fileName, true);
+    	OpenFile file = fileSys.open(fileName, true);
     	
-    	return -1;
+    	if(file == null) return -1;
+    	
+    	fileHandle = setOpenFile(file);
+    	
+    	Lib.debug('s', "File successfully created; handle: " + fileHandle);
+    	
+    	return fileHandle;   	
+    }
+    
+    private int setOpenFile(OpenFile fileToSet)
+    {    	
+    	if(numOpenFiles == MAX_OPEN_FILES) return -1;
+    	   	
+    	numOpenFiles++;
+    	
+    	for(int i = 0; i < MAX_OPEN_FILES; i++)
+    	{
+    		if(openFiles[i] == null)
+    		{
+    			openFiles[i] = fileToSet;
+    			
+    			return i;
+    		}
+    	}
+    	
+    	//all open file slots are full; return error
+    	return -1;   	    	
     }
     
     private int handleExit()
@@ -376,6 +416,11 @@ public class UserProcess {
     {    	
     	Lib.debug('s', "UserProcess handling open...");
     	
+    	return -1;
+    }
+    
+    private int open(String fileName)
+    {
     	return -1;
     }
     
