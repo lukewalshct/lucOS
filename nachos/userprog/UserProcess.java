@@ -358,6 +358,10 @@ public class UserProcess {
     	
     	if(fileName == null || fileName.length() == 0) return -1;
     	
+    	FileSystem fileSys = Machine.stubFileSystem();
+    	
+    	fileSys.open(fileName, true);
+    	
     	return -1;
     }
     

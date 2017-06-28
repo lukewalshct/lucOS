@@ -7,7 +7,7 @@
 
 int main()
 {
-    creat("test1");
+    creat("test1.txt");
 } 
 
 
