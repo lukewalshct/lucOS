@@ -47,6 +47,9 @@ public class ThreadedKernel extends Kernel {
      */	
     public void selfTest() {
 	
+    //if debug flag to skip tests was enabled, skip tests
+    if(Lib.test('x')) return;
+    
     if(scheduler instanceof PriorityScheduler)
 	{
 
