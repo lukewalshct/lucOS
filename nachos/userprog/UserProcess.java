@@ -368,18 +368,18 @@ public class UserProcess {
     	return -1;
     }
     
-    private int handleWrite(int a0, int a1, int a2)
+    private int handleWrite(int fHandle, int bufferVirtualAddress, int size)
     {
-    	String s = readVirtualMemoryString(a1, a2);
+    	String s = readVirtualMemoryString(bufferVirtualAddress, size);
     	
     	byte[] sBytes = s.getBytes();
     	
-    	if(a2 > sBytes.length) return -1;
+    	if(size > sBytes.length) return -1;
     	
-    	for(int i = 0; i < a2; i++)
+    	for(int i = 0; i < size; i++)
     		UserKernel.console.writeByte(sBytes[i]);
     	
-    	return a2;
+    	return size;
     }
 
 

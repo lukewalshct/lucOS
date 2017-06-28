@@ -12,7 +12,7 @@ int main()
    
    printf("user program opening file %s ...", *fName);
 
-   int fileHandle = open("testFile1.txt");
+   int fileHandle = open(fName);
 
    printf("%s opened with file handle %d", *fName, fileHandle);
 
