@@ -19,6 +19,8 @@ import java.io.EOFException;
  * @see	nachos.network.NetProcess
  */
 public class UserProcess {
+	
+	private final int MAX_FILE_NAME_BYTES = 256;
     /**
      * Allocate a new process.
      */
@@ -347,22 +349,27 @@ public class UserProcess {
     }
     
     
-    private int handleCreate()
+    private int handleCreate(int pathNameVAddress)
     {
     	Lib.debug('s', "UserProcess handling create syscall...");
+    	
+    	String fileName =  readVirtualMemoryString(pathNameVAddress, 
+    			MAX_FILE_NAME_BYTES);
+    	
+    	if(fileName == null || fileName.length() == 0) return -1;
     	
     	return -1;
     }
     
     private int handleExit()
-    {
+    {    		
     	Lib.debug('s', "UserProcess handling exit syscall...");
     	
     	return 0;
     }
     
     private int handleOpen()
-    {
+    {    	
     	Lib.debug('s', "UserProcess handling open...");
     	
     	return -1;
@@ -428,7 +435,7 @@ public class UserProcess {
 	case syscallHalt:
 	    return handleHalt();
 	case syscallCreate:
-		return handleCreate();
+		return handleCreate(a0);
 	case syscallExit:
 		return handleExit();
 	case syscallOpen:
