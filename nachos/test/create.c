@@ -5,9 +5,35 @@
 
 #include "syscall.h"
 
+int numFilesToCreate = 5;
+
+void testCreate();
+
 int main()
 {
-    creat("test1.txt");
+    printf("Initialize creat() syscall tests...");
+
+    printf("Attempting to create %d files simultaneously");
+
+    testCreate();
+
 } 
+
+void testCreate()
+{
+    int i;
+
+    for(i = 0; i < numFilesToCreate; i++)
+    {
+        char fName[256];
+ 
+        sprintf(fName, "cTest_%d.txt", i);
+
+        creat(fName);
+    }
+
+}
+
+
 
 
