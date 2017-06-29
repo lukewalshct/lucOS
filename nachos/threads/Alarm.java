@@ -54,9 +54,7 @@ public class Alarm {
     		threadToWake.WaitingThread.ready();
     	}
     	
-    	_queueLock.release();
-    	
-    	Machine.interrupt().enable();
+    	_queueLock.release();   	    	
     	
     	//yield current thread
     	KThread.currentThread().yield();
@@ -78,6 +76,8 @@ public class Alarm {
      */
     public void waitUntil(long x) {
     	
+    	Machine.interrupt().disable();
+    	
     	_queueLock.acquire();   	
     	
     	KThread curThread = KThread.currentThread();
@@ -90,9 +90,7 @@ public class Alarm {
     	//add thread to queue waiting for timer interrupt
     	_waitQueue.add(threadToWait);
     	
-    	_queueLock.release();
-    	
-    	Machine.interrupt().disable();
+    	_queueLock.release();   	    	
     	
     	//sleep thread - will be woken by timer interrupt
     	KThread.sleep();
