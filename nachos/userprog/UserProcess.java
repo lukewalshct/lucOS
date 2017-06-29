@@ -367,7 +367,7 @@ public class UserProcess {
     	if(fileName == null || fileName.length() == 0) return -1;
     	
     	//if file already exists, return that file handle
-    	int fileHandle = open(fileName);
+    	int fileHandle = getOpenFile(fileName.trim());
     	
     	if(fileHandle != -1) return fileHandle;
     	
@@ -419,8 +419,18 @@ public class UserProcess {
     	return -1;
     }
     
-    private int open(String fileName)
+    private int getOpenFile(String fileName)
     {
+    	//check if process already has the file open
+    	for(int i = 0; i < MAX_OPEN_FILES; i++)
+		{
+			OpenFile file = openFiles[i];
+			
+			//if the file names match, return the file handle
+			if(file != null && file.getName().trim() == fileName.trim())
+				return i;
+		}
+    	//the file isn't open already
     	return -1;
     }
     
