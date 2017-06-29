@@ -5,7 +5,7 @@
 
 #include "syscall.h"
 
-int numFilesToCreate = 5;
+int numFilesToCreate = 20;
 
 void testCreate();
 
