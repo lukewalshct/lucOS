@@ -361,28 +361,7 @@ public class UserProcess {
     {
     	Lib.debug('s', "UserProcess handling create syscall...");
     	
-    	String fileName =  readVirtualMemoryString(pathNameVAddress, 
-    			MAX_FILE_NAME_BYTES);
-    	
-    	if(fileName == null || fileName.length() == 0) return -1;
-    	
-    	//if file already exists, return that file handle
-    	int fileHandle = getOpenFile(fileName.trim());
-    	
-    	if(fileHandle != -1) return fileHandle;
-    	
-    	//file doesn't exist so let's create it
-    	FileSystem fileSys = Machine.stubFileSystem();
-    	
-    	OpenFile file = fileSys.open(fileName, true);
-    	
-    	if(file == null) return -1;
-    	
-    	fileHandle = setOpenFile(file);
-    	
-    	Lib.debug('s', "File successfully opened; handle: " + fileHandle);
-    	
-    	return fileHandle;   	
+    	return handleOpen(pathNameVAddress, true);    	
     }
     
     private int setOpenFile(OpenFile fileToSet)
@@ -412,11 +391,32 @@ public class UserProcess {
     	return 0;
     }
     
-    private int handleOpen()
+    private int handleOpen(int pathNameVAddress, boolean createIfNotExists)
     {    	
     	Lib.debug('s', "UserProcess handling open...");
     	
-    	return -1;
+    	String fileName =  readVirtualMemoryString(pathNameVAddress, 
+    			MAX_FILE_NAME_BYTES);
+    	
+    	if(fileName == null || fileName.length() == 0) return -1;
+    	
+    	//if file already exists, return that file handle
+    	int fileHandle = getOpenFile(fileName.trim());
+    	
+    	if(fileHandle != -1) return fileHandle;
+    	
+    	//process does not have file open; see if exists on file system
+    	FileSystem fileSys = Machine.stubFileSystem();
+    	
+    	OpenFile file = fileSys.open(fileName, createIfNotExists);
+    	
+    	if(file == null) return -1;
+    	
+    	fileHandle = setOpenFile(file);
+    	
+    	Lib.debug('s', "File successfully opened; handle: " + fileHandle);
+    	
+    	return fileHandle;   	
     }
     
     private int getOpenFile(String fileName)
@@ -509,7 +509,7 @@ public class UserProcess {
 	case syscallExit:
 		return handleExit();
 	case syscallOpen:
-		return handleOpen();
+		return handleOpen(a0, false);
 	case syscallWrite:
 		return handleWrite(a0, a1, a2);
 	case syscallClose:
