@@ -23,6 +23,7 @@ void testCreate()
 {
     int i;
 
+    //create files
     for(i = 0; i < numFilesToCreate; i++)
     {
         char fName[256];
@@ -30,6 +31,14 @@ void testCreate()
         sprintf(fName, "cTest_%d.txt", i);
 
         creat(fName);
+    }
+
+    //close files
+    for(i = 0; i < numFilesToCreate; i++)
+    {
+        int result = close(i);
+
+        printf("Attempted to close file %d, result: %d\n", i, result);  
     }
 
 }

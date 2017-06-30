@@ -380,7 +380,7 @@ public class UserProcess {
     	
     	fileHandle = setOpenFile(file);
     	
-    	Lib.debug('s', "File successfully created; handle: " + fileHandle);
+    	Lib.debug('s', "File successfully opened; handle: " + fileHandle);
     	
     	return fileHandle;   	
     }
@@ -448,7 +448,18 @@ public class UserProcess {
     	return size;
     }
 
-
+    private int handleClose(int fileDescriptor)
+    {
+    	if(fileDescriptor >= MAX_OPEN_FILES ||
+    			openFiles[fileDescriptor] == null) return -1;
+    	
+    	//TODO: need to add clearing write buffers
+    	
+    	openFiles[fileDescriptor].close();
+    	
+    	return 0;    	
+    }
+    
     private static final int
         syscallHalt = 0,
 	syscallExit = 1,
@@ -501,6 +512,8 @@ public class UserProcess {
 		return handleOpen();
 	case syscallWrite:
 		return handleWrite(a0, a1, a2);
+	case syscallClose:
+		return handleClose(a0);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
