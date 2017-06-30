@@ -11,8 +11,12 @@ int main()
 {
     int fHandle = open(fName);
 
-    if(fHandle != -1)
+    if(fHandle == -1)
     {
-
+        printf("File does not exist");
+    }
+    else
+    {
+       //test read
     }
 }
