@@ -5,24 +5,34 @@
 
 #include "syscall.h"
 
-char *fName = "rTest1.txt";
+int testRead(char* fName, char* buffer, int size);
 
 int main()
+{
+    char buffer[100];
+
+    testRead("rTest1.txt", buffer, 10);
+}
+
+int testRead(char *fName, char* buffer, int size)
 {
     int fHandle = open(fName);
 
     if(fHandle == -1)
     {
         printf("File does not exist");
+
+        return -1;
     }
     else
     {
-        char buffer[100];
-
-        int readSuccess = read(fHandle, buffer, 10);
+        int bytesRead = read(fHandle, buffer, 10);
 
         close(fHandle);
 
         printf(buffer);
+
+        return bytesRead;
     }
+
 }
