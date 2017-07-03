@@ -450,7 +450,7 @@ public class UserProcess {
 
     private int handleClose(int fileDescriptor)
     {
-    	if(fileDescriptor >= MAX_OPEN_FILES ||
+    	if(fileDescriptor >= MAX_OPEN_FILES || fileDescriptor < 0 ||
     			openFiles[fileDescriptor] == null) return -1;
     	
     	//TODO: need to add clearing write buffers
@@ -458,6 +458,23 @@ public class UserProcess {
     	openFiles[fileDescriptor].close();
     	
     	return 0;    	
+    }
+    
+    private int handleRead(int fileDescriptor, int bufferVAddr, int size)
+    {
+    	if(size < 0 || fileDescriptor < 0 || 
+    			openFiles[fileDescriptor] == null) return -1;
+    	
+    	OpenFile file = openFiles[fileDescriptor];
+    	
+    	byte[] readBuffer = new byte[size];
+    	
+    	int bytesRead = file.read(0, readBuffer, 0, size);
+    	
+    	//need to add protections for reading/writing size limits    	
+    	writeVirtualMemory(bufferVAddr, readBuffer);
+    	
+    	return bytesRead;
     }
     
     private static final int
@@ -514,6 +531,8 @@ public class UserProcess {
 		return handleWrite(a0, a1, a2);
 	case syscallClose:
 		return handleClose(a0);
+	case syscallRead:
+		return handleRead(a0, a1, a2);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);

@@ -17,6 +17,12 @@ int main()
     }
     else
     {
-       //test read
+        char buffer[100];
+
+        int readSuccess = read(fHandle, buffer, 10);
+
+        close(fHandle);
+
+        printf(buffer);
     }
 }
