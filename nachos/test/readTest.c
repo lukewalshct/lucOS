@@ -5,7 +5,7 @@
 
 #include "syscall.h"
 
-int testRead(char* fName, int bufferLen, int size, char* expected);
+int testRead(char* fName, char* buffer, int size, char* expected);
 
 void verifyResult(char* buffer, char* expected, int bytesRead);
 void throwReadError();
@@ -13,22 +13,24 @@ void throwReadError();
 int main()
 {
     //normal read from a file
-    testRead("rTest1.txt", 10, 10, "0123456789");
+    char buff1[10];
+    testRead("rTest1.txt", buff1, 10, "0123456789");
 
     //read from a file w/text, but size 0 - should read 0
-    testRead("rTest1.txt", 0, 0, ""); 
+    char buff2[0];
+    testRead("rTest1.txt", buff2, 0, ""); 
 
     //read from file w/ no text - shoud read 0
-    testRead("rTest2.txt", 10, 10, "");
+    char buff3[10];
+    testRead("rTest2.txt", buff3, 10, "");
 
     //read from file buffer smaller than read size - should
-    testRead("rTest1.txt", 5, 10, "0123456789");
+    char buff4[5];
+    testRead("rTest1.txt", buff4, 10, "0123456789");
 }
 
-int testRead(char *fName, int bufferLen, int size, char* expected)
+int testRead(char *fName, char *buffer, int size, char* expected)
 {
-    char buffer[bufferLen];
-
     int fHandle = open(fName);
 
     if(fHandle == -1)
