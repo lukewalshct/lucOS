@@ -457,6 +457,8 @@ public class UserProcess {
     	
     	openFiles[fileDescriptor].close();
     	
+    	openFiles[fileDescriptor] = null;
+    	
     	return 0;    	
     }
     
