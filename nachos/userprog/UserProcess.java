@@ -37,6 +37,10 @@ public class UserProcess {
 	for (int i=0; i<numPhysPages; i++)
 	    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
 	openFiles = new OpenFile[MAX_OPEN_FILES];
+	//setup standard I/O to synchronzied console
+	Lib.assertTrue(MAX_OPEN_FILES >= 2);
+	openFiles[0] = UserKernel.console.openForReading();
+	openFiles[1] = UserKernel.console.openForWriting();
     }
     
     /**
@@ -434,6 +438,13 @@ public class UserProcess {
     	return -1;
     }
     
+    private OpenFile getOpenFile(int fileDescriptor)
+    {
+    	if(fileDescriptor >= MAX_OPEN_FILES) return null;
+    	
+    	return openFiles[fileDescriptor];
+    }
+    
     private int handleWrite(int fHandle, int bufferVirtualAddress, int size)
     {
     	//TODO: add constraint/check for max size?
@@ -443,10 +454,12 @@ public class UserProcess {
     			
         readVirtualMemory(bufferVirtualAddress, bytes);   	    	
     	
-    	for(int i = 0; i < size; i++)
-    		UserKernel.console.writeByte(bytes[i]);
-    	
-    	return size;
+        //get open file
+        OpenFile file = getOpenFile(fHandle);
+        
+        if(file == null) return -1;
+        
+        return file.write(bytes, 0, size);
     }
 
     private int handleClose(int fileDescriptor)
