@@ -436,14 +436,15 @@ public class UserProcess {
     
     private int handleWrite(int fHandle, int bufferVirtualAddress, int size)
     {
-    	String s = readVirtualMemoryString(bufferVirtualAddress, size);
+    	//TODO: add constraint/check for max size?
+    	if(size < 0) return -1;
     	
-    	byte[] sBytes = s.getBytes();
-    	
-    	if(size > sBytes.length) return -1;
+    	byte[] bytes = new byte[size]; 
+    			
+        readVirtualMemory(bufferVirtualAddress, bytes);   	    	
     	
     	for(int i = 0; i < size; i++)
-    		UserKernel.console.writeByte(sBytes[i]);
+    		UserKernel.console.writeByte(bytes[i]);
     	
     	return size;
     }
