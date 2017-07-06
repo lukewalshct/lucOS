@@ -14,9 +14,13 @@ int main()
 
     if(fHandle == -1) writeError();
 
-    char *buffer = "Test text to write";
+    char *buffer1 = "Test text to write";
 
-    write(fHandle, buffer, 15);
+    write(fHandle, buffer1, 15);
+
+    char *buffer2 = "  next test text";
+
+    write(fHandle, buffer2, strlen(buffer2));
     
     close(fHandle);
 }
