@@ -493,6 +493,11 @@ public class UserProcess {
     	return bytesRead;
     }
     
+    private int handleUnlink(int pathNameVAddress)
+    {
+    	return -1;
+    }
+    
     private static final int
         syscallHalt = 0,
 	syscallExit = 1,
@@ -549,6 +554,8 @@ public class UserProcess {
 		return handleClose(a0);
 	case syscallRead:
 		return handleRead(a0, a1, a2);
+	case syscallUnlink:
+		return handleUnlink(a0);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
