@@ -405,7 +405,7 @@ public class UserProcess {
     	if(fileName == null || fileName.length() == 0) return -1;
     	
     	//if file already exists, return that file handle
-    	int fileHandle = getOpenFile(fileName.trim());
+    	int fileHandle = getOpenFileHandle(fileName.trim());
     	
     	if(fileHandle != -1) return fileHandle;
     	
@@ -423,7 +423,7 @@ public class UserProcess {
     	return fileHandle;   	
     }
     
-    private int getOpenFile(String fileName)
+    private int getOpenFileHandle(String fileName)
     {
     	//check if process already has the file open
     	for(int i = 0; i < MAX_OPEN_FILES; i++)
@@ -440,7 +440,8 @@ public class UserProcess {
     
     private OpenFile getOpenFile(int fileDescriptor)
     {
-    	if(fileDescriptor >= MAX_OPEN_FILES) return null;
+    	if(fileDescriptor >= MAX_OPEN_FILES ||
+    			fileDescriptor < 0) return null;
     	
     	return openFiles[fileDescriptor];
     }
@@ -495,7 +496,33 @@ public class UserProcess {
     
     private int handleUnlink(int pathNameVAddress)
     {
-    	return -1;
+    	Lib.debug('s', "UserProcess handling unlink...");
+    	
+    	String fileName =  readVirtualMemoryString(pathNameVAddress, 
+    			MAX_FILE_NAME_BYTES);
+    	
+    	if(fileName == null || fileName.length() == 0) return -1;
+    	
+    	int fileHandle = getOpenFileHandle(fileName.trim());
+    	
+    	OpenFile file = getOpenFile(fileHandle);
+    	
+    	FileSystem fileSys = Machine.stubFileSystem(); 
+    	
+    	//if the file doesn't exist, return -1
+    	if(file == null && (file = 
+    			fileSys.open(fileName, false)) == null)
+    	{
+    		Lib.debug('s', "File to unlink does not exist");
+    		
+    		return -1;    	    	
+    	}
+    	
+    	boolean unlinked = fileSys.remove(fileName.trim());
+    	
+    	Lib.debug('s', "Unlink success: " + (unlinked ? "YES" : "FAILED"));
+    	
+    	return unlinked ? 0 : -1;
     }
     
     private static final int
