@@ -41,6 +41,7 @@ public class UserProcess {
 	Lib.assertTrue(MAX_OPEN_FILES >= 2);
 	openFiles[0] = UserKernel.console.openForReading();
 	openFiles[1] = UserKernel.console.openForWriting();
+	numOpenFiles += 2;
     }
     
     /**
