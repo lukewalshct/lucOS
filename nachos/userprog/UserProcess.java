@@ -28,10 +28,14 @@ public class UserProcess {
 	
 	private OpenFile[] openFiles;
 	
+	//represents this process' virtual memory
+	private byte[] vMemory;
+	
     /**
      * Allocate a new process.
      */
     public UserProcess() {
+    this.vMemory = Machine.processor().getMemory();
 	int numPhysPages = Machine.processor().getNumPhysPages();
 	pageTable = new TranslationEntry[numPhysPages];
 	for (int i=0; i<numPhysPages; i++)
@@ -145,15 +149,13 @@ public class UserProcess {
     public int readVirtualMemory(int vaddr, byte[] data, int offset,
 				 int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
-
-	byte[] memory = Machine.processor().getMemory();
 	
 	// for now, just assume that virtual addresses equal physical addresses
-	if (vaddr < 0 || vaddr >= memory.length)
+	if (vaddr < 0 || vaddr >= this.vMemory.length)
 	    return 0;
 
-	int amount = Math.min(length, memory.length-vaddr);
-	System.arraycopy(memory, vaddr, data, offset, amount);
+	int amount = Math.min(length, this.vMemory.length-vaddr);
+	System.arraycopy(this.vMemory, vaddr, data, offset, amount);
 
 	return amount;
     }
@@ -188,15 +190,13 @@ public class UserProcess {
     public int writeVirtualMemory(int vaddr, byte[] data, int offset,
 				  int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
-
-	byte[] memory = Machine.processor().getMemory();
 	
 	// for now, just assume that virtual addresses equal physical addresses
-	if (vaddr < 0 || vaddr >= memory.length)
+	if (vaddr < 0 || vaddr >= this.vMemory.length)
 	    return 0;
 
-	int amount = Math.min(length, memory.length-vaddr);
-	System.arraycopy(data, offset, memory, vaddr, amount);
+	int amount = Math.min(length, this.vMemory.length-vaddr);
+	System.arraycopy(data, offset, this.vMemory, vaddr, amount);
 
 	return amount;
     }
