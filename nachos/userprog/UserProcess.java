@@ -29,8 +29,8 @@ public class UserProcess {
 	
 	private OpenFile[] openFiles;
 	
-	//represents this process' virtual memory
-	private MemNode[] physMemAccessible;	
+	//represents the phsyical memory pages to which this process' virtual memory maps	
+	private MemNode[] physMemPages;	
 	
 	private byte[] vMemory;
 
@@ -56,16 +56,26 @@ public class UserProcess {
      */
     public UserProcess() 
     {
-	    setPhysMemoryAccessible();
+	    setPhysMemPages();
 	    
 	    this.vMemory = Machine.processor().getMemory();
 	    
 		int numPhysPages = Machine.processor().getNumPhysPages();
 		
-		pageTable = new TranslationEntry[numPhysPages];
+		//pageTable = new TranslationEntry[numPhysPages];
 		
-		for (int i=0; i<numPhysPages; i++)
-		    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+		pageTable = new TranslationEntry[this.physMemPages.length];
+		
+		//for (int i=0; i<numPhysPages; i++)
+			//pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+
+		
+		for (int i=0; i<this.physMemPages.length; i++)
+		{
+			int physPageNum = this.physMemPages[i].endIndex / Machine.processor().pageSize; 
+					
+			pageTable[i] = new TranslationEntry(i,physPageNum, true,false,false,false);
+		}		    
 		
 		openFiles = new OpenFile[MAX_OPEN_FILES];
 		
@@ -79,11 +89,11 @@ public class UserProcess {
 		numOpenFiles += 2;
 	}
     
-    private void setPhysMemoryAccessible()
+    private void setPhysMemPages()
     {    	
     	//create a "blank" virtual address space of
     	//this.stackPages number of pages
-    	this.physMemAccessible = new MemNode[this.stackPages];
+    	this.physMemPages = new MemNode[this.stackPages];
     	
     	for(int i = 0; i < this.stackPages; i++)
     	{
@@ -91,7 +101,7 @@ public class UserProcess {
     		
     		if(memNode == null) { /*handle not enough mem exception*/ };
     		
-    		this.physMemAccessible[i] = memNode;
+    		this.physMemPages[i] = memNode;
     	}   	    	
     }
     
@@ -247,6 +257,16 @@ public class UserProcess {
 
 	return amount;
     }
+    
+    private int translateToPPN(int vpn)
+    {
+    	for(int i = 0; i < pageTable.length; i++)
+    	{
+    		if(pageTable[i].vpn == vpn) return pageTable[i].ppn;
+    	}
+    	
+    	return -1;
+    }
 
     /**
      * Load the executable with the specified name into this process, and
@@ -361,6 +381,8 @@ public class UserProcess {
 		int vpn = section.getFirstVPN()+i;
 
 		// for now, just assume virtual addresses=physical addresses
+		int ppn = translateToPPN(vpn);
+		
 		section.loadPage(i, vpn);
 	    }
 	}
