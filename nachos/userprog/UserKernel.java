@@ -3,11 +3,15 @@ package nachos.userprog;
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
+import java.util.*;
 
 /**
  * A kernel that can support multiple user processes.
  */
 public class UserKernel extends ThreadedKernel {
+	
+	private List<FreeMemNode> freeMemory;
+	
     /**
      * Allocate a new user kernel.
      */
@@ -27,8 +31,35 @@ public class UserKernel extends ThreadedKernel {
 	Machine.processor().setExceptionHandler(new Runnable() {
 		public void run() { exceptionHandler(); }
 	    });
+	
+	initializeFreeMemory();
+	
     }
 
+    /**
+     * Sets up globally accessible linked list of free physical memory
+     * for user processes to "claim" when they are initizlized.
+     */
+    private void initializeFreeMemory()
+    {
+    	int pageSize = Machine.processor().pageSize;   	
+    	
+    	byte [] mainMemory = Machine.processor().getMemory();
+    
+    	this.freeMemory = new LinkedList<FreeMemNode>();
+    	
+    	for(int i = 0; i < mainMemory.length; i += pageSize)
+    	{
+    		FreeMemNode memNode = new FreeMemNode();
+    		
+    		memNode.startIndex = i;
+    		
+    		memNode.endIndex = i + pageSize - 1;
+    		
+    		this.freeMemory.add(memNode);
+    	}
+    }
+    
     /**
      * Test the console device.
      */	
@@ -112,4 +143,11 @@ public class UserKernel extends ThreadedKernel {
 
     // dummy variables to make javac smarter
     private static Coff dummy1 = null;
+    
+    public class FreeMemNode
+    {
+    	public int startIndex;
+    	
+    	public int endIndex;
+    }
 }
