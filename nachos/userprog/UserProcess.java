@@ -3,6 +3,7 @@ package nachos.userprog;
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
+import nachos.userprog.UserKernel.MemNode;
 
 import java.io.EOFException;
 
@@ -29,7 +30,9 @@ public class UserProcess {
 	private OpenFile[] openFiles;
 	
 	//represents this process' virtual memory
-	private byte[] vMemory;	
+	private MemNode[] physMemAccessible;	
+	
+	private byte[] vMemory;
 
     /** The program being run by this process. */
     protected Coff coff;
@@ -53,7 +56,9 @@ public class UserProcess {
      */
     public UserProcess() 
     {
-	    this.vMemory = setVirtualAddressSpace();
+	    setPhysMemoryAccessible();
+	    
+	    this.vMemory = Machine.processor().getMemory();
 	    
 		int numPhysPages = Machine.processor().getNumPhysPages();
 		
@@ -74,9 +79,20 @@ public class UserProcess {
 		numOpenFiles += 2;
 	}
     
-    private byte[] setVirtualAddressSpace()
+    private void setPhysMemoryAccessible()
     {    	
-    	return Machine.processor().getMemory();
+    	//create a "blank" virtual address space of
+    	//this.stackPages number of pages
+    	this.physMemAccessible = new MemNode[this.stackPages];
+    	
+    	for(int i = 0; i < this.stackPages; i++)
+    	{
+    		MemNode memNode = UserKernel.getNextFreeMemPage();
+    		
+    		if(memNode == null) { /*handle not enough mem exception*/ };
+    		
+    		this.physMemAccessible[i] = memNode;
+    	}   	    	
     }
     
     /**

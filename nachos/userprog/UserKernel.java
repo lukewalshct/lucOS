@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class UserKernel extends ThreadedKernel {
 	
-	private List<FreeMemNode> freeMemory;
+	private static List<MemNode> freeMemory;
 	
     /**
      * Allocate a new user kernel.
@@ -46,31 +46,31 @@ public class UserKernel extends ThreadedKernel {
     	
     	byte [] mainMemory = Machine.processor().getMemory();
     
-    	this.freeMemory = new LinkedList<FreeMemNode>();
+    	freeMemory = new LinkedList<MemNode>();
     	
     	for(int i = 0; i < mainMemory.length; i += pageSize)
     	{
-    		FreeMemNode memNode = new FreeMemNode();
+    		MemNode memNode = new MemNode();
     		
     		memNode.startIndex = i;
     		
     		memNode.endIndex = i + pageSize - 1;
     		
-    		this.freeMemory.add(memNode);
+    		freeMemory.add(memNode);
     	}
     }
     
     /**
      * Gets the next free memory page. This info is stored
-     * as indices of the main memory in the FreeMemNode class.
+     * as indices of the main memory in the MemNode class.
      * 
-     * @return the next FreeMemNode containing free page of memory indices
+     * @return the next MemNode containing free page of memory indices
      */
-    public FreeMemNode getNextFreeMemPage()
+    public static MemNode getNextFreeMemPage()
     {
-    	if(this.freeMemory.isEmpty()) return null;
+    	if(freeMemory.isEmpty()) return null;
     	
-    	return this.freeMemory.get(0);
+    	return freeMemory.remove(0);
     }
     
     /**
@@ -157,7 +157,7 @@ public class UserKernel extends ThreadedKernel {
     // dummy variables to make javac smarter
     private static Coff dummy1 = null;
     
-    public class FreeMemNode
+    public class MemNode
     {
     	public int startIndex;
     	
