@@ -29,23 +29,54 @@ public class UserProcess {
 	private OpenFile[] openFiles;
 	
 	//represents this process' virtual memory
-	private byte[] vMemory;
+	private byte[] vMemory;	
+
+    /** The program being run by this process. */
+    protected Coff coff;
+
+    /** This process's page table. */
+    protected TranslationEntry[] pageTable;
+    /** The number of contiguous pages occupied by the program. */
+    protected int numPages;
+
+    /** The number of pages in the program's stack. */
+    protected final int stackPages = 8;
+    
+    private int initialPC, initialSP;
+    private int argc, argv;
+	
+    private static final int pageSize = Processor.pageSize;
+    private static final char dbgProcess = 'a';
 	
     /**
      * Allocate a new process.
      */
-    public UserProcess() {
-    this.vMemory = Machine.processor().getMemory();
-	int numPhysPages = Machine.processor().getNumPhysPages();
-	pageTable = new TranslationEntry[numPhysPages];
-	for (int i=0; i<numPhysPages; i++)
-	    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
-	openFiles = new OpenFile[MAX_OPEN_FILES];
-	//setup standard I/O to synchronzied console
-	Lib.assertTrue(MAX_OPEN_FILES >= 2);
-	openFiles[0] = UserKernel.console.openForReading();
-	openFiles[1] = UserKernel.console.openForWriting();
-	numOpenFiles += 2;
+    public UserProcess() 
+    {
+	    this.vMemory = setVirtualAddressSpace();
+	    
+		int numPhysPages = Machine.processor().getNumPhysPages();
+		
+		pageTable = new TranslationEntry[numPhysPages];
+		
+		for (int i=0; i<numPhysPages; i++)
+		    pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
+		
+		openFiles = new OpenFile[MAX_OPEN_FILES];
+		
+		//setup standard I/O to synchronzied console
+		Lib.assertTrue(MAX_OPEN_FILES >= 2);
+		
+		openFiles[0] = UserKernel.console.openForReading();
+		
+		openFiles[1] = UserKernel.console.openForWriting();
+		
+		numOpenFiles += 2;
+	}
+    
+    private byte[] setVirtualAddressSpace()
+    {    	
+    	return Machine.processor().getMemory();
     }
     
     /**
@@ -622,20 +653,4 @@ public class UserProcess {
 	}
     }
 
-    /** The program being run by this process. */
-    protected Coff coff;
-
-    /** This process's page table. */
-    protected TranslationEntry[] pageTable;
-    /** The number of contiguous pages occupied by the program. */
-    protected int numPages;
-
-    /** The number of pages in the program's stack. */
-    protected final int stackPages = 8;
-    
-    private int initialPC, initialSP;
-    private int argc, argv;
-	
-    private static final int pageSize = Processor.pageSize;
-    private static final char dbgProcess = 'a';
 }
