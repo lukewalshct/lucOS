@@ -61,6 +61,19 @@ public class UserKernel extends ThreadedKernel {
     }
     
     /**
+     * Gets the next free memory page. This info is stored
+     * as indices of the main memory in the FreeMemNode class.
+     * 
+     * @return the next FreeMemNode containing free page of memory indices
+     */
+    public FreeMemNode getNextFreeMemPage()
+    {
+    	if(this.freeMemory.isEmpty()) return null;
+    	
+    	return this.freeMemory.get(0);
+    }
+    
+    /**
      * Test the console device.
      */	
     public void selfTest() {
