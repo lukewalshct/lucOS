@@ -55,27 +55,8 @@ public class UserProcess {
      * Allocate a new process.
      */
     public UserProcess() 
-    {
-	    setPhysMemPages();
-	    
-	    this.vMemory = Machine.processor().getMemory();
-	    
-		int numPhysPages = Machine.processor().getNumPhysPages();
-		
-		//pageTable = new TranslationEntry[numPhysPages];
-		
-		pageTable = new TranslationEntry[this.physMemPages.length];
-		
-		//for (int i=0; i<numPhysPages; i++)
-			//pageTable[i] = new TranslationEntry(i,i, true,false,false,false);
-
-		
-		for (int i=0; i<this.physMemPages.length; i++)
-		{
-			int physPageNum = this.physMemPages[i].endIndex / Machine.processor().pageSize; 
-					
-			pageTable[i] = new TranslationEntry(i,physPageNum, true,false,false,false);
-		}		    
+    {   
+	    this.vMemory = Machine.processor().getMemory();			    
 		
 		openFiles = new OpenFile[MAX_OPEN_FILES];
 		
@@ -89,13 +70,19 @@ public class UserProcess {
 		numOpenFiles += 2;
 	}
     
-    private void setPhysMemPages()
+    /**
+     * Allocates memory for this process up-front upon
+     * process creation. Includes space for the code data
+     * from the COFF sections and pages for a stack.
+     */
+    private void allocateMemory()
     {    	
-    	//create a "blank" virtual address space of
-    	//this.stackPages number of pages
-    	this.physMemPages = new MemNode[this.stackPages];
+    	if(this.numPages == 0) return;
     	
-    	for(int i = 0; i < this.stackPages; i++)
+    	//create a "blank" virtual address space of size numPages
+    	this.physMemPages = new MemNode[this.numPages];
+    	
+    	for(int i = 0; i < this.numPages; i++)
     	{
     		MemNode memNode = UserKernel.getNextFreeMemPage();
     		
@@ -103,6 +90,24 @@ public class UserProcess {
     		
     		this.physMemPages[i] = memNode;
     	}   	    	
+    	
+    	initializeTranslations();
+    }
+    
+    /**
+     * Sets up the translation page table that maps this
+     * process' virtual mermory page numbers to physical ones.
+     */
+    private void initializeTranslations()
+    {    			
+		pageTable = new TranslationEntry[this.numPages];
+		
+		for (int i=0; i<this.numPages; i++)
+		{
+			int physPageNum = this.physMemPages[i].endIndex / pageSize; 
+					
+			pageTable[i] = new TranslationEntry(i,physPageNum, true,false,false,false);
+		}	
     }
     
     /**
@@ -258,7 +263,7 @@ public class UserProcess {
 	return amount;
     }
     
-    private int translateToPPN(int vpn)
+    private int translateVPNToPPN(int vpn)
     {
     	for(int i = 0; i < pageTable.length; i++)
     	{
@@ -331,6 +336,8 @@ public class UserProcess {
 
 	// and finally reserve 1 page for arguments
 	numPages++;
+	
+	allocateMemory();
 
 	if (!loadSections())
 	    return false;
@@ -381,9 +388,9 @@ public class UserProcess {
 		int vpn = section.getFirstVPN()+i;
 
 		// for now, just assume virtual addresses=physical addresses
-		int ppn = translateToPPN(vpn);
+		int ppn = translateVPNToPPN(vpn);
 		
-		section.loadPage(i, vpn);
+		section.loadPage(i, ppn);
 	    }
 	}
 	
