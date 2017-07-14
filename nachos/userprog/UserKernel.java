@@ -12,6 +12,9 @@ public class UserKernel extends ThreadedKernel {
 	
 	private static List<MemNode> freeMemory;
 	
+	//a lock protecting access to free memory
+	private static Lock freeMemLock;
+	
     /**
      * Allocate a new user kernel.
      */
@@ -42,11 +45,16 @@ public class UserKernel extends ThreadedKernel {
      */
     private void initializeFreeMemory()
     {
+    	if(freeMemory != null) return;
+    	
     	int pageSize = Machine.processor().pageSize;   	
     	
     	byte [] mainMemory = Machine.processor().getMemory();
     
     	freeMemory = new LinkedList<MemNode>();
+    	
+    	//set up concurrency protections
+    	this.freeMemLock = new Lock();   	
     	
     	for(int i = 0; i < mainMemory.length; i += pageSize)
     	{
@@ -68,9 +76,25 @@ public class UserKernel extends ThreadedKernel {
      */
     public static MemNode getNextFreeMemPage()
     {
-    	if(freeMemory.isEmpty()) return null;
+    	MemNode result = null;
     	
-    	return freeMemory.remove(0);
+    	//enter critical section
+    	freeMemLock.acquire();
+    	
+    	try
+    	{    	
+    		if(!freeMemory.isEmpty())
+    		{
+    			result = freeMemory.remove(0);
+    		}   	
+    	}
+    	finally
+    	{
+        	//exit critical section
+        	freeMemLock.release();
+        	
+        	return result;
+    	}
     }
     
     /**
