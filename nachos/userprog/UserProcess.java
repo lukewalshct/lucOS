@@ -262,12 +262,15 @@ public class UserProcess {
 	
 	byte[] memory = Machine.processor().getMemory();
 	
+	int paddr = translateVAddrToPAdrr(vaddr);
+	
 	// for now, just assume that virtual addresses equal physical addresses
-	if (vaddr < 0 || vaddr >= memory.length)
+	if (paddr < 0 || paddr >= memory.length)
 	    return 0;
 
-	int amount = Math.min(length, memory.length-vaddr);
-	System.arraycopy(data, offset, memory, vaddr, amount);
+	int amount = Math.min(length, memory.length-paddr);
+	
+	System.arraycopy(data, offset, memory, paddr, amount);
 
 	return amount;
     }
