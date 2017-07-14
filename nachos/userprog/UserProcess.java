@@ -50,12 +50,14 @@ public class UserProcess {
 	
     private static final int pageSize = Processor.pageSize;
     private static final char dbgProcess = 'a';
+    
+    private static int globalProcessCount;
 	
     /**
      * Allocate a new process.
      */
     public UserProcess() 
-    {   
+    {     		
 	    this.vMemory = Machine.processor().getMemory();			    
 		
 		openFiles = new OpenFile[MAX_OPEN_FILES];
@@ -115,10 +117,15 @@ public class UserProcess {
      * is specified by the <tt>nachos.conf</tt> key
      * <tt>Kernel.processClassName</tt>.
      *
-     * @return	a new process of the correct class.
+     * @return	a new process of the correct class.    	
+    	//set up concurrency protections
+    	this.freeMemLock = new Lock();   
      */
     public static UserProcess newUserProcess() {
-	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());
+    	
+    	globalProcessCount++;
+	
+    	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());
     }
 
     /**
@@ -430,11 +437,16 @@ public class UserProcess {
      * Handle the halt() system call. 
      */
     private int handleHalt() {
-
-	Machine.halt();
-	
-	Lib.assertNotReached("Machine.halt() did not halt machine!");
-	return 0;
+    	
+    	//indicate error if this isn't called by the root process
+    	//(only root process can halt the machine)
+    	if(globalProcessCount != 1) return -1;
+    	
+		Machine.halt();
+		
+		Lib.assertNotReached("Machine.halt() did not halt machine!");
+		
+		return 0;
     }
     
     
