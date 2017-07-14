@@ -31,8 +31,6 @@ public class UserProcess {
 	
 	//represents the phsyical memory pages to which this process' virtual memory maps	
 	private MemNode[] physMemPages;	
-	
-	private byte[] vMemory;
 
     /** The program being run by this process. */
     protected Coff coff;
@@ -57,9 +55,7 @@ public class UserProcess {
      * Allocate a new process.
      */
     public UserProcess() 
-    {     		
-	    this.vMemory = Machine.processor().getMemory();			    
-		
+    { 	    
 		openFiles = new OpenFile[MAX_OPEN_FILES];
 		
 		//setup standard I/O to synchronzied console
@@ -219,12 +215,16 @@ public class UserProcess {
 				 int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
-	// for now, just assume that virtual addresses equal physical addresses
-	if (vaddr < 0 || vaddr >= this.vMemory.length)
-	    return 0;
+	byte[] memory = Machine.processor().getMemory();
+	
+	int paddr = translateVAddrToPAdrr(vaddr);
 
-	int amount = Math.min(length, this.vMemory.length-vaddr);
-	System.arraycopy(this.vMemory, vaddr, data, offset, amount);
+	if (paddr < 0 || paddr >= memory.length)
+	    return 0;
+	
+	int amount = Math.min(length, memory.length-paddr);
+	
+	System.arraycopy(memory, paddr, data, offset, amount);
 
 	return amount;
     }
@@ -260,12 +260,14 @@ public class UserProcess {
 				  int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
+	byte[] memory = Machine.processor().getMemory();
+	
 	// for now, just assume that virtual addresses equal physical addresses
-	if (vaddr < 0 || vaddr >= this.vMemory.length)
+	if (vaddr < 0 || vaddr >= memory.length)
 	    return 0;
 
-	int amount = Math.min(length, this.vMemory.length-vaddr);
-	System.arraycopy(data, offset, this.vMemory, vaddr, amount);
+	int amount = Math.min(length, memory.length-vaddr);
+	System.arraycopy(data, offset, memory, vaddr, amount);
 
 	return amount;
     }
@@ -278,6 +280,36 @@ public class UserProcess {
     	}
     	
     	return -1;
+    }
+    
+    /**
+     * Translates virtual address to physical address.
+     * 
+     * Returns -1 if vaddress is bad.
+     * 
+     * @param vaddr
+     * @return the translated physical address
+     */
+    private int translateVAddrToPAdrr(int vaddr)
+    {
+    	if(vaddr < 0) return -1;
+    	
+    	//get the virtual page number based on vaddr
+    	int vpn = vaddr / pageSize;   	
+    	
+    	//calculate the offset into the page 
+    	int addressOffset = vaddr % pageSize;
+    	
+    	//get the physical page number
+    	int ppn = translateVPNToPPN(vpn);
+    	
+    	//if the vaddr is outside this process' virtual address space, return 0
+    	if(ppn == -1) return -1;
+    	
+    	//calculate physical address
+    	int paddr = (ppn*pageSize) + addressOffset;
+    	
+    	return paddr;
     }
 
     /**
