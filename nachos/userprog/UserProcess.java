@@ -400,7 +400,11 @@ public class UserProcess {
 	allocateMemory();
 
 	if (!loadSections())
+	{
+		deallocateMemory();
+		
 	    return false;
+	}
 
 	// store arguments in last page
 	int entryOffset = (numPages-1)*pageSize;
