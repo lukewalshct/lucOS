@@ -280,6 +280,13 @@ public class UserProcess {
 	
 	byte[] memory = Machine.processor().getMemory();
 	
+	//get virtual page number
+	int vpn = vaddr / pageSize;
+	
+	//check to ensure there's a valid virtual page and it's not read only
+	if(vpn < 0 || vpn > this.physMemPages.length ||
+			this.pageTable[vpn].readOnly) return 0;
+	
 	int paddr = translateVAddrToPAdrr(vaddr);
 	
 	// for now, just assume that virtual addresses equal physical addresses
