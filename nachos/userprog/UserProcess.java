@@ -449,12 +449,16 @@ public class UserProcess {
 		      + " section (" + section.getLength() + " pages)");
 
 	    for (int i=0; i<section.getLength(); i++) {
-		int vpn = section.getFirstVPN()+i;
-
-		// for now, just assume virtual addresses=physical addresses
-		int ppn = translateVPNToPPN(vpn);
 		
-		section.loadPage(i, ppn);
+	    	int vpn = section.getFirstVPN()+i;		
+		
+	    	//set page to readonly in translation table if applicable
+	    	this.pageTable[vpn].readOnly = section.isReadOnly();
+		
+	    	//for now, just assume virtual addresses=physical addresses
+	    	int ppn = translateVPNToPPN(vpn);
+		
+	    	section.loadPage(i, ppn);
 	    }
 	}
 	
