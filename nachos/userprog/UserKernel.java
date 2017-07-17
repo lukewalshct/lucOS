@@ -98,6 +98,29 @@ public class UserKernel extends ThreadedKernel {
     }
     
     /**
+     * Adds a memory node/page back to the pool of 
+     * free memory. Used when a process ends and is
+     * return its memory resources to the pool.
+     * 
+     * @param node
+     */
+    public static void returnFreeMemPage(MemNode node)
+    {
+    	//enter critical section
+    	freeMemLock.acquire();
+    	
+    	try
+    	{    	
+    		freeMemory.add(node);   	
+    	}
+    	finally
+    	{
+        	//exit critical section
+        	freeMemLock.release();       	
+        }
+    }
+    
+    /**
      * Test the console device.
      */	
     public void selfTest() {

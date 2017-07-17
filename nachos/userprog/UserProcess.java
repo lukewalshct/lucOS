@@ -84,7 +84,7 @@ public class UserProcess {
     	{
     		MemNode memNode = UserKernel.getNextFreeMemPage();
     		
-    		if(memNode == null) { /*handle not enough mem exception*/ };
+    		if(memNode == null) { /*handle not enough mem exception*/ }
     		
     		this.physMemPages[i] = memNode;
     	}   	    	
@@ -92,6 +92,24 @@ public class UserProcess {
     	initializeTranslations();
     }
     
+    /**
+     * Deallocates memory from this process after
+     * process is finished or it is killed off.
+     */
+    private void deallocateMemory()
+    {
+    	Lib.debug('s', "Process deallocating memory...");
+    	
+    	for(int i= 0; i < this.physMemPages.length; i++)
+    	{
+    		MemNode nodeToReturn = this.physMemPages[i];
+    		
+    		UserKernel.returnFreeMemPage(nodeToReturn);
+    		
+    		this.physMemPages[i] = null;
+    	}
+    }
+
     /**
      * Sets up the translation page table that maps this
      * process' virtual mermory page numbers to physical ones.
@@ -515,6 +533,8 @@ public class UserProcess {
     private int handleExit()
     {    		
     	Lib.debug('s', "UserProcess handling exit syscall...");
+    	
+    	deallocateMemory();
     	
     	return 0;
     }
