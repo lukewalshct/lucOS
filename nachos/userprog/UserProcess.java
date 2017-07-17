@@ -551,6 +551,11 @@ public class UserProcess {
     	
     	deallocateMemory();
     	
+    	//if it's the last process, kill the machine
+    	if(globalProcessCount == 1) handleHalt();
+    	
+    	globalProcessCount--;
+    	
     	return 0;
     }
     
