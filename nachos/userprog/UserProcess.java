@@ -684,6 +684,15 @@ public class UserProcess {
     	return unlinked ? 0 : -1;
     }
     
+    private int handleExec(int progNameVAddress, int numArgs, int argVAddress)
+    {
+    	UserProcess process = UserProcess.newUserProcess();
+    	
+    	boolean success = process.execute("simpleHello.coff", new String[] {});
+    	
+    	return success ? 1 : -1;
+    }
+    
     private static final int
         syscallHalt = 0,
 	syscallExit = 1,
@@ -742,6 +751,8 @@ public class UserProcess {
 		return handleRead(a0, a1, a2);
 	case syscallUnlink:
 		return handleUnlink(a0);
+	case syscallExec:
+		return handleExec(a0, a1, a2);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
