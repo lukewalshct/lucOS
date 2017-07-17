@@ -75,3 +75,5 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# swap files
+*.swp
