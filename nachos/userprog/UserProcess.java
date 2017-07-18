@@ -691,9 +691,25 @@ public class UserProcess {
     
     private int handleExec(int progNameVAddress, int numArgs, int argVAddress)
     {
+    	String progName =  readVirtualMemoryString(progNameVAddress, 
+    			MAX_FILE_NAME_BYTES);
+    	
+    	if(progName == null || progName.length() == 0) return -1;
+    	
+    	String[] args = new String[numArgs];   	
+    	
+    	for(int i = 0; i < numArgs; i++)
+    	{  		
+    		args[i] = readVirtualMemoryString(argVAddress, MAX_FILE_NAME_BYTES);  
+    		
+    		int addrIncrement = args[i] == null ? 4 : (args[i].length() * 4) + 4;
+    		
+    		argVAddress += addrIncrement;
+    	}    	
+    	
     	UserProcess process = UserProcess.newUserProcess();
     	
-    	boolean success = process.execute("simpleHello.coff", new String[] {});
+    	boolean success = process.execute(progName, args);
     	
     	return success ? 1 : -1;
     }
