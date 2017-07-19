@@ -6,6 +6,8 @@ import nachos.userprog.*;
 import nachos.userprog.UserKernel.MemNode;
 
 import java.io.EOFException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 /**
  * Encapsulates the state of a user process that is not contained in its
@@ -697,14 +699,28 @@ public class UserProcess {
     	if(progName == null || progName.length() == 0) return -1;
     	
     	String[] args = new String[numArgs];   	
+
+    	//get the address of the firs string in arg array - need to convert
+    	//the 4-byte representation to integer
+    	byte[] firstArgAddrBytes = new byte[4];
     	
+    	int bytesRead = readVirtualMemory(argVAddress, firstArgAddrBytes);
+    	
+    	//if reading args unsuccessful, return error
+    	if(bytesRead != 4) return -1;
+    	
+    	ByteBuffer byteWrapper = ByteBuffer.wrap(firstArgAddrBytes);
+    	
+    	//need to specify endianness
+    	byteWrapper.order(ByteOrder.LITTLE_ENDIAN);
+    	
+    	int firstArgAddr = byteWrapper.getInt(0);   	    	   	
+    			
     	for(int i = 0; i < numArgs; i++)
     	{  		
-    		args[i] = readVirtualMemoryString(argVAddress, MAX_FILE_NAME_BYTES);  
+    		args[i] = readVirtualMemoryString(firstArgAddr, MAX_FILE_NAME_BYTES);    		    		
     		
-    		int addrIncrement = args[i] == null ? 4 : (args[i].length() * 4) + 4;
-    		
-    		argVAddress += addrIncrement;
+    		firstArgAddr += (args[i] == null ? 1 : args[i].length() + 1);
     	}    	
     	
     	UserProcess process = UserProcess.newUserProcess();
