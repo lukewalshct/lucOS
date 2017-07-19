@@ -4,8 +4,18 @@
  * 	opening/closing new processes in lucOS.
  */
 
-int main()
+int main(int argc, char *argv[])
 {
-    printf("Hello, world!\n");
+    int i;
+ 
+    for(i = 0; i < argc; i++)
+    {
+        int n;
+
+        for(n = 0; n < (sizeof(argv[i])/sizeof(argv[i][0])); n++)
+        {
+            printf("%c", argv[i][n]);
+        }
+    }
 }
 
