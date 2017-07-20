@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     }
 
     //simulate work
-    while(i++ < 999999);
+    while(i++ < 9999);
 
     printf("exiting simpleHello.coff\n");
 }
