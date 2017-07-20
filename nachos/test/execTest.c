@@ -3,7 +3,7 @@
  * 	by creating new processes.
  */
 
-int NUM_PROGRAMS = 1;
+int NUM_PROGRAMS = 5;
 
 int main()
 {
@@ -27,4 +27,6 @@ int main()
 
         printf("process created, pid is %d\n", newPID1);
     }
+
+    printf("exiting execTest.coff\n");
 }

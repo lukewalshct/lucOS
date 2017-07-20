@@ -21,5 +21,10 @@ int main(int argc, char *argv[])
 
         printf("\n");
     }
+
+    //simulate work
+    while(i++ < 999999);
+
+    printf("exiting simpleHello.coff\n");
 }
 
