@@ -102,6 +102,8 @@ public class UserProcess {
      */
     private void deallocateMemory()
     {
+    	if(this.physMemPages == null) return;
+    	
     	Lib.debug('s', "Process deallocating memory...");
     	
     	for(int i= 0; i < this.physMemPages.length; i++)
@@ -155,8 +157,13 @@ public class UserProcess {
      * @return	<tt>true</tt> if the program was successfully executed.
      */
     public boolean execute(String name, String[] args) {
-	if (!load(name, args))
-	    return false;
+		if (!load(name, args))
+		{
+			handleExit();
+			
+			return false;
+		}
+	    
 	
 	new UThread(this).setName(name).fork();
 
@@ -359,7 +366,7 @@ public class UserProcess {
 	
 	OpenFile executable = ThreadedKernel.fileSystem.open(name, false);
 	if (executable == null) {
-	    Lib.debug(dbgProcess, "\topen failed");
+	    Lib.debug(dbgProcess, "\topen failed");	    
 	    return false;
 	}
 
@@ -368,7 +375,7 @@ public class UserProcess {
 	}
 	catch (EOFException e) {
 	    executable.close();
-	    Lib.debug(dbgProcess, "\tcoff load failed");
+	    Lib.debug(dbgProcess, "\tcoff load failed");	    
 	    return false;
 	}
 
@@ -378,7 +385,7 @@ public class UserProcess {
 	    CoffSection section = coff.getSection(s);
 	    if (section.getFirstVPN() != numPages) {
 		coff.close();
-		Lib.debug(dbgProcess, "\tfragmented executable");
+		Lib.debug(dbgProcess, "\tfragmented executable");		
 		return false;
 	    }
 	    numPages += section.getLength();
@@ -394,7 +401,7 @@ public class UserProcess {
 	}
 	if (argsSize > pageSize) {
 	    coff.close();
-	    Lib.debug(dbgProcess, "\targuments too long");
+	    Lib.debug(dbgProcess, "\targuments too long");	    
 	    return false;
 	}
 
@@ -408,19 +415,9 @@ public class UserProcess {
 	// and finally reserve 1 page for arguments
 	numPages++;
 	
-	if(!allocateMemory())
-	{
-		deallocateMemory();
-		
-		return false;
-	};
-
-	if (!loadSections())
-	{
-		deallocateMemory();
-		
-	    return false;
-	}
+	if(!allocateMemory()) return false;
+	
+	if (!loadSections()) return false;	
 
 	// store arguments in last page
 	int entryOffset = (numPages-1)*pageSize;
@@ -454,6 +451,7 @@ public class UserProcess {
 	if (numPages > Machine.processor().getNumPhysPages()) {
 	    coff.close();
 	    Lib.debug(dbgProcess, "\tinsufficient physical memory");
+	    handleExit();
 	    return false;
 	}
 
@@ -556,7 +554,7 @@ public class UserProcess {
     
     private int handleExit()
     {    		
-    	Lib.debug('s', "UserProcess handling exit syscall...");
+    	Lib.debug('s', "UserProcess handling exit...");
     	
     	deallocateMemory();
     	
