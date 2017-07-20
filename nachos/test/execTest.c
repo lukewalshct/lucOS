@@ -3,15 +3,15 @@
  * 	by creating new processes.
  */
 
-int NUM_PROGRAMS = 5;
+int NUM_PROGRAMS = 1;
 
 int main()
 {
     char *file = "simpleHello.coff";
    
-    int argc = 0;
+    int argc = 3;
 
-    char *argv[] = {};
+    char *argv[] = {"Hello, world!", "test", "longfilename123456789101112"};
 
     int prog_cnt;
 

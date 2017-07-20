@@ -10,12 +10,16 @@ int main(int argc, char *argv[])
  
     for(i = 0; i < argc; i++)
     {
-        int n;
+        int n = 0;
 
-        for(n = 0; n < (sizeof(argv[i])/sizeof(argv[i][0])); n++)
+        while(argv[i][n] != 0)
         {
             printf("%c", argv[i][n]);
+
+            n++;
         }
+
+        printf("\n");
     }
 }
 
