@@ -52,6 +52,11 @@ public class UserProcess {
     private static final char dbgProcess = 'a';
     
     private static int globalProcessCount;
+    
+    //count of all processes ever created
+    private static int cumProcessCount;
+    
+    private int processID;
 	
     /**
      * Allocate a new process.
@@ -67,7 +72,9 @@ public class UserProcess {
 		
 		openFiles[1] = UserKernel.console.openForWriting();
 		
-		numOpenFiles += 2;
+		this.processID = cumProcessCount;
+		
+		numOpenFiles += 2;	
 	}
     
     /**
@@ -145,9 +152,12 @@ public class UserProcess {
     	
     	globalProcessCount++;
 	
+    	cumProcessCount++;
+    	
     	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());
     }
 
+    public int getProcessID(){ return this.processID; }
     /**
      * Execute the specified program with the specified arguments. Attempts to
      * load the program, and then forks a thread to run it.
@@ -718,7 +728,7 @@ public class UserProcess {
     	
     	boolean success = process.execute(progName, args);
     	
-    	return success ? globalProcessCount : -1;
+    	return success ? process.getProcessID() : -1;
     }
     
     /**
