@@ -110,8 +110,8 @@ public class UserKernel extends ThreadedKernel {
     	freeMemLock.acquire();
     	
     	try
-    	{    	
-    		freeMemory.add(node);   	
+    	{   	    		
+    		if(node != null) freeMemory.add(node);   	
     	}
     	finally
     	{

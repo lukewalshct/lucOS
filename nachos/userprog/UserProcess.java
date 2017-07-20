@@ -75,9 +75,9 @@ public class UserProcess {
      * process creation. Includes space for the code data
      * from the COFF sections and pages for a stack.
      */
-    private void allocateMemory()
+    private boolean allocateMemory()
     {    	
-    	if(this.numPages == 0) return;
+    	if(this.numPages == 0) return false;
     	
     	//create a "blank" virtual address space of size numPages
     	this.physMemPages = new MemNode[this.numPages];
@@ -86,12 +86,14 @@ public class UserProcess {
     	{
     		MemNode memNode = UserKernel.getNextFreeMemPage();
     		
-    		if(memNode == null) { /*handle not enough mem exception*/ }
+    		if(memNode == null) return false;
     		
     		this.physMemPages[i] = memNode;
     	}   	    	
     	
     	initializeTranslations();
+    	
+    	return true;
     }
     
     /**
@@ -406,7 +408,12 @@ public class UserProcess {
 	// and finally reserve 1 page for arguments
 	numPages++;
 	
-	allocateMemory();
+	if(!allocateMemory())
+	{
+		deallocateMemory();
+		
+		return false;
+	};
 
 	if (!loadSections())
 	{
