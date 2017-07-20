@@ -718,7 +718,7 @@ public class UserProcess {
     	
     	boolean success = process.execute(progName, args);
     	
-    	return success ? 1 : -1;
+    	return success ? globalProcessCount : -1;
     }
     
     /**
