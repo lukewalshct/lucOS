@@ -700,27 +700,13 @@ public class UserProcess {
     	
     	String[] args = new String[numArgs];   	
 
-    	//get the address of the firs string in arg array - need to convert
-    	//the 4-byte representation to integer
-    	byte[] firstArgAddrBytes = new byte[4];
-    	
-    	int bytesRead = readVirtualMemory(argVAddress, firstArgAddrBytes);
-    	
-    	//if reading args unsuccessful, return error
-    	if(bytesRead != 4) return -1;
-    	
-    	ByteBuffer byteWrapper = ByteBuffer.wrap(firstArgAddrBytes);
-    	
-    	//need to specify endianness
-    	byteWrapper.order(ByteOrder.LITTLE_ENDIAN);
-    	
-    	int firstArgAddr = byteWrapper.getInt(0);   	    	   	
+    	//get the address of the arguments
+    	int[] argAddresses = getArgAddresses(argVAddress, numArgs);   	
+    	 	    	   	
     			
-    	for(int i = 0; i < numArgs; i++)
+    	for(int i = 0; i < argAddresses.length; i++)
     	{  		
-    		args[i] = readVirtualMemoryString(firstArgAddr, MAX_FILE_NAME_BYTES);    		    		
-    		
-    		firstArgAddr += (args[i] == null ? 1 : args[i].length() + 1);
+    		args[i] = readVirtualMemoryString(argAddresses[i], MAX_FILE_NAME_BYTES);  		    		    		    		
     	}    	
     	
     	UserProcess process = UserProcess.newUserProcess();
@@ -728,6 +714,42 @@ public class UserProcess {
     	boolean success = process.execute(progName, args);
     	
     	return success ? 1 : -1;
+    }
+    
+    /**
+     * Gets the argument addresses by reading from the pointer
+     * address. Needs to convert 4 byte address representation
+     * to integer.
+     * 
+     * @param argVAddr
+     * @param numArgs
+     * @return
+     */
+    private int[] getArgAddresses(int argVAddr, int numArgs)
+    {
+    	if(numArgs < 0) return new int[0];
+    	
+    	int[] argAddrs = new int[numArgs];
+    	
+    	byte[] argBytes = new byte[4*numArgs];    	
+    	
+    	int bytesRead = readVirtualMemory(argVAddr, argBytes);   	    	
+    	
+    	//if reading args unsuccessful, return empty array
+    	if(bytesRead != 4*numArgs) return new int[0];
+    	
+    	ByteBuffer byteWrapper = ByteBuffer.wrap(argBytes);
+    	
+    	//need to specify endianness
+    	byteWrapper.order(ByteOrder.LITTLE_ENDIAN);
+    	
+    	//convert byte representation of each address to int
+    	for(int i = 0; i < numArgs*4; i += 4)
+    	{
+    		argAddrs[i/4] = byteWrapper.getInt(i);
+    	}
+    	
+    	return argAddrs;
     }
     
     private static final int
