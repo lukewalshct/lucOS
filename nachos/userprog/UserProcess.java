@@ -588,12 +588,14 @@ public class UserProcess {
     {    		
     	Lib.debug('s', "UserProcess handling exit...");
     	
+    	if(this.parentProcess != null) this.parentProcess.removeChildProcess(this);
+    	
     	deallocateMemory();
     	
     	//if it's the last process, kill the machine
     	if(globalProcessCount == 1) handleHalt();
     	
-    	globalProcessCount--;
+    	globalProcessCount--;   	
     	
     	return 0;
     }
@@ -789,7 +791,9 @@ public class UserProcess {
     
     private void removeChildProcess(UserProcess childProcess)
     {
+    	if(childProcess == null) return;
     	
+    	this.childProcesses.remove(childProcess.getProcessID());
     }
     
     /**
