@@ -57,6 +57,10 @@ public class UserProcess {
     private static int cumProcessCount;
     
     private int processID;
+    
+    private int parentProcessID;
+    
+    private UserProcess processWaitingToJoin;
 	
     /**
      * Allocate a new process.
@@ -154,10 +158,16 @@ public class UserProcess {
 	
     	cumProcessCount++;
     	
-    	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());
+    	return (UserProcess)Lib.constructObject(Machine.getProcessClassName());   	
     }
 
     public int getProcessID(){ return this.processID; }
+    
+    private void setParentProcessID(int parentID)
+    {
+    	this.parentProcessID = parentID;
+    }
+    
     /**
      * Execute the specified program with the specified arguments. Attempts to
      * load the program, and then forks a thread to run it.
@@ -734,9 +744,16 @@ public class UserProcess {
     	
     	UserProcess process = UserProcess.newUserProcess();
     	
+    	process.setParentProcessID(this.processID);
+    	
     	boolean success = process.execute(progName, args);
     	
     	return success ? process.getProcessID() : -1;
+    }
+    
+    private int handleJoin(int pid, int statusVaddr)
+    {
+    	return -1;
     }
     
     /**
@@ -835,6 +852,8 @@ public class UserProcess {
 		return handleUnlink(a0);
 	case syscallExec:
 		return handleExec(a0, a1, a2);
+	case syscallJoin:
+		return handleJoin(a0, a1);
 
 	default:
 	    Lib.debug(dbgProcess, "Unknown syscall " + syscall);
