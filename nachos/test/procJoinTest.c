@@ -16,7 +16,13 @@ int main()
 
     int childID = exec(file, 1, argv);
 
-    join(childID);
+    int *status;
+
+    int result = join(childID, status);
+
+    delay(9999);
+
+    printf("join result: %d\n", result);
 
     printf("finishing proc join test\n");    
 }
