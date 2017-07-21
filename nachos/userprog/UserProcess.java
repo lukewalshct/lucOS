@@ -405,6 +405,14 @@ public class UserProcess {
 	byte[][] argv = new byte[args.length][];
 	int argsSize = 0;
 	for (int i=0; i<args.length; i++) {
+		
+		if(argv[i] == null)
+		{
+			coff.close();
+			Lib.debug(dbgProcess, "\tinvalid argument");
+		    return false;
+		}
+		
 	    argv[i] = args[i].getBytes();
 	    // 4 bytes for argv[] pointer; then string plus one for null byte
 	    argsSize += 4 + argv[i].length + 1;
