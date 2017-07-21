@@ -8,6 +8,8 @@ import nachos.userprog.UserKernel.MemNode;
 import java.io.EOFException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulates the state of a user process that is not contained in its
@@ -61,6 +63,8 @@ public class UserProcess {
     private int parentProcessID;
     
     private UserProcess processWaitingToJoin;
+    
+    private Map<Integer, UserProcess> childProcesses;
 	
     /**
      * Allocate a new process.
@@ -68,6 +72,8 @@ public class UserProcess {
     public UserProcess() 
     { 	    
 		openFiles = new OpenFile[MAX_OPEN_FILES];
+		
+		this.childProcesses = new HashMap<Integer, UserProcess>(10);
 		
 		//setup standard I/O to synchronzied console
 		Lib.assertTrue(MAX_OPEN_FILES >= 2);
@@ -744,7 +750,11 @@ public class UserProcess {
     	
     	UserProcess process = UserProcess.newUserProcess();
     	
+    	//set thisp rocess as the parent process
     	process.setParentProcessID(this.processID);
+    	
+    	//add the new child process to this process' list of childs
+    	this.addChildProcess(process);
     	
     	boolean success = process.execute(progName, args);
     	
@@ -754,6 +764,20 @@ public class UserProcess {
     private int handleJoin(int pid, int statusVaddr)
     {
     	return -1;
+    }
+    
+    private void addChildProcess(UserProcess childProcess)
+    {
+    	if(childProcess == null) return;
+    	
+    	Integer cid = (Integer)childProcess.getProcessID();
+    	
+    	this.childProcesses.put(cid, childProcess);
+    }
+    
+    private UserProcess removeChildProcess(int childProcessID)
+    {
+    	return null;
     }
     
     /**
