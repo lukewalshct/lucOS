@@ -406,7 +406,7 @@ public class UserProcess {
 	int argsSize = 0;
 	for (int i=0; i<args.length; i++) {
 		
-		if(argv[i] == null)
+		if(args[i] == null)
 		{
 			coff.close();
 			Lib.debug(dbgProcess, "\tinvalid argument");
