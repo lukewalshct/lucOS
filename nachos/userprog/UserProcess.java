@@ -60,9 +60,7 @@ public class UserProcess {
     
     private int processID;
     
-    private int parentProcessID;
-    
-    private UserProcess processWaitingToJoin;
+    private UserProcess parentProcess;       
     
     private Map<Integer, UserProcess> childProcesses;
 	
@@ -169,9 +167,9 @@ public class UserProcess {
 
     public int getProcessID(){ return this.processID; }
     
-    private void setParentProcessID(int parentID)
+    private void setParentProcess(UserProcess parentProcess)
     {
-    	this.parentProcessID = parentID;
+    	this.parentProcess = parentProcess;
     }
     
     /**
@@ -751,7 +749,7 @@ public class UserProcess {
     	UserProcess process = UserProcess.newUserProcess();
     	
     	//set thisp rocess as the parent process
-    	process.setParentProcessID(this.processID);
+    	process.setParentProcess(this);
     	
     	//add the new child process to this process' list of childs
     	this.addChildProcess(process);
@@ -761,9 +759,23 @@ public class UserProcess {
     	return success ? process.getProcessID() : -1;
     }
     
-    private int handleJoin(int pid, int statusVaddr)
+    private int handleJoin(int childProcessID, int statusVaddr)
     {
-    	return -1;
+    	if(childProcessID < 0) return -1;
+    	
+    	UserProcess childProcess = this.childProcesses.remove((Integer)childProcessID);
+    	
+    	if(childProcess == null) return -1;
+    	
+    	return childProcess.join(this);    	
+    }
+    
+    private int join(UserProcess parentProcess)
+    {
+    	if(parentProcess == null || this.parentProcess == null ||
+    			parentProcess.getProcessID() != this.parentProcess.getProcessID()) return -1;
+    	
+    	return 1;
     }
     
     private void addChildProcess(UserProcess childProcess)
@@ -775,9 +787,9 @@ public class UserProcess {
     	this.childProcesses.put(cid, childProcess);
     }
     
-    private UserProcess removeChildProcess(int childProcessID)
+    private void removeChildProcess(UserProcess childProcess)
     {
-    	return null;
+    	
     }
     
     /**
