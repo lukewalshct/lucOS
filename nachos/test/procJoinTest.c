@@ -16,7 +16,7 @@ int main()
 
     int childID = exec(file, 1, argv);
 
-    delay(9999);
+    join(childID);
 
     printf("finishing proc join test\n");    
 }
