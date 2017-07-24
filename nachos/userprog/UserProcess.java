@@ -67,6 +67,8 @@ public class UserProcess {
     private UThread initialThread;
     
     private boolean parentJoining;
+    
+    private int exitStatus = -1;
 	
     /**
      * Allocate a new process.
@@ -187,7 +189,7 @@ public class UserProcess {
     public boolean execute(String name, String[] args) {
 		if (!load(name, args))
 		{
-			handleExit();
+			handleExit(-1);
 			
 			return false;
 		}
@@ -489,7 +491,7 @@ public class UserProcess {
 	if (numPages > Machine.processor().getNumPhysPages()) {
 	    coff.close();
 	    Lib.debug(dbgProcess, "\tinsufficient physical memory");
-	    handleExit();
+	    handleExit(-1);
 	    return false;
 	}
 
@@ -590,9 +592,11 @@ public class UserProcess {
     	return -1;   	    	
     }
     
-    private int handleExit()
+    private int handleExit(int status)
     {    		
     	Lib.debug('s', "UserProcess handling exit...");
+    	
+    	this.exitStatus = status;
     	
     	if(this.parentProcess != null)
     	{
@@ -610,7 +614,7 @@ public class UserProcess {
     	
     	globalProcessCount--;   	
     	
-    	return 0;
+    	return this.exitStatus;
     }
     
     private int handleOpen(int pathNameVAddress, boolean createIfNotExists)
@@ -917,7 +921,7 @@ public class UserProcess {
 	case syscallCreate:
 		return handleCreate(a0);
 	case syscallExit:
-		return handleExit();
+		return handleExit(a0);
 	case syscallOpen:
 		return handleOpen(a0, false);
 	case syscallWrite:
