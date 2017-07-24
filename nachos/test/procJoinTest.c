@@ -12,17 +12,27 @@ int main()
 
     char *file = "workSim.coff";
 
-    char *argv[] = {"0"};
+    char *argv[] = {"0", "0"};
 
-    int childID = exec(file, 1, argv);
+    int childID = exec(file, 2, argv);
 
     int *status;
 
-    int result = join(childID, status);
+    int result1 = join(childID, status);
 
     delay(9999);
 
-    printf("join result: %d\n", result);
+    char *argv2[] = {"1", "1"};
+
+    int childID2 = exec(file, 2, argv2);
+
+    int result2 = join(childID2, status);
+
+    delay(9999);
+
+    printf("join result1: %d\n", result1);
+
+    printf("join result2; %d\n", result2);
 
     printf("finishing proc join test\n");    
 }

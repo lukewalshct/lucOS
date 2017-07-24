@@ -69,6 +69,9 @@ public class UserProcess {
     private boolean parentJoining;
     
     private int exitStatus = -1;
+    
+    //number of outstanding child processes to join on
+    private int outstandingChildJoins;
 	
     /**
      * Allocate a new process.
@@ -602,7 +605,13 @@ public class UserProcess {
     	{
     		Machine.interrupt().disable();
     		
-    		if(this.parentJoining) this.parentProcess.getInitialThread().ready();
+    		if(this.parentJoining)
+			{
+				this.parentProcess.decrementJoinCount();
+				
+				if(this.parentProcess.getJoinCount() == 0)
+					this.parentProcess.getInitialThread().ready();
+			}
     		
     		this.parentProcess.removeChildProcess(this);
     	}
@@ -793,6 +802,8 @@ public class UserProcess {
 			return -1;
 		}
     	
+    	this.outstandingChildJoins++;
+    	
     	return childProcess.join(this);    	
     }
     
@@ -821,6 +832,11 @@ public class UserProcess {
     }
     
     public UThread getInitialThread(){ return this.initialThread; }
+    
+    public void decrementJoinCount(){ this.outstandingChildJoins--; }
+    
+    public int getJoinCount(){ return this.outstandingChildJoins; }
+   
     
     private void addChildProcess(UserProcess childProcess)
     {
