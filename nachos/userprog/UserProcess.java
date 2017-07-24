@@ -63,6 +63,10 @@ public class UserProcess {
     private UserProcess parentProcess;       
     
     private Map<Integer, UserProcess> childProcesses;
+    
+    private UThread initialThread;
+    
+    private boolean parentJoining;
 	
     /**
      * Allocate a new process.
@@ -189,7 +193,9 @@ public class UserProcess {
 		}
 	    
 	
-	new UThread(this).setName(name).fork();
+	this.initialThread = (UThread) (new UThread(this)).setName(name);
+	
+	this.initialThread.fork();
 
 	return true;
     }
@@ -588,7 +594,14 @@ public class UserProcess {
     {    		
     	Lib.debug('s', "UserProcess handling exit...");
     	
-    	if(this.parentProcess != null) this.parentProcess.removeChildProcess(this);
+    	if(this.parentProcess != null)
+    	{
+    		Machine.interrupt().disable();
+    		
+    		if(this.parentJoining) this.parentProcess.getInitialThread().ready();
+    		
+    		this.parentProcess.removeChildProcess(this);
+    	}
     	
     	deallocateMemory();
     	
@@ -767,7 +780,14 @@ public class UserProcess {
     	
     	UserProcess childProcess = this.childProcesses.remove((Integer)childProcessID);
     	
-    	if(childProcess == null) return -1;
+    	Machine.interrupt().disable();
+    	
+    	if(childProcess == null)
+		{	
+			Machine.interrupt().enable();
+			
+			return -1;
+		}
     	
     	return childProcess.join(this);    	
     }
@@ -775,10 +795,28 @@ public class UserProcess {
     private int join(UserProcess parentProcess)
     {
     	if(parentProcess == null || this.parentProcess == null ||
-    			parentProcess.getProcessID() != this.parentProcess.getProcessID()) return -1;
+			parentProcess.getProcessID() != this.parentProcess.getProcessID())
+		{
+			Machine.interrupt().enable();
+			
+			return -1;		
+		}
+		
+    	//sleep the process' initial thread ; when multithreading
+    	//is supported need to sleep all threads for that process   	
+    	UThread procThread = parentProcess.getInitialThread();
     	
-    	return 1;
+    	Lib.assertTrue(procThread == KThread.currentThread());
+		
+    	this.parentJoining = true;
+    	
+    	procThread.sleep();
+		
+    	//return the exit status
+    	return 1; //this.exitStatus;
     }
+    
+    public UThread getInitialThread(){ return this.initialThread; }
     
     private void addChildProcess(UserProcess childProcess)
     {
