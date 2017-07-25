@@ -30,11 +30,12 @@ public class LotteryScheduler extends PriorityScheduler {
 
    	//set the min, max, default num tickets
 	//protected static final int priorityDefault = 1;
-	protected static final int priorityDefault = 1;
-	
-	protected static final int priorityMinimum = 1;
-	
-	protected static final int priorityMaximum = Integer.MAX_VALUE;
+	@Override
+	public int priorityDefault() { return 1; }
+	@Override
+	public int priorityMinimum() { return 1; }
+	@Override
+	public int priorityMaximum() { return Integer.MAX_VALUE; }
 
 	/**
      * Allocate a new lottery scheduler.
@@ -61,5 +62,7 @@ public class LotteryScheduler extends PriorityScheduler {
     	{
     		super(transferPriority);
     	}
+    	
+    	
     }
 }

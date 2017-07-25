@@ -61,8 +61,8 @@ public class PriorityScheduler extends Scheduler {
     public void setPriority(KThread thread, int priority) {
 	Lib.assertTrue(Machine.interrupt().disabled());
 		       
-	Lib.assertTrue(priority >= priorityMinimum &&
-		   priority <= priorityMaximum);
+	Lib.assertTrue(priority >= priorityMinimum() &&
+		   priority <= priorityMaximum());
 	
 	getThreadState(thread).setPriority(priority);
     }
@@ -73,7 +73,7 @@ public class PriorityScheduler extends Scheduler {
 	KThread thread = KThread.currentThread();
 
 	int priority = getPriority(thread);
-	if (priority == priorityMaximum)
+	if (priority == priorityMaximum())
 	    return false;
 
 	setPriority(thread, priority+1);
@@ -88,7 +88,7 @@ public class PriorityScheduler extends Scheduler {
 	KThread thread = KThread.currentThread();
 
 	int priority = getPriority(thread);
-	if (priority == priorityMinimum)
+	if (priority == priorityMinimum())
 	    return false;
 
 	setPriority(thread, priority-1);
@@ -100,15 +100,15 @@ public class PriorityScheduler extends Scheduler {
     /**
      * The default priority for a new thread. Do not change this value.
      */
-    public static final int priorityDefault = 1;
+    public int priorityDefault() { return 1; }
     /**
      * The minimum priority that a thread can have. Do not change this value.
      */
-    public static final int priorityMinimum = 0;
+    public int priorityMinimum() { return 0; }
     /**
      * The maximum priority that a thread can have. Do not change this value.
      */
-    public static final int priorityMaximum = 7;    
+    public int priorityMaximum() { return  7; }    
 
     /**
      * Return the scheduling state of the specified thread.
@@ -298,7 +298,7 @@ public class PriorityScheduler extends Scheduler {
 	{
 	    this.thread = thread;
 	    
-	    setPriority(priorityDefault);
+	    setPriority(priorityDefault());
 		
 		this.donorThreads = new java.util.PriorityQueue<ThreadState>();
 	}
@@ -348,7 +348,7 @@ public class PriorityScheduler extends Scheduler {
 		}	
 		else
 		{
-			this.highestDonatedPriority = priorityMinimum;
+			this.highestDonatedPriority = priorityMinimum();
 		}
 	}
 	
