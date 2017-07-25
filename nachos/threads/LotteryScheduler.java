@@ -27,7 +27,16 @@ import java.util.Iterator;
  * the maximum).
  */
 public class LotteryScheduler extends PriorityScheduler {
-    /**
+
+   	//set the min, max, default num tickets
+	//protected static final int priorityDefault = 1;
+	protected static final int priorityDefault = 1;
+	
+	protected static final int priorityMinimum = 1;
+	
+	protected static final int priorityMaximum = Integer.MAX_VALUE;
+
+	/**
      * Allocate a new lottery scheduler.
      */
     public LotteryScheduler() {
@@ -43,6 +52,6 @@ public class LotteryScheduler extends PriorityScheduler {
      */
     public ThreadQueue newThreadQueue(boolean transferPriority) {
 	// implement me
-	return null;
+	return new PriorityQueue(transferPriority);
     }
 }
