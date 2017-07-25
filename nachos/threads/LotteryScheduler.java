@@ -52,6 +52,14 @@ public class LotteryScheduler extends PriorityScheduler {
      */
     public ThreadQueue newThreadQueue(boolean transferPriority) {
 	// implement me
-	return new PriorityQueue(transferPriority);
+	return new LotteryQueue(transferPriority);
+    }
+    
+    protected class LotteryQueue extends PriorityQueue
+    {
+    	public LotteryQueue(boolean transferPriority)
+    	{
+    		super(transferPriority);
+    	}
     }
 }
