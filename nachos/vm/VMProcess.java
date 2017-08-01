@@ -29,9 +29,15 @@ public class VMProcess extends UserProcess {
      * <tt>UThread.restoreState()</tt>.
      */
     public void restoreState() {
-	super.restoreState();
+	//super.restoreState();
     }
 
+    @Override
+    protected void initializeTranslations()
+    {
+    	super.initializeTranslations();
+    }
+    
     /**
      * Initializes page tables for this process so that the executable can be
      * demand-paged.

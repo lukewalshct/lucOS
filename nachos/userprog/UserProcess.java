@@ -144,7 +144,7 @@ public class UserProcess {
      * Sets up the translation page table that maps this
      * process' virtual mermory page numbers to physical ones.
      */
-    private void initializeTranslations()
+    protected void initializeTranslations()
     {    			
 		pageTable = new TranslationEntry[this.numPages];
 		
