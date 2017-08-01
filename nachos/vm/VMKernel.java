@@ -12,7 +12,7 @@ import java.util.Hashtable;;
 public class VMKernel extends UserKernel {
 	
 	//a global inverted page table
-	private Hashtable<Integer, Integer> _globalPageTable;
+	private InvertedPageTable _globalPageTable;
 	
     /**
      * Allocate a new VM kernel.
@@ -33,10 +33,8 @@ public class VMKernel extends UserKernel {
      * Initializes a global inverted page table.
      */
     private void initializePageTable()
-    {    	
-    	int totalPages = Machine.processor().getNumPhysPages();    	
-    	
-    	this._globalPageTable = new Hashtable<Integer, Integer>(totalPages);
+    {   	
+    	this._globalPageTable = new InvertedPageTable(8, 8); 
     }
 
     /**
@@ -64,4 +62,54 @@ public class VMKernel extends UserKernel {
     private static VMProcess dummy1 = null;
 
     private static final char dbgVM = 'v';
+    
+    /** 
+     * An inverted page table. The constructor takes as arguments
+     * the estimated number of processes the OS should support at once,
+     * and the number of estimated pages per process. These are used as
+     * the initial capcity of the underlying hash table lookups.
+     * 
+     * @author luke
+     *
+     */
+    private class InvertedPageTable
+    {
+    	private Hashtable<Integer, Hashtable<Integer, TranslationEntry>> _pageTable; 	    	
+    	
+    	private int _numPagesPerProcess;
+    	
+    	public InvertedPageTable(int numProcesses, int numPagesPerProcess)
+    	{
+    		this._numPagesPerProcess = numPagesPerProcess;
+    		
+    		this._pageTable = new Hashtable<Integer, 
+    				Hashtable<Integer, TranslationEntry>>(numProcesses);    		    		
+    	}
+    	
+    	/**
+    	 * Adds a translation entry for the given process and virtual
+    	 * page number. If the hashtable for the process doesn't yet exist,
+    	 * create it.
+    	 * 
+    	 * @return
+    	 */
+    	public TranslationEntry put(int processID, int virtualPageNumber, 
+    			TranslationEntry entry)
+    	{
+    		Hashtable<Integer, TranslationEntry> processPageTable = 
+    				this._pageTable.get(processID);
+    		
+    		if(processPageTable == null)
+    		{
+    			processPageTable = new Hashtable<Integer, TranslationEntry>(this._numPagesPerProcess);
+    			
+    			this._pageTable.put(processID, processPageTable);
+    		}
+    		
+    		processPageTable.put(virtualPageNumber, entry);
+    		
+    		return entry;
+    	}
+    	
+    }
 }
