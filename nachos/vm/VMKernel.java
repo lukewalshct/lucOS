@@ -111,5 +111,22 @@ public class VMKernel extends UserKernel {
     		return entry;
     	}
     	
+    	/**
+    	 * Retrieves a translation entry based on process id and 
+    	 * virtual page number. Returns null if either do not exist.
+    	 * @param processID
+    	 * @param virtualPageNumber
+    	 * @return
+    	 */
+    	public TranslationEntry get(int processID, int virtualPageNumber)
+    	{
+    		Hashtable<Integer, TranslationEntry> processPageTable 
+    			= this._pageTable.get(processID);
+    		
+    		if(processPageTable == null) return null;
+    		
+    		return processPageTable.get(virtualPageNumber);
+    	}
+    	
     }
 }
