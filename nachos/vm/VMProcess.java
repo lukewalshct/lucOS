@@ -65,6 +65,13 @@ public class VMProcess extends UserProcess {
     }    
 
     /**
+     * Handles a TLB Miss
+     */
+    private void handleTLBMiss()
+    {
+    	
+    }
+    /**
      * Handle a user exception. Called by
      * <tt>UserKernel.exceptionHandler()</tt>. The
      * <i>cause</i> argument identifies which exception occurred; see the
@@ -76,6 +83,9 @@ public class VMProcess extends UserProcess {
 	Processor processor = Machine.processor();
 
 	switch (cause) {
+	case Processor.exceptionTLBMiss:
+		handleTLBMiss();
+		break;
 	default:
 	    super.handleException(cause);
 	    break;
