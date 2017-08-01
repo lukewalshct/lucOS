@@ -32,6 +32,7 @@ public class VMProcess extends UserProcess {
 	//super.restoreState();
     }
 
+    
     @Override
     protected void initializeTranslations()
     {

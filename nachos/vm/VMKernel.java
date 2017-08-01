@@ -4,11 +4,16 @@ import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
 import nachos.vm.*;
+import java.util.Hashtable;;
 
 /**
  * A kernel that can support multiple demand-paging user processes.
  */
 public class VMKernel extends UserKernel {
+	
+	//a global inverted page table
+	private Hashtable<Integer, Integer> _globalPageTable;
+	
     /**
      * Allocate a new VM kernel.
      */
@@ -21,6 +26,17 @@ public class VMKernel extends UserKernel {
      */
     public void initialize(String[] args) {
 	super.initialize(args);
+	initializePageTable();
+    }
+    
+    /**
+     * Initializes a global inverted page table.
+     */
+    private void initializePageTable()
+    {    	
+    	int totalPages = Machine.processor().getNumPhysPages();    	
+    	
+    	this._globalPageTable = new Hashtable<Integer, Integer>(totalPages);
     }
 
     /**
