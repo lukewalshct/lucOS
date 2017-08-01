@@ -12,7 +12,7 @@ import java.util.Hashtable;;
 public class VMKernel extends UserKernel {
 	
 	//a global inverted page table
-	private InvertedPageTable _globalPageTable;
+	private static InvertedPageTable _globalPageTable = new InvertedPageTable(8, 8);  
 	
     /**
      * Allocate a new VM kernel.
@@ -25,16 +25,17 @@ public class VMKernel extends UserKernel {
      * Initialize this kernel.
      */
     public void initialize(String[] args) {
-	super.initialize(args);
-	initializePageTable();
+	super.initialize(args);	
     }
     
-    /**
-     * Initializes a global inverted page table.
-     */
-    private void initializePageTable()
-    {   	
-    	this._globalPageTable = new InvertedPageTable(8, 8); 
+    public static void putTranslation(int processID, int virtualPageNumber, TranslationEntry entry)
+    {
+    	_globalPageTable.put(processID, virtualPageNumber, entry);    	
+    }
+    
+    public static TranslationEntry getTranslation(int processID, int virtualPageNumber)
+    {
+    	return _globalPageTable.get(processID, virtualPageNumber);
     }
 
     /**
@@ -72,7 +73,7 @@ public class VMKernel extends UserKernel {
      * @author luke
      *
      */
-    private class InvertedPageTable
+    private static class InvertedPageTable
     {
     	private Hashtable<Integer, Hashtable<Integer, TranslationEntry>> _pageTable; 	    	
     	

@@ -34,7 +34,7 @@ public class UserProcess {
 	private OpenFile[] openFiles;
 	
 	//represents the phsyical memory pages to which this process' virtual memory maps	
-	private MemNode[] physMemPages;	
+	protected MemNode[] physMemPages;	
 
     /** The program being run by this process. */
     protected Coff coff;
@@ -58,7 +58,7 @@ public class UserProcess {
     //count of all processes ever created
     private static int cumProcessCount;
     
-    private int processID;
+    protected int processID;
     
     private UserProcess parentProcess;       
     

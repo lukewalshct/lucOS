@@ -35,8 +35,16 @@ public class VMProcess extends UserProcess {
     
     @Override
     protected void initializeTranslations()
-    {
-    	super.initializeTranslations();
+    {   	
+		for (int i=0; i<this.numPages; i++)
+		{
+			int physPageNum = this.physMemPages[i].endIndex / pageSize;								
+			
+			VMKernel.putTranslation(this.processID, i,
+					new TranslationEntry(i,physPageNum, true,false,false,false));
+		}    	
+		
+		super.initializeTranslations();
     }
     
     /**
