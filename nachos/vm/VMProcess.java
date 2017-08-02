@@ -69,8 +69,41 @@ public class VMProcess extends UserProcess {
      */
     private void handleTLBMiss()
     {
+    	Machine.interrupt().disable();
+    	
+    	Processor processor = Machine.processor();
+    	
+    	int badVAddr = processor.readRegister(Processor.regBadVAddr);
+    	
+    	int vpn = badVAddr / pageSize;
+    	
+    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);
+    	
+    	//load the translation entry into processor's TLB
+    	loadEntry(entry);
+    	
+    	//reset teh program counter
+    	processor.writeRegister(Processor.regNextPC, 
+    			processor.readRegister(Processor.regPC));
+    	
+    	processor.advancePC();
+    	
+    	Machine.interrupt().enable();
+    }
+    
+    private void loadEntry(TranslationEntry entry)
+    {
+    	if(entry == null) return;
+    	
+    	//for now, just write to 0 index; need to add cache eviction strategy
+    	Machine.processor().writeTLBEntry(0, entry);
+    }
+    
+    private void resetProgramCounter()
+    {
     	
     }
+    
     /**
      * Handle a user exception. Called by
      * <tt>UserKernel.exceptionHandler()</tt>. The
