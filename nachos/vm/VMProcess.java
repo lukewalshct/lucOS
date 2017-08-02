@@ -82,13 +82,12 @@ public class VMProcess extends UserProcess {
     	//load the translation entry into processor's TLB
     	loadEntry(entry);
     	
-    	//reset teh program counter
-    	processor.writeRegister(Processor.regNextPC, 
-    			processor.readRegister(Processor.regPC));
+    	//reset the program counter
+    	int pc = processor.readRegister(Processor.regPC);    	
     	
-    	processor.advancePC();
+    	processor.writeRegister(Processor.regPC, pc-4);    			
     	
-    	Machine.interrupt().enable();
+    	Machine.interrupt().enable();   	    	
     }
     
     private void loadEntry(TranslationEntry entry)
@@ -97,11 +96,6 @@ public class VMProcess extends UserProcess {
     	
     	//for now, just write to 0 index; need to add cache eviction strategy
     	Machine.processor().writeTLBEntry(0, entry);
-    }
-    
-    private void resetProgramCounter()
-    {
-    	
     }
     
     /**
