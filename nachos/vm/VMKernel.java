@@ -12,7 +12,21 @@ import java.util.Hashtable;;
 public class VMKernel extends UserKernel {
 	
 	//a global inverted page table
-	private static InvertedPageTable _globalPageTable = new InvertedPageTable(8, 8);  
+	private static InvertedPageTable _globalPageTable;  
+	
+	//a global core map with physical page # as index
+	private static TranslationEntry[] _globalCoreMap;
+	
+	static
+	{    	
+    	//set up global inverted page table
+    	_globalPageTable = new InvertedPageTable(8, 8);
+    	
+    	//set up global core map
+    	Processor processor = Machine.processor();
+    	
+    	_globalCoreMap = new TranslationEntry[processor.getNumPhysPages()];
+	}
 	
     /**
      * Allocate a new VM kernel.
@@ -25,12 +39,24 @@ public class VMKernel extends UserKernel {
      * Initialize this kernel.
      */
     public void initialize(String[] args) {
-	super.initialize(args);	
+    	super.initialize(args);	
     }
     
     public static void putTranslation(int processID, int virtualPageNumber, TranslationEntry entry)
     {
-    	_globalPageTable.put(processID, virtualPageNumber, entry);    	
+    	if(entry == null || entry.ppn < 0 || 
+    			entry.ppn >= Machine.processor().getMemory().length)
+    	{
+    		//TODO: better handle bad translation entries
+    		
+    		return;
+    	}
+    		
+    	//add entry to global inverted page table
+    	_globalPageTable.put(processID, virtualPageNumber, entry);
+    	
+    	//add entry to core map
+    	_globalCoreMap[entry.ppn] = entry;
     }
     
     public static TranslationEntry getTranslation(int processID, int virtualPageNumber)
