@@ -1,5 +1,7 @@
 package nachos.vm;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
@@ -77,15 +79,10 @@ public class VMProcess extends UserProcess {
     	
     	int vpn = badVAddr / pageSize;
     	
-    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);
-    	
+    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);    	
+    	    	
     	//load the translation entry into processor's TLB
-    	loadEntry(entry);
-    	
-    	//reset the program counter
-    	int pc = processor.readRegister(Processor.regPC);    	
-    	
-    	processor.writeRegister(Processor.regPC, pc-4);    			
+    	loadEntry(entry); 			
     	
     	Machine.interrupt().enable();   	    	
     }
@@ -94,8 +91,20 @@ public class VMProcess extends UserProcess {
     {
     	if(entry == null) return;
     	
-    	//for now, just write to 0 index; need to add cache eviction strategy
-    	Machine.processor().writeTLBEntry(0, entry);
+    	Processor processor = Machine.processor();
+    	
+    	entry.used = false;
+    	
+    	for(int i = 0; i < processor.getTLBSize(); i++)
+    	{
+    		TranslationEntry existing = processor.readTLBEntry(i);
+    		
+    		//for now, just choose random index of TLB to overwrite
+    		//TODO: add better TLB eviction policy
+        	int randIndex = ThreadLocalRandom.current().nextInt(0, 4);        	
+    		
+    	    Machine.processor().writeTLBEntry(randIndex, entry);
+    	}    	
     }
     
     /**
