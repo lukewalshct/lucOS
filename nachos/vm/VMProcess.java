@@ -23,9 +23,27 @@ public class VMProcess extends UserProcess {
      * Called by <tt>UThread.saveState()</tt>.
      */
     public void saveState() {
-	super.saveState();
+    	
+    	invalidateTLBEntries();
+    	
+    	super.saveState();
     }
 
+    /**
+     * Invalidates TLB entries before context switch.
+     */
+    private void invalidateTLBEntries()
+    {
+    	Processor processor = Machine.processor();
+    	
+    	for(int i = 0; i < processor.getTLBSize(); i++)
+    	{
+    		TranslationEntry entry = processor.readTLBEntry(i);
+    		
+    		if(entry != null) entry.valid = false;
+    	}
+    }
+    
     /**
      * Restore the state of this process after a context switch. Called by
      * <tt>UThread.restoreState()</tt>.
