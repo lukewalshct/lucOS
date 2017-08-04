@@ -78,6 +78,13 @@ public class VMKernel extends UserKernel {
     	return _globalPageTable.get(processID, virtualPageNumber);
     }
 
+    public static MemNode getNextFreeMemPage()
+    {
+    	//TODO: handle case where no pyhs memory left (evict some other page)
+    	
+    	return UserKernel.getNextFreeMemPage();
+    }
+    
     /**
      * Test this kernel.
      */	

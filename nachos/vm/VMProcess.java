@@ -77,7 +77,33 @@ public class VMProcess extends UserProcess {
     	//if swap file doesn't yet exist, initialize it
     	if(VMKernel.getSwapFileAccess() == null) VMKernel.initializeSwapFileAccess();
     	
-    	return super.loadSections();
+    	// load sections
+    	for (int s=0; s<coff.getNumSections(); s++) {
+    	    CoffSection section = coff.getSection(s);
+    	    
+    	    Lib.debug(dbgProcess, "\tinitializing " + section.getName()
+    		      + " section (" + section.getLength() + " pages)");
+
+    	    for (int i=0; i<section.getLength(); i++) {
+    		
+    	    	int vpn = section.getFirstVPN()+i;		
+    	    	
+    	    	//obtain a free page of physical memory
+    	    	UserKernel.MemNode freeMemPage = VMKernel.getNextFreeMemPage();
+    	    	
+    	    	//calculate the physical page number
+    	    	int physPageNum = freeMemPage.endIndex / pageSize; 
+    	    	
+    	    	//create a translation entry
+    	    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
+    	    			true,section.isReadOnly(),false,false);
+    	    	
+    	    	//add the entry to the global inverted page table
+    	    	VMKernel.putTranslation(this.processID, entry.vpn, entry);
+    	    }
+    	}
+    	
+    	return true;    	
     }
 
     /**
