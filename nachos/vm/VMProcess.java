@@ -60,7 +60,7 @@ public class VMProcess extends UserProcess {
 		{
 			int physPageNum = this.physMemPages[i].endIndex / pageSize;								
 			
-			VMKernel.putTranslation(this.processID, i,
+			VMKernel.putTranslation(this.processID,
 					new TranslationEntry(i,physPageNum, true,false,false,false));
 		}    	
 		
@@ -99,7 +99,7 @@ public class VMProcess extends UserProcess {
     	    			true,section.isReadOnly(),false,false);
     	    	
     	    	//add the entry to the global inverted page table
-    	    	VMKernel.putTranslation(this.processID, entry.vpn, entry);
+    	    	VMKernel.putTranslation(this.processID, entry);
     	    }
     	}
     	

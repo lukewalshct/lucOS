@@ -56,7 +56,7 @@ public class VMKernel extends UserKernel {
     
     public static SwapFileAccess getSwapFileAccess() { return _globalSwapFileAccess; }
     
-    public static void putTranslation(int processID, int virtualPageNumber, TranslationEntry entry)
+    public static void putTranslation(int processID, TranslationEntry entry)
     {
     	if(entry == null || entry.ppn < 0 || 
     			entry.ppn >= Machine.processor().getMemory().length)
@@ -67,7 +67,7 @@ public class VMKernel extends UserKernel {
     	}
     		
     	//add entry to global inverted page table
-    	_globalPageTable.put(processID, virtualPageNumber, entry);
+    	_globalPageTable.put(processID, entry);
     	
     	//add entry to core map
     	_globalCoreMap[entry.ppn] = entry;
@@ -144,8 +144,7 @@ public class VMKernel extends UserKernel {
     	 * 
     	 * @return
     	 */
-    	public TranslationEntry put(int processID, int virtualPageNumber, 
-    			TranslationEntry entry)
+    	public TranslationEntry put(int processID, TranslationEntry entry)
     	{
     		Hashtable<Integer, TranslationEntry> processPageTable = 
     				this._pageTable.get(processID);
@@ -157,7 +156,7 @@ public class VMKernel extends UserKernel {
     			this._pageTable.put(processID, processPageTable);
     		}
     		
-    		processPageTable.put(virtualPageNumber, entry);
+    		processPageTable.put(entry.vpn, entry);
     		
     		return entry;
     	}
