@@ -560,7 +560,7 @@ public class UserProcess {
     	//(only root process can halt the machine)
     	if(globalProcessCount != 1) return -1;
     	
-		Machine.halt();
+		Kernel.kernel.terminate();
 		
 		Lib.assertNotReached("Machine.halt() did not halt machine!");
 		

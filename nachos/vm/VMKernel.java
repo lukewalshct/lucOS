@@ -17,6 +17,11 @@ public class VMKernel extends UserKernel {
 	//a global core map with physical page # as index
 	private static TranslationEntry[] _globalCoreMap;
 	
+	//swap file to store swapped pages on disk for demand paging
+	private static OpenFile _swapFile;
+	
+	private static String _swapFileName;
+	
 	static
 	{    	
     	//set up global inverted page table
@@ -32,15 +37,30 @@ public class VMKernel extends UserKernel {
      * Allocate a new VM kernel.
      */
     public VMKernel() {
-	super();
+    	super();  	    	
     }
 
     /**
      * Initialize this kernel.
      */
-    public void initialize(String[] args) {
+    public void initialize(String[] args) {    	
     	super.initialize(args);	
     }
+    
+    /**
+     * Initializes swap file on disk.
+     */
+    public static void initializeSwapFile()
+    {
+    	//set up swap file
+    	FileSystem fileSys = Machine.stubFileSystem();
+    	
+    	_swapFileName = "lucos.swp";
+    	
+    	_swapFile = fileSys.open(_swapFileName, true); 
+    }
+    
+    public static OpenFile getSwapFile() { return _swapFile; }
     
     public static void putTranslation(int processID, int virtualPageNumber, TranslationEntry entry)
     {
@@ -82,7 +102,15 @@ public class VMKernel extends UserKernel {
      * Terminate this kernel. Never returns.
      */
     public void terminate() {
-	super.terminate();
+    	
+    	//delete swap file from disk
+    	FileSystem fileSys = Machine.stubFileSystem();
+    	
+    	if(_swapFile != null) _swapFile.close();
+    	
+    	fileSys.remove(_swapFileName);
+    	
+    	super.terminate();
     }
 
     // dummy variables to make javac smarter
