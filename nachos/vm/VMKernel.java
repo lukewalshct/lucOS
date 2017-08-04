@@ -57,6 +57,16 @@ public class VMKernel extends UserKernel {
     	
     	_swapFileName = "lucos.swp";
     	
+    	//if there's already a swapfile, find it and delete it
+    	OpenFile existingSwap = fileSys.open(_swapFileName, false);
+    	
+    	if(existingSwap != null)
+    	{
+    		existingSwap.close();
+    		
+    		fileSys.remove(_swapFileName);
+    	}
+    	
     	_swapFile = fileSys.open(_swapFileName, true); 
     }
     
