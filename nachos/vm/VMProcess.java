@@ -129,12 +129,12 @@ public class VMProcess extends UserProcess {
     	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);    	
     	    	
     	//load the translation entry into processor's TLB
-    	loadEntry(entry); 			
+    	loadTLBEntry(entry); 			
     	
     	Machine.interrupt().enable();   	    	
     }
     
-    private void loadEntry(TranslationEntry entry)
+    private void loadTLBEntry(TranslationEntry entry)
     {
     	if(entry == null) return;
     	
