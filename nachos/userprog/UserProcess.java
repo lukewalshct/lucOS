@@ -346,7 +346,7 @@ public class UserProcess {
 	return amount;
     }
     
-    private int translateVPNToPPN(int vpn)
+    protected int translateVPNToPPN(int vpn)
     {
     	for(int i = 0; i < pageTable.length; i++)
     	{

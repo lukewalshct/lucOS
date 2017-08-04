@@ -99,13 +99,25 @@ public class VMProcess extends UserProcess {
     	    			true,section.isReadOnly(),false,false);
     	    	
     	    	//add the entry to the global inverted page table
-    	    	VMKernel.putTranslation(this.processID, entry);
+    	    	VMKernel.putTranslation(this.processID, entry);    	    	    	    
+    			
+    	    	//load the section into memory
+    	    	section.loadPage(i, physPageNum);
     	    }
     	}
     	
     	return true;    	
     }
-
+    
+    @Override
+    protected int translateVPNToPPN(int vpn)
+    {    	
+    	//look up ppn from global inverted page table
+    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);
+    	
+    	return entry == null ? -1 : entry.ppn;
+    }
+    
     /**
      * Release any resources allocated by <tt>loadSections()</tt>.
      */
