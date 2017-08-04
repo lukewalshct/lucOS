@@ -456,9 +456,7 @@ public class UserProcess {
 	initialSP = numPages*pageSize;
 
 	// and finally reserve 1 page for arguments
-	numPages++;
-	
-	if(!allocateMemory()) return false;
+	numPages++;	
 	
 	if (!loadSections()) return false;	
 
@@ -491,6 +489,9 @@ public class UserProcess {
      * @return	<tt>true</tt> if the sections were successfully loaded.
      */
     protected boolean loadSections() {
+    	
+    if(!allocateMemory()) return false;
+    
 	if (numPages > Machine.processor().getNumPhysPages()) {
 	    coff.close();
 	    Lib.debug(dbgProcess, "\tinsufficient physical memory");
