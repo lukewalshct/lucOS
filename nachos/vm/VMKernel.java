@@ -17,10 +17,7 @@ public class VMKernel extends UserKernel {
 	//a global core map with physical page # as index
 	private static TranslationEntry[] _globalCoreMap;
 	
-	//swap file to store swapped pages on disk for demand paging
-	private static OpenFile _swapFile;
-	
-	private static String _swapFileName;
+	private static SwapFileAccess _globalSwapFileAccess;	
 	
 	static
 	{    	
@@ -48,29 +45,16 @@ public class VMKernel extends UserKernel {
     }
     
     /**
-     * Initializes swap file on disk.
+     * Initializes swap file access object.
      */
-    public static void initializeSwapFile()
-    {
-    	//set up swap file
-    	FileSystem fileSys = Machine.stubFileSystem();
+    public static void initializeSwapFileAccess()
+    {    	
+    	_globalSwapFileAccess = new SwapFileAccess();
     	
-    	_swapFileName = "lucos.swp";
-    	
-    	//if there's already a swapfile, find it and delete it
-    	OpenFile existingSwap = fileSys.open(_swapFileName, false);
-    	
-    	if(existingSwap != null)
-    	{
-    		existingSwap.close();
-    		
-    		fileSys.remove(_swapFileName);
-    	}
-    	
-    	_swapFile = fileSys.open(_swapFileName, true); 
+    	_globalSwapFileAccess.initialize();    	
     }
     
-    public static OpenFile getSwapFile() { return _swapFile; }
+    public static SwapFileAccess getSwapFileAccess() { return _globalSwapFileAccess; }
     
     public static void putTranslation(int processID, int virtualPageNumber, TranslationEntry entry)
     {
@@ -113,12 +97,7 @@ public class VMKernel extends UserKernel {
      */
     public void terminate() {
     	
-    	//delete swap file from disk
-    	FileSystem fileSys = Machine.stubFileSystem();
-    	
-    	if(_swapFile != null) _swapFile.close();
-    	
-    	fileSys.remove(_swapFileName);
+    	if(_globalSwapFileAccess != null) _globalSwapFileAccess.terminate();
     	
     	super.terminate();
     }
@@ -193,5 +172,49 @@ public class VMKernel extends UserKernel {
     		return processPageTable.get(virtualPageNumber);
     	}
     	
+    }
+    
+    /**
+     * A static data structure representing an API for the kernel to communicate
+     * with the swap file on disk. All the translations, free page frames,
+     * calls to the file system, etc, are encapsulated within this data 
+     * structure.
+     * @author luke
+     *
+     */
+    private static class SwapFileAccess
+    {
+    	//swap file to store swapped pages on disk for demand paging
+    	private static OpenFile _swapFile;
+    	
+    	private static final String _swapFileName = "lucos.swp";
+    	
+    	public void initialize()
+    	{
+        	//set up swap file
+        	FileSystem fileSys = Machine.stubFileSystem();       	        	
+        	
+        	//if there's already a swapfile, find it and delete it
+        	OpenFile existingSwap = fileSys.open(_swapFileName, false);
+        	
+        	if(existingSwap != null)
+        	{
+        		existingSwap.close();
+        		
+        		fileSys.remove(_swapFileName);
+        	}
+        	
+        	_swapFile = fileSys.open(_swapFileName, true); 
+    	}
+    	
+    	public void terminate()
+    	{
+        	//delete swap file from disk
+        	FileSystem fileSys = Machine.stubFileSystem();
+        	
+        	if(_swapFile != null) _swapFile.close();
+        	
+        	fileSys.remove(_swapFileName);
+    	}
     }
 }

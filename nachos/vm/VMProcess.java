@@ -75,7 +75,7 @@ public class VMProcess extends UserProcess {
      */
     protected boolean loadSections() {
     	//if swap file doesn't yet exist, initialize it
-    	if(VMKernel.getSwapFile() == null) VMKernel.initializeSwapFile();
+    	if(VMKernel.getSwapFileAccess() == null) VMKernel.initializeSwapFileAccess();
     	
     	return super.loadSections();
     }
