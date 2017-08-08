@@ -68,7 +68,11 @@ public class VMKernel extends UserKernel {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	return _globalSwapFileAccess.loadPage(pid, vpn);
+    	TranslationEntry entry = _globalSwapFileAccess.loadPage(pid, vpn);
+    	
+    	if(entry != null) entry.valid = true;
+    	
+    	return entry;
     }
     
     
