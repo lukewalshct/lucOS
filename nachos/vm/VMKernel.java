@@ -211,7 +211,7 @@ public class VMKernel extends UserKernel {
     private static class SwapFileAccess
     {
     	//swap file to store swapped pages on disk for demand paging
-    	private static OpenFile _swapFile;
+    	private OpenFile _swapFile;
     	
     	private static final String _swapFileName = "lucos.swp";
     	
@@ -238,17 +238,26 @@ public class VMKernel extends UserKernel {
         		fileSys.remove(_swapFileName);
         	}
         	
-        	_swapFile = fileSys.open(_swapFileName, true); 
+        	this._swapFile = fileSys.open(_swapFileName, true); 
         	
-        	_freePageFrames = new LinkedList<Integer>();
+        	this._freePageFrames = new LinkedList<Integer>();
         	
-        	_swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
+        	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
     	}
-    	    	
+    	 
+    	/**
+    	 * Looks up the page in the swap file for the given process id and
+    	 * virtual page number. Loads the page into main memory, and returns
+    	 * the translation entry for the page.
+    	 * 
+    	 * @param pid
+    	 * @param vpn
+    	 * @return
+    	 */
     	public TranslationEntry loadPage(int pid, int vpn)
     	{
     		Hashtable<Integer, SwapEntry> processSwapLookup 
-				= _swapLookup.get(pid);
+				= this._swapLookup.get(pid);
 		
     		if(processSwapLookup == null) return null;
 		
@@ -261,6 +270,62 @@ public class VMKernel extends UserKernel {
     		return entry.translation;
     	}
     	
+    	/**
+    	 * Writes page from main memory to swap file.
+    	 * @return
+    	 */
+    	public boolean writePage(int pid, TranslationEntry entry)
+    	{
+    		if(entry == null || !entry.dirty) return false;
+    		    		
+    		//get the swap lookup for the process, create if doesn't exist
+    		Hashtable<Integer, SwapEntry> processSwapLookup 
+				= this._swapLookup.get(pid);
+    		
+    		if(processSwapLookup == null)
+    		{
+    			processSwapLookup = new Hashtable<Integer, SwapEntry>();    			
+    			
+    			this._swapLookup.put(pid, processSwapLookup);
+    		}
+    		
+    		//try to get the existing page frame index    		    	
+    		SwapEntry swapEntry = processSwapLookup.get(pid);
+    		
+    		if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
+    		
+    		return writeToSwap(swapEntry);
+    	}
+    	
+    	private boolean writeToSwap(SwapEntry swapEntry)
+    	{
+    		if(swapEntry == null || swapEntry.translation == null) return false;
+    		
+    		//get main memory from the processor
+    		byte[] memory = Machine.processor().getMemory();
+    		
+    		int ppn = swapEntry.translation.ppn;
+    		
+    		//validate physical page number
+    		if (ppn < 0 || ppn >= memory.length)
+    		    return false;    		 
+    		
+    		//get page to be written from main memory
+    		byte[] pageToWrite = new byte[Machine.processor().pageSize];
+    		
+    		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
+    		
+    		//write page to swap
+    		int bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
+    				pageToWrite, 0, pageToWrite.length);
+    		
+    		return bytesWritten == Machine.processor().pageSize;
+    	}
+    	
+    	/**
+    	 * Loads page retrieved from swap file into memory.
+    	 * @param entry
+    	 */
     	private void load(SwapEntry entry)
     	{
     		//TODO: load page into main memory
@@ -281,7 +346,14 @@ public class VMKernel extends UserKernel {
     	{
     		public int pageFrameIndex;
     		
-    		public TranslationEntry translation;   		    		 
+    		public TranslationEntry translation;   
+    		
+    		public SwapEntry(int pageFrameIndex, TranslationEntry entry)
+    		{
+    			this.pageFrameIndex = pageFrameIndex;
+    			
+    			this.translation = entry;
+    		}
     	}
     }
 }
