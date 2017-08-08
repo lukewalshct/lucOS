@@ -5,6 +5,7 @@ import nachos.threads.*;
 import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.Hashtable;;
+import java.util.LinkedList;
 
 /**
  * A kernel that can support multiple demand-paging user processes.
@@ -67,7 +68,7 @@ public class VMKernel extends UserKernel {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	return null;
+    	return _globalSwapFileAccess.loadPage(pid, vpn);
     }
     
     
@@ -210,6 +211,14 @@ public class VMKernel extends UserKernel {
     	
     	private static final String _swapFileName = "lucos.swp";
     	
+    	//keeps track of page frames in the swap file that are no longer
+    	//in use and pages from main memory can be "paged out" to
+    	private LinkedList<Integer> _freePageFrames;
+    	
+    	//a lookup of page frames and translation for a given process id
+    	//nad virtual page number
+    	private Hashtable<Integer, Hashtable<Integer, SwapEntry>> _swapLookup;
+    	
     	public void initialize()
     	{
         	//set up swap file
@@ -226,6 +235,32 @@ public class VMKernel extends UserKernel {
         	}
         	
         	_swapFile = fileSys.open(_swapFileName, true); 
+        	
+        	_freePageFrames = new LinkedList<Integer>();
+        	
+        	_swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
+    	}
+    	    	
+    	public TranslationEntry loadPage(int pid, int vpn)
+    	{
+    		Hashtable<Integer, SwapEntry> processSwapLookup 
+				= _swapLookup.get(pid);
+		
+    		if(processSwapLookup == null) return null;
+		
+    		SwapEntry entry = processSwapLookup.get(vpn);
+    		
+    		if(entry == null) return null;
+    		
+    		load(entry);
+    		
+    		return entry.translation;
+    	}
+    	
+    	private void load(SwapEntry entry)
+    	{
+    		//TODO: load page into main memory
+    		
     	}
     	
     	public void terminate()
@@ -236,6 +271,13 @@ public class VMKernel extends UserKernel {
         	if(_swapFile != null) _swapFile.close();
         	
         	fileSys.remove(_swapFileName);
+    	}
+    	
+    	private class SwapEntry
+    	{
+    		public int pageFrameIndex;
+    		
+    		public TranslationEntry translation;   		    		 
     	}
     }
 }
