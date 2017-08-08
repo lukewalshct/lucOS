@@ -140,10 +140,33 @@ public class VMProcess extends UserProcess {
     	
     	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);    	
     	    	
+    	//if there's no entry or if it's invalid, handle page fault
+    	if(entry == null || !entry.valid)
+    	{
+    		entry = handlePageFault(this.processID, vpn);
+    	}
+    		
     	//load the translation entry into processor's TLB
     	loadTLBEntry(entry); 			
     	
     	Machine.interrupt().enable();   	    	
+    }
+    
+    /**
+     * Handles page fault by calling VMKernel to get the page
+     * from the swap file.
+     * 
+     * @param pid
+     * @param vpn
+     * @return
+     */
+    private TranslationEntry handlePageFault(int pid, int vpn)
+    {
+    	Lib.assertTrue(Machine.interrupt().disabled());   	
+    	
+    	//TODO: handle page fault
+    	
+    	return VMKernel.loadPageFromSwap(pid, vpn);
     }
     
     private void loadTLBEntry(TranslationEntry entry)

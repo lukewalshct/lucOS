@@ -56,6 +56,21 @@ public class VMKernel extends UserKernel {
     
     public static SwapFileAccess getSwapFileAccess() { return _globalSwapFileAccess; }
     
+    /**
+     * Loads the page from swap file on the file system and returns
+     * the associated translation entry. 
+     * @param pid
+     * @param vpn
+     * @return
+     */
+    public static TranslationEntry loadPageFromSwap(int pid, int vpn)
+    {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
+    	return null;
+    }
+    
+    
     public static void putTranslation(int processID, TranslationEntry entry)
     {
     	if(entry == null || entry.ppn < 0 || 
