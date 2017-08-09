@@ -319,7 +319,7 @@ public class VMKernel extends UserKernel {
     				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
     				
     		//write page to swap
-    		int bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
+    		int bytesWritten = _swapFile.write(pageFrameIndex, 
     				pageToWrite, 0, pageToWrite.length);
     		
     		return bytesWritten == Machine.processor().pageSize;
