@@ -182,7 +182,22 @@ public class VMProcess extends UserProcess {
     	
     	//TODO: handle page fault
     	
-    	return VMKernel.loadPageFromSwap(pid, vpn);
+    	TranslationEntry entry = VMKernel.loadPageFromSwap(pid, vpn);
+    	
+    	//handle cases where the page does not exist in main mem or swap
+    	if(entry == null)
+    	{
+    		//if stack page and within stack size limit, create new stack page
+    		if(isStackPage(vpn)) entry = newPage(vpn, true, false, false, false);
+    	}
+    	
+    	return entry;
+    }
+    
+    private boolean isStackPage(int vpn)
+    {
+    	return (vpn <= (this.getInitialSP() / pageSize) && 
+    			vpn >= (this.getInitialSP() / pageSize) - stackPages);
     }
     
     private void loadTLBEntry(TranslationEntry entry)
