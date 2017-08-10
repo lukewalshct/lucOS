@@ -220,6 +220,12 @@ public class VMProcess extends UserProcess {
     	}    	
     }
     
+    @Override
+    protected TranslationEntry getTranslation(int vpn)
+    {
+    	return VMKernel.getTranslation(this.processID, vpn);
+    }
+    
     /**
      * Handle a user exception. Called by
      * <tt>UserKernel.exceptionHandler()</tt>. The

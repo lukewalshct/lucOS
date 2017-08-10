@@ -331,9 +331,10 @@ public class UserProcess {
 	//get virtual page number
 	int vpn = vaddr / pageSize;
 	
+	TranslationEntry entry = getTranslation(vpn);
+	
 	//check to ensure there's a valid virtual page and it's not read only
-	if(vpn < 0 || vpn > this.physMemPages.length ||
-			this.pageTable[vpn].readOnly) return 0;
+	if(entry == null || entry.readOnly) return 0;
 	
 	int paddr = translateVAddrToPAdrr(vaddr);
 	
@@ -346,6 +347,13 @@ public class UserProcess {
 	System.arraycopy(data, offset, memory, paddr, amount);
 
 	return amount;
+    }
+    
+    protected TranslationEntry getTranslation(int vpn)
+    {
+    	if(vpn < 0 || vpn >= this.pageTable.length) return null;
+    	
+    	return this.pageTable[vpn];
     }
     
     protected int translateVPNToPPN(int vpn)
