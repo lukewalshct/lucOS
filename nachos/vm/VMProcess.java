@@ -87,26 +87,42 @@ public class VMProcess extends UserProcess {
     	    for (int i=0; i<section.getLength(); i++) {
     		
     	    	int vpn = section.getFirstVPN()+i;		
-    	    	
-    	    	//obtain a free page of physical memory
-    	    	UserKernel.MemNode freeMemPage = VMKernel.getNextFreeMemPage();
-    	    	
-    	    	//calculate the physical page number
-    	    	int physPageNum = freeMemPage.endIndex / pageSize; 
-    	    	
-    	    	//create a translation entry
-    	    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
-    	    			true,section.isReadOnly(),false,false);
-    	    	
-    	    	//add the entry to the global inverted page table
-    	    	VMKernel.putTranslation(this.processID, entry);    	    	    	    
+    	    	 	    	    	    
+    			TranslationEntry entry = newPage(vpn, true, section.isReadOnly(),
+    					false, false);
     			
     	    	//load the section into memory
-    	    	section.loadPage(i, physPageNum);
+    	    	section.loadPage(i, entry.ppn);
     	    }
     	}
     	
+    	//allocate first page for stack
+    	newPage(this.getInitialSP() / pageSize, true, false, false, false);
+    	
     	return true;    	
+    }
+    
+    /**
+     * Creates a new page and translation entry for that page..
+     * @return
+     */
+    private TranslationEntry newPage(int vpn, boolean valid, boolean readOnly,
+    		boolean used, boolean dirty)
+    {
+    	//obtain a free page of physical memory
+    	UserKernel.MemNode freeMemPage = VMKernel.getNextFreeMemPage();
+    	
+    	//calculate the physical page number
+    	int physPageNum = freeMemPage.endIndex / pageSize; 
+    	
+    	//create a translation entry
+    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
+    			valid, readOnly, used, dirty);
+    	
+    	//add the entry to the global inverted page table
+    	VMKernel.putTranslation(this.processID, entry);   
+    	
+    	return entry;
     }
     
     @Override

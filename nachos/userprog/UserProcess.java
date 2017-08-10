@@ -176,6 +176,8 @@ public class UserProcess {
 
     public int getProcessID(){ return this.processID; }
     
+    protected int getInitialSP(){ return this.initialSP; }
+    
     private void setParentProcess(UserProcess parentProcess)
     {
     	this.parentProcess = parentProcess;
