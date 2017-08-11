@@ -132,16 +132,7 @@ public class VMProcess extends UserProcess {
     	
     	return entry;
     }
-    
-    @Override
-    protected int translateVPNToPPN(int vpn)
-    {    	
-    	//look up ppn from global inverted page table
-    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);
-    	
-    	return entry == null ? -1 : entry.ppn;
-    }
-    
+     
     /**
      * Release any resources allocated by <tt>loadSections()</tt>.
      */

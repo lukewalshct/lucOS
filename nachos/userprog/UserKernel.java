@@ -86,7 +86,11 @@ public class UserKernel extends ThreadedKernel {
     		if(!freeMemory.isEmpty())
     		{
     			result = freeMemory.remove(0);
-    		}   	
+    		}
+    		else
+    		{
+    			Lib.debug('u', "NO FREE MEMORY");
+    		}
     	}
     	finally
     	{
