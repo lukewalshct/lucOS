@@ -178,6 +178,8 @@ public class UserProcess {
     
     protected int getInitialSP(){ return this.initialSP; }
     
+    protected int getArgV() { return this.argv; }
+    
     private void setParentProcess(UserProcess parentProcess)
     {
     	this.parentProcess = parentProcess;
@@ -356,16 +358,6 @@ public class UserProcess {
     	return this.pageTable[vpn];
     }
     
-    protected int translateVPNToPPN(int vpn)
-    {
-    	for(int i = 0; i < pageTable.length; i++)
-    	{
-    		if(pageTable[i].vpn == vpn) return pageTable[i].ppn;
-    	}
-    	
-    	return -1;
-    }
-    
     /**
      * Translates virtual address to physical address.
      * 
@@ -384,14 +376,13 @@ public class UserProcess {
     	//calculate the offset into the page 
     	int addressOffset = vaddr % pageSize;
     	
-    	//get the physical page number
-    	int ppn = translateVPNToPPN(vpn);
+    	//get the translation entry
+    	TranslationEntry entry = getTranslation(vpn);
     	
-    	//if the vaddr is outside this process' virtual address space, return 0
-    	if(ppn == -1) return -1;
-    	
+    	if(entry == null) return -1;
+    
     	//calculate physical address
-    	int paddr = (ppn*pageSize) + addressOffset;
+    	int paddr = (entry.ppn*pageSize) + addressOffset;
     	
     	return paddr;
     }
@@ -523,10 +514,10 @@ public class UserProcess {
 	    	//set page to readonly in translation table if applicable
 	    	this.pageTable[vpn].readOnly = section.isReadOnly();
 		
-	    	//for now, just assume virtual addresses=physical addresses
-	    	int ppn = translateVPNToPPN(vpn);
+	    	//get translation entry
+	    	TranslationEntry entry = getTranslation(vpn);	    	
 		
-	    	section.loadPage(i, ppn);
+	    	section.loadPage(i, entry.ppn);
 	    }
 	}
 	
