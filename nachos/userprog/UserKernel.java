@@ -11,10 +11,10 @@ import nachos.vm.*; //TODO: remove once static method calls removed
  */
 public class UserKernel extends ThreadedKernel {
 	
-	private static List<MemNode> freeMemory;
+	private List<MemNode> freeMemory;
 	
 	//a lock protecting access to free memory
-	private static Lock freeMemLock;
+	private Lock freeMemLock;
 	
     /**
      * Allocate a new user kernel.
@@ -52,7 +52,7 @@ public class UserKernel extends ThreadedKernel {
     	
     	byte [] mainMemory = Machine.processor().getMemory();
     
-    	freeMemory = new LinkedList<MemNode>();
+    	this.freeMemory = new LinkedList<MemNode>();
     	
     	//set up concurrency protections
     	this.freeMemLock = new Lock();   	
@@ -65,7 +65,7 @@ public class UserKernel extends ThreadedKernel {
     		
     		memNode.endIndex = i + pageSize - 1;
     		
-    		freeMemory.add(memNode);
+    		this.freeMemory.add(memNode);
     	}
     }
     
@@ -75,31 +75,39 @@ public class UserKernel extends ThreadedKernel {
      * 
      * @return the next MemNode containing free page of memory indices
      */
-    public static MemNode getNextFreeMemPage(int processID)
+    public MemNode getNextFreeMemPage(int processID)
     {
     	MemNode result = null;
     	
     	//enter critical section
-    	freeMemLock.acquire();
+    	this.freeMemLock.acquire();
     	
     	try
     	{    	
-    		if(!freeMemory.isEmpty())
+    		if(!this.freeMemory.isEmpty())
     		{
-    			result = freeMemory.remove(0);
+    			result = this.freeMemory.remove(0);
     		}
     		else
     		{
-    			result = VMKernel.freeUpMemory(processID); //TODO: temp fix: need to convert this static method to instance method
+    			result = ((UserKernel)(Kernel.kernel)).freeUpMemory(processID); //TODO: temp fix: need to convert this static method to instance method
     		}
     	}
     	finally
     	{
         	//exit critical section
-        	freeMemLock.release();
+        	this.freeMemLock.release();
         	
         	return result;
     	}
+    }
+    
+    /*
+     * Implemented only in VMKernel. Not implemented in UserKernel.
+     */
+    protected MemNode freeUpMemory(int processID)
+    {
+    	return null;    
     }
     
     /**
@@ -109,19 +117,19 @@ public class UserKernel extends ThreadedKernel {
      * 
      * @param node
      */
-    public static void returnFreeMemPage(MemNode node)
+    public void returnFreeMemPage(MemNode node)
     {
     	//enter critical section
-    	freeMemLock.acquire();
+    	this.freeMemLock.acquire();
     	
     	try
     	{   	    		
-    		if(node != null) freeMemory.add(node);   	
+    		if(node != null) this.freeMemory.add(node);   	
     	}
     	finally
     	{
         	//exit critical section
-        	freeMemLock.release();       	
+        	this.freeMemLock.release();       	
         }
     }
     

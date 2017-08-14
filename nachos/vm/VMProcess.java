@@ -63,11 +63,13 @@ public class VMProcess extends UserProcess {
     @Override
     protected void initializeTranslations()
     {   	
+    	VMKernel kernel = (VMKernel) Kernel.kernel;
+    	
 		for (int i=0; i<this.numPages; i++)
 		{
 			int physPageNum = this.physMemPages[i].endIndex / pageSize;								
 			
-			VMKernel.putTranslation(this.processID,
+			kernel.putTranslation(this.processID,
 					new TranslationEntry(i,physPageNum, true,false,false,false));
 		}    	
 		
@@ -81,8 +83,11 @@ public class VMProcess extends UserProcess {
      * @return	<tt>true</tt> if successful.
      */
     protected boolean loadSections() {
+    	
+    	VMKernel kernel = (VMKernel) Kernel.kernel;
+    	
     	//if swap file doesn't yet exist, initialize it
-    	if(VMKernel.getSwapFileAccess() == null) VMKernel.initializeSwapFileAccess();
+    	if(kernel.getSwapFileAccess() == null) kernel.initializeSwapFileAccess();
     	
     	// load sections
     	for (int s=0; s<coff.getNumSections(); s++) {
@@ -109,7 +114,7 @@ public class VMProcess extends UserProcess {
     	//allocate page for arguments, if they exist
     	int argVAddr = this.getArgV() / pageSize;
     	
-    	if(VMKernel.getTranslation(this.processID, argVAddr) == null)
+    	if(kernel.getTranslation(this.processID, argVAddr) == null)
     	{
     		newPage(argVAddr, true, false, false, false);
     	}
@@ -124,8 +129,10 @@ public class VMProcess extends UserProcess {
     private TranslationEntry newPage(int vpn, boolean valid, boolean readOnly,
     		boolean used, boolean dirty)
     {
+    	VMKernel kernel = (VMKernel) Kernel.kernel;
+    	
     	//obtain a free page of physical memory
-    	UserKernel.MemNode freeMemPage = VMKernel.getNextFreeMemPage();
+    	UserKernel.MemNode freeMemPage = kernel.getNextFreeMemPage(this.processID);
     	
     	//calculate the physical page number
     	int physPageNum = freeMemPage.endIndex / pageSize; 
@@ -135,7 +142,7 @@ public class VMProcess extends UserProcess {
     			valid, readOnly, used, dirty);
     	
     	//add the entry to the global inverted page table
-    	VMKernel.putTranslation(this.processID, entry);   
+    	kernel.putTranslation(this.processID, entry);   
     	
     	return entry;
     }
@@ -160,7 +167,7 @@ public class VMProcess extends UserProcess {
     	
     	int vpn = badVAddr / pageSize;
     	
-    	TranslationEntry entry = VMKernel.getTranslation(this.processID, vpn);    	
+    	TranslationEntry entry = ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn);    	
     	    	
     	//if there's no entry or if it's invalid, handle page fault
     	if(entry == null || !entry.valid)
@@ -188,7 +195,7 @@ public class VMProcess extends UserProcess {
     	
     	//TODO: handle page fault
     	
-    	TranslationEntry entry = VMKernel.loadPageFromSwap(pid, vpn);
+    	TranslationEntry entry = ((VMKernel)Kernel.kernel).loadPageFromSwap(pid, vpn);
     	
     	//handle cases where the page does not exist in main mem or swap
     	if(entry == null)
@@ -229,7 +236,7 @@ public class VMProcess extends UserProcess {
     @Override
     protected TranslationEntry getTranslation(int vpn)
     {
-    	return VMKernel.getTranslation(this.processID, vpn);
+    	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn);
     }
     
     /**

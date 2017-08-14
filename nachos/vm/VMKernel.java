@@ -14,23 +14,12 @@ import java.util.concurrent.ThreadLocalRandom;
 public class VMKernel extends UserKernel {
 	
 	//a global inverted page table
-	private static InvertedPageTable _globalPageTable;  
+	private InvertedPageTable _globalPageTable;  
 	
 	//a global core map with physical page # as index
-	private static TranslationEntry[] _globalCoreMap;
+	private TranslationEntry[] _globalCoreMap;
 	
-	private static SwapFileAccess _globalSwapFileAccess;	
-	
-	static
-	{    	
-    	//set up global inverted page table
-    	_globalPageTable = new InvertedPageTable(8, 8);
-    	
-    	//set up global core map
-    	Processor processor = Machine.processor();
-    	
-    	_globalCoreMap = new TranslationEntry[processor.getNumPhysPages()];
-	}
+	private SwapFileAccess _globalSwapFileAccess;	
 	
     /**
      * Allocate a new VM kernel.
@@ -42,21 +31,29 @@ public class VMKernel extends UserKernel {
     /**
      * Initialize this kernel.
      */
-    public void initialize(String[] args) {    	
+    public void initialize(String[] args) { 
+       	//set up global inverted page table
+    	this._globalPageTable = new InvertedPageTable(8, 8);
+    	
+    	//set up global core map
+    	Processor processor = Machine.processor();
+    	
+    	this._globalCoreMap = new TranslationEntry[processor.getNumPhysPages()];
+    	
     	super.initialize(args);	
     }
     
     /**
      * Initializes swap file access object.
      */
-    public static void initializeSwapFileAccess()
+    public void initializeSwapFileAccess()
     {    	
-    	_globalSwapFileAccess = new SwapFileAccess();
+    	this._globalSwapFileAccess = new SwapFileAccess();
     	
-    	_globalSwapFileAccess.initialize();    	
+    	this._globalSwapFileAccess.initialize();    	
     }
     
-    public static SwapFileAccess getSwapFileAccess() { return _globalSwapFileAccess; }
+    public SwapFileAccess getSwapFileAccess() { return this._globalSwapFileAccess; }
     
     /**
      * Loads the page from swap file on the file system and returns
@@ -65,11 +62,11 @@ public class VMKernel extends UserKernel {
      * @param vpn
      * @return
      */
-    public static TranslationEntry loadPageFromSwap(int pid, int vpn)
+    public TranslationEntry loadPageFromSwap(int pid, int vpn)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	TranslationEntry entry = _globalSwapFileAccess.loadPage(pid, vpn);
+    	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn);
     	
     	if(entry != null) entry.valid = true;
     	
@@ -77,7 +74,7 @@ public class VMKernel extends UserKernel {
     }
     
     
-    public static void putTranslation(int processID, TranslationEntry entry)
+    public void putTranslation(int processID, TranslationEntry entry)
     {
     	if(entry == null || entry.ppn < 0 || 
     			entry.ppn >= Machine.processor().getMemory().length)
@@ -88,15 +85,15 @@ public class VMKernel extends UserKernel {
     	}
     		
     	//add entry to global inverted page table
-    	_globalPageTable.put(processID, entry);
+    	this._globalPageTable.put(processID, entry);
     	
     	//add entry to core map
-    	_globalCoreMap[entry.ppn] = entry;
+    	this._globalCoreMap[entry.ppn] = entry;
     }
     
-    public static TranslationEntry getTranslation(int processID, int virtualPageNumber)
+    public TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
-    	return _globalPageTable.get(processID, virtualPageNumber);
+    	return this._globalPageTable.get(processID, virtualPageNumber);
     }    
 
     /*
@@ -106,7 +103,8 @@ public class VMKernel extends UserKernel {
      * returns a MemNode that represents the new empty slot in 
      * main memory.
      */    
-    public static MemNode freeUpMemory(int processID)
+    @Override
+    protected MemNode freeUpMemory(int processID)
     {
     	int freePageNum = evictPage(processID);
     	
@@ -120,25 +118,25 @@ public class VMKernel extends UserKernel {
 		
 		memNode.endIndex = memNode.startIndex + pageSize - 1;
     	
-    	return memNOde;
+    	return memNode;
     }
     
     /*
      * Evicts a page from main memory.
      */
-    private static int evictPage(int processID)
+    private int evictPage(int processID)
     {
     	//Currently chooses page at random. TODO: implement nth chance algorithm
     	int physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
     	
-    	TranslationEntry entry = _globalCoreMap[physPageNum];
+    	TranslationEntry entry = this._globalCoreMap[physPageNum];
     	
     	if(entry == null) return -1;
     	
     	//remove references to the page from core map and global inverted page table
-    	_globalCoreMap[physPageNum] = null;
+    	this._globalCoreMap[physPageNum] = null;
     	
-    	_globalPageTable.remove(processID, entry.vpn);
+    	this._globalPageTable.remove(processID, entry.vpn);
     	
     	return physPageNum;
     }
@@ -162,7 +160,7 @@ public class VMKernel extends UserKernel {
      */
     public void terminate() {
     	
-    	if(_globalSwapFileAccess != null) _globalSwapFileAccess.terminate();
+    	if(this._globalSwapFileAccess != null) this._globalSwapFileAccess.terminate();
     	
     	super.terminate();
     }
@@ -181,7 +179,7 @@ public class VMKernel extends UserKernel {
      * @author luke
      *
      */
-    private static class InvertedPageTable
+    private class InvertedPageTable
     {
     	private Hashtable<Integer, Hashtable<Integer, TranslationEntry>> _pageTable; 	    	
     	
@@ -256,7 +254,7 @@ public class VMKernel extends UserKernel {
      * @author luke
      *
      */
-    private static class SwapFileAccess
+    private class SwapFileAccess
     {
     	//swap file to store swapped pages on disk for demand paging
     	private OpenFile _swapFile;
