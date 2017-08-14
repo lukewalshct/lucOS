@@ -133,10 +133,13 @@ public class VMKernel extends UserKernel {
     	
     	if(entry == null) return -1;
     	
+    	//write old page to the swap file
+    	this._globalSwapFileAccess.writePage(processID, entry);
+    	
     	//remove references to the page from core map and global inverted page table
     	this._globalCoreMap[physPageNum] = null;
     	
-    	this._globalPageTable.remove(processID, entry.vpn);
+    	this._globalPageTable.remove(processID, entry.vpn);    	    	
     	
     	return physPageNum;
     }

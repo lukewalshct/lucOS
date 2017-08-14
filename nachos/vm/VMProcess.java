@@ -11,6 +11,10 @@ import nachos.vm.*;
  * A <tt>UserProcess</tt> that supports demand-paging.
  */
 public class VMProcess extends UserProcess {
+	
+	//saved TLB state for when context swtiches occur
+	private TranslationEntry[] _savedTLBEntries;
+	
     /**
      * Allocate a new process.
      */
@@ -25,6 +29,9 @@ public class VMProcess extends UserProcess {
     public void saveState() {
     	
     	Lib.assertTrue(Machine.interrupt().disabled());
+    	
+    	if(this._savedTLBEntries == null) 
+    		this._savedTLBEntries = new TranslationEntry[Machine.processor().getTLBSize()];
     	
     	invalidateTLBEntries();
     	
@@ -42,6 +49,8 @@ public class VMProcess extends UserProcess {
     	{    		
     		TranslationEntry entry = processor.readTLBEntry(i);
     		
+    		this._savedTLBEntries[i] = new TranslationEntry(entry);
+    		
     		if(entry != null)
     		{
     			entry.valid = false;
@@ -56,7 +65,15 @@ public class VMProcess extends UserProcess {
      * <tt>UThread.restoreState()</tt>.
      */
     public void restoreState() {
-	//super.restoreState();
+    	
+    	if(this._savedTLBEntries == null) return;
+    	
+    	Processor processor = Machine.processor();
+    	
+    	for(int i = 0; i < processor.getTLBSize(); i++)
+    	{   	    		    			
+    		processor.writeTLBEntry(i, this._savedTLBEntries[i]);    				
+    	}    	
     }
 
     

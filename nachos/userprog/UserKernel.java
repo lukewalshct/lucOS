@@ -79,6 +79,8 @@ public class UserKernel extends ThreadedKernel {
     {
     	MemNode result = null;
     	
+    	Machine.interrupt().disable();
+    	
     	//enter critical section
     	this.freeMemLock.acquire();
     	
@@ -90,13 +92,15 @@ public class UserKernel extends ThreadedKernel {
     		}
     		else
     		{
-    			result = ((UserKernel)(Kernel.kernel)).freeUpMemory(processID); //TODO: temp fix: need to convert this static method to instance method
+    			result = ((UserKernel)(Kernel.kernel)).freeUpMemory(processID); 
     		}
     	}
     	finally
     	{
         	//exit critical section
         	this.freeMemLock.release();
+        	
+        	Machine.interrupt().enable();
         	
         	return result;
     	}
