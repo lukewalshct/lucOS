@@ -108,7 +108,7 @@ public class UserProcess {
     	
     	for(int i = 0; i < this.numPages; i++)
     	{
-    		MemNode memNode = UserKernel.getNextFreeMemPage();
+    		MemNode memNode = UserKernel.getNextFreeMemPage(this.processID);
     		
     		if(memNode == null) return false;
     		

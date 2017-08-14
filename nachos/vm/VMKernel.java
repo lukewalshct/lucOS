@@ -6,6 +6,7 @@ import nachos.userprog.*;
 import nachos.vm.*;
 import java.util.Hashtable;;
 import java.util.LinkedList;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A kernel that can support multiple demand-paging user processes.
@@ -96,16 +97,7 @@ public class VMKernel extends UserKernel {
     public static TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
     	return _globalPageTable.get(processID, virtualPageNumber);
-    }
-
-    public static MemNode getNextFreeMemPage()
-    {
-    	//TODO: handle case where no pyhs memory left (evict some other page)
-    	MemNode freeMemPage = UserKernel.getNextFreeMemPage();
-    	
-    	return freeMemPage;
-    }
-    
+    }    
 
     /*
      * Called when main memory is full but a process needs a 
@@ -114,11 +106,41 @@ public class VMKernel extends UserKernel {
      * returns a MemNode that represents the new empty slot in 
      * main memory.
      */    
-    public static MemNode freeUpMemory()
+    public static MemNode freeUpMemory(int processID)
     {
-    	Lib.debug('u', "NO FREE MEMORY");
+    	int freePageNum = evictPage(processID);
     	
-    	return null;
+    	if(freePageNum < 0) return null;
+    	
+    	int pageSize = Machine.processor().pageSize;   	
+    	
+		MemNode memNode = new MemNode();
+		
+		memNode.startIndex = freePageNum * pageSize;
+		
+		memNode.endIndex = memNode.startIndex + pageSize - 1;
+    	
+    	return memNOde;
+    }
+    
+    /*
+     * Evicts a page from main memory.
+     */
+    private static int evictPage(int processID)
+    {
+    	//Currently chooses page at random. TODO: implement nth chance algorithm
+    	int physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    	
+    	TranslationEntry entry = _globalCoreMap[physPageNum];
+    	
+    	if(entry == null) return -1;
+    	
+    	//remove references to the page from core map and global inverted page table
+    	_globalCoreMap[physPageNum] = null;
+    	
+    	_globalPageTable.remove(processID, entry.vpn);
+    	
+    	return physPageNum;
     }
     
     /**
@@ -212,6 +234,16 @@ public class VMKernel extends UserKernel {
     		if(processPageTable == null) return null;
     		
     		return processPageTable.get(virtualPageNumber);
+    	}
+    	
+    	public TranslationEntry remove(int processID, int virtualPageNumber)
+    	{
+    		Hashtable<Integer, TranslationEntry> processPageTable 
+    			= this._pageTable.get(processID);
+		
+    		if(processPageTable == null) return null;
+		
+    		return processPageTable.remove(virtualPageNumber);	
     	}
     	
     }

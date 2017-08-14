@@ -75,7 +75,7 @@ public class UserKernel extends ThreadedKernel {
      * 
      * @return the next MemNode containing free page of memory indices
      */
-    public static MemNode getNextFreeMemPage()
+    public static MemNode getNextFreeMemPage(int processID)
     {
     	MemNode result = null;
     	
@@ -90,7 +90,7 @@ public class UserKernel extends ThreadedKernel {
     		}
     		else
     		{
-    			result = VMKernel.freeUpMemory(); //TODO: temp fix: need to convert this static method to instance method
+    			result = VMKernel.freeUpMemory(processID); //TODO: temp fix: need to convert this static method to instance method
     		}
     	}
     	finally
