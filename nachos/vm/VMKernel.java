@@ -106,6 +106,21 @@ public class VMKernel extends UserKernel {
     	return freeMemPage;
     }
     
+
+    /*
+     * Called when main memory is full but a process needs a 
+     * free page of memory. Frees up a page in main memory by
+     * writing the page to the swap file (if applicable) and 
+     * returns a MemNode that represents the new empty slot in 
+     * main memory.
+     */    
+    public static MemNode freeUpMemory()
+    {
+    	Lib.debug('u', "NO FREE MEMORY");
+    	
+    	return null;
+    }
+    
     /**
      * Test this kernel.
      */	

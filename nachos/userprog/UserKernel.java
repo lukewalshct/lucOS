@@ -4,6 +4,7 @@ import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
 import java.util.*;
+import nachos.vm.*; //TODO: remove once static method calls removed
 
 /**
  * A kernel that can support multiple user processes.
@@ -89,7 +90,7 @@ public class UserKernel extends ThreadedKernel {
     		}
     		else
     		{
-    			Lib.debug('u', "NO FREE MEMORY");
+    			result = VMKernel.freeUpMemory(); //TODO: temp fix: need to convert this static method to instance method
     		}
     	}
     	finally
