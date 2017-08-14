@@ -479,9 +479,18 @@ public class UserProcess {
 	    stringOffset += 1;
 	}
 
+	allocateArgs();
+	
 	return true;
     }
 
+    /*
+     * Overridden by VMProcess b/c memory allocation handled differently.
+     */
+    protected void allocateArgs()
+    {
+    	
+    }
     /**
      * Allocates memory for this process, and loads the COFF sections into
      * memory. If this returns successfully, the process will definitely be

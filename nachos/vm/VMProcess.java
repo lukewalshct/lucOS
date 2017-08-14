@@ -128,17 +128,23 @@ public class VMProcess extends UserProcess {
     	//allocate first page for stack
     	newPage(this.getInitialSP() / pageSize, true, false, false, false);
     	
-    	//allocate page for arguments, if they exist
-    	int argVAddr = this.getArgV() / pageSize;
-    	
-    	if(kernel.getTranslation(this.processID, argVAddr) == null)
-    	{
-    		newPage(argVAddr, true, false, false, false);
-    	}
-    	
+
     	return true;    	
     }
     
+    /*
+     * allocates a page for arguments, if they exist
+     */
+    @Override
+    protected void allocateArgs()
+    {
+    	int argVAddr = this.getArgV() / pageSize;
+    	
+    	if(((VMKernel)Kernel.kernel).getTranslation(this.processID, argVAddr) == null)
+    	{
+    		newPage(argVAddr, true, false, false, false);
+    	}    	
+    }
     /**
      * Creates a new page and translation entry for that page..
      * @return
