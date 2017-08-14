@@ -101,8 +101,9 @@ public class VMKernel extends UserKernel {
     public static MemNode getNextFreeMemPage()
     {
     	//TODO: handle case where no pyhs memory left (evict some other page)
+    	MemNode freeMemPage = UserKernel.getNextFreeMemPage();
     	
-    	return UserKernel.getNextFreeMemPage();
+    	return freeMemPage;
     }
     
     /**

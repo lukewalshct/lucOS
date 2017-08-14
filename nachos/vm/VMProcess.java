@@ -24,6 +24,8 @@ public class VMProcess extends UserProcess {
      */
     public void saveState() {
     	
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	invalidateTLBEntries();
     	
     	super.saveState();
@@ -37,10 +39,15 @@ public class VMProcess extends UserProcess {
     	Processor processor = Machine.processor();
     	
     	for(int i = 0; i < processor.getTLBSize(); i++)
-    	{
+    	{    		
     		TranslationEntry entry = processor.readTLBEntry(i);
     		
-    		if(entry != null) entry.valid = false;
+    		if(entry != null)
+    		{
+    			entry.valid = false;
+    			
+    			processor.writeTLBEntry(i, entry);    		
+    		}   		    		
     	}
     }
     
