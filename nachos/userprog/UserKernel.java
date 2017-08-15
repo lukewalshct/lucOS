@@ -16,6 +16,9 @@ public class UserKernel extends ThreadedKernel {
 	//a lock protecting access to free memory
 	private Lock freeMemLock;
 	
+	//used to protect pages being marked as non/evictable
+	private Lock _pageEvictionLock;
+	
     /**
      * Allocate a new user kernel.
      */
@@ -35,6 +38,8 @@ public class UserKernel extends ThreadedKernel {
 	Machine.processor().setExceptionHandler(new Runnable() {
 		public void run() { exceptionHandler(); }
 	    });
+	
+	this._pageEvictionLock = new Lock();
 	
 	initializeFreeMemory();
 	
@@ -137,6 +142,38 @@ public class UserKernel extends ThreadedKernel {
         }
     }
     
+    /*
+     * Safely marks page as in use by a process so that the eviction
+     * policy does not evict a page that's in the middle of reading
+     * or writing memory, etc. 
+     */
+    public void markPageAsNonEvictable(TranslationEntry entry)
+    {
+    	this._pageEvictionLock.acquire();
+    	
+    	try
+    	{    	
+    		entry.used = true;
+    	}    	
+    	finally
+    	{
+    		this._pageEvictionLock.release();
+    	}
+    }
+    
+    public void markPageAsEvictable(TranslationEntry entry)
+    {
+    	this._pageEvictionLock.acquire();
+    	
+    	try
+    	{    	
+    		entry.used = false;
+    	}    	
+    	finally
+    	{
+    		this._pageEvictionLock.release();
+    	}
+    }
     /**
      * Test the console device.
      */	

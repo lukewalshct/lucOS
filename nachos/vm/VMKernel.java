@@ -21,9 +21,6 @@ public class VMKernel extends UserKernel {
 	
 	private SwapFileAccess _globalSwapFileAccess;	
 	
-	//used to protect pages being marked as non/evictable
-	private Lock _pageEvictionLock;
-	
     /**
      * Allocate a new VM kernel.
      */
@@ -147,38 +144,7 @@ public class VMKernel extends UserKernel {
     	return physPageNum;
     }
     
-    /*
-     * Safel marks page as in use by a process so that the eviction
-     * policy does not evict a page that's in the middle of reading
-     * or writing memory, etc. 
-     */
-    public void markPageAsNonEvictable(TranslationEntry entry)
-    {
-    	this._pageEvictionLock.acquire();
-    	
-    	try
-    	{    	
-    		entry.used = true;
-    	}    	
-    	finally
-    	{
-    		this._pageEvictionLock.release();
-    	}
-    }
     
-    public void markPageAsEvictable(TranslationEntry entry)
-    {
-    	this._pageEvictionLock.acquire();
-    	
-    	try
-    	{    	
-    		entry.used = false;
-    	}    	
-    	finally
-    	{
-    		this._pageEvictionLock.release();
-    	}
-    }
     
     /**
      * Test this kernel.
