@@ -325,7 +325,7 @@ public class VMKernel extends UserKernel {
     	 */
     	public boolean writePage(int pid, TranslationEntry entry)
     	{
-    		if(entry == null || !entry.dirty) return false;
+    		if(entry == null) return false;
     		    		
     		//get the swap lookup for the process, create if doesn't exist
     		Hashtable<Integer, SwapEntry> processSwapLookup 
