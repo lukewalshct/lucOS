@@ -12,9 +12,6 @@ import nachos.vm.*;
  */
 public class VMProcess extends UserProcess {
 	
-	//saved TLB state for when context swtiches occur
-	private TranslationEntry[] _savedTLBEntries;
-	
     /**
      * Allocate a new process.
      */
@@ -29,9 +26,6 @@ public class VMProcess extends UserProcess {
     public void saveState() {
     	
     	Lib.assertTrue(Machine.interrupt().disabled());
-    	
-    	if(this._savedTLBEntries == null) 
-    		this._savedTLBEntries = new TranslationEntry[Machine.processor().getTLBSize()];
     	
     	invalidateTLBEntries();
     	
@@ -48,9 +42,7 @@ public class VMProcess extends UserProcess {
     	for(int i = 0; i < processor.getTLBSize(); i++)
     	{    		
     		TranslationEntry entry = processor.readTLBEntry(i);
-    		
-    		this._savedTLBEntries[i] = new TranslationEntry(entry);
-    		
+    		    		
     		if(entry != null)
     		{
     			entry.valid = false;
@@ -64,16 +56,7 @@ public class VMProcess extends UserProcess {
      * Restore the state of this process after a context switch. Called by
      * <tt>UThread.restoreState()</tt>.
      */
-    public void restoreState() {
-    	
-    	if(this._savedTLBEntries == null) return;
-    	
-    	Processor processor = Machine.processor();
-    	
-    	for(int i = 0; i < processor.getTLBSize(); i++)
-    	{   	    		    			
-    		processor.writeTLBEntry(i, this._savedTLBEntries[i]);    				
-    	}    	
+    public void restoreState() {  	
     }
 
     
