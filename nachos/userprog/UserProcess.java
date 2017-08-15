@@ -292,7 +292,19 @@ public class UserProcess {
 	
 	int amount = Math.min(length, memory.length-paddr);
 	
-	System.arraycopy(memory, paddr, data, offset, amount);
+	//get virtual page number
+	int vpn = vaddr / pageSize;
+	
+	TranslationEntry entry = getTranslation(vpn, true);			
+	
+	try
+	{
+		System.arraycopy(memory, paddr, data, offset, amount);
+	}
+	finally
+	{
+		if(entry != null) entry.used = false;
+	}
 
 	return amount;
     }
