@@ -242,7 +242,13 @@ public class VMProcess extends UserProcess {
     @Override
     protected TranslationEntry getTranslation(int vpn)
     {
-    	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn);
+    	return getTranslation(vpn, false);
+    }
+    
+    @Override
+    protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
+    {
+    	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn, nonEvictable);
     }
     
     /**

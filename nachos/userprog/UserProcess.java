@@ -333,22 +333,45 @@ public class UserProcess {
 	//get virtual page number
 	int vpn = vaddr / pageSize;
 	
-	TranslationEntry entry = getTranslation(vpn);
+	TranslationEntry entry = getTranslation(vpn, true);
 	
 	//check to ensure there's a valid virtual page and it's not read only
-	if(entry == null || entry.readOnly) return 0;
+	if(entry == null || entry.readOnly)
+	{
+		if(entry != null) entry.used = false;
+		
+		return 0;
+	}
 	
 	int paddr = translateVAddrToPAdrr(vaddr);
 	
 	// for now, just assume that virtual addresses equal physical addresses
 	if (paddr < 0 || paddr >= memory.length)
-	    return 0;
+	{
+		entry.used = false;
+		
+		return 0;
+	}	    
 
 	int amount = Math.min(length, memory.length-paddr);
 	
-	System.arraycopy(data, offset, memory, paddr, amount);
+	UserKernel kernel = (UserKernel) Kernel.kernel;
+	
+	try
+	{		
+		System.arraycopy(data, offset, memory, paddr, amount);
+	}
+	finally
+	{
+		entry.used = false;
+	}		
 
 	return amount;
+    }
+    
+    protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
+    {
+    	return getTranslation(vpn);
     }
     
     protected TranslationEntry getTranslation(int vpn)

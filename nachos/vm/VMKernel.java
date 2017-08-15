@@ -93,8 +93,36 @@ public class VMKernel extends UserKernel {
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
-    	return this._globalPageTable.get(processID, virtualPageNumber);
+    	return getTranslation(processID, virtualPageNumber, false);    	
     }    
+    
+    public TranslationEntry getTranslation(int processID, 
+    		int virtualPageNumber, boolean nonEvictable)
+    {
+    	TranslationEntry entry;
+    	
+    	if(nonEvictable)
+    	{
+    		this._pageEvictionLock.acquire();    	
+    		
+    		try
+    		{
+    			entry = this._globalPageTable.get(processID, virtualPageNumber);
+    			
+    			if(entry != null) entry.used = true;
+    		}
+    		finally
+    		{
+    			this._pageEvictionLock.release();
+    		}
+    	}
+    	else
+    	{
+    		entry = this._globalPageTable.get(processID, virtualPageNumber);
+    	}   	
+    	
+    	return entry;    	
+    }
 
     /*
      * Called when main memory is full but a process needs a 
