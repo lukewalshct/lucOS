@@ -174,12 +174,32 @@ public class VMKernel extends UserKernel {
     	//remove references to the page from core map and global inverted page table
     	this._globalCoreMap[physPageNum] = null;
     	
-    	this._globalPageTable.remove(mapEntry.processID, mapEntry.entry.vpn);    	    	
+    	this._globalPageTable.remove(mapEntry.processID, mapEntry.entry.vpn);
+    	
+    	if(mapEntry.processID == processID) invalidateTLBEntry(mapEntry.entry.vpn);
     	
     	return physPageNum;
     }
     
-    
+    /**
+     * Invalidates TLB entry with the given vpn if it's in the TLB.
+     */
+    private void invalidateTLBEntry(int vpn)
+    {
+    	Processor processor = Machine.processor();
+    	
+    	for(int i = 0; i < processor.getTLBSize(); i++)
+    	{    		
+    		TranslationEntry entry = processor.readTLBEntry(i);
+    		    		
+    		if(entry != null && entry.vpn == vpn)
+    		{
+    			entry.valid = false;
+    			
+    			processor.writeTLBEntry(i, entry);    		
+    		}   		    		
+    	}
+    }
     
     /**
      * Test this kernel.
