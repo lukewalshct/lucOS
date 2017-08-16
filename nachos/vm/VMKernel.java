@@ -17,7 +17,7 @@ public class VMKernel extends UserKernel {
 	private InvertedPageTable _globalPageTable;  
 	
 	//a global core map with physical page # as index
-	private TranslationEntry[] _globalCoreMap;
+	private CoreMapEntry[] _globalCoreMap;
 	
 	private SwapFileAccess _globalSwapFileAccess;	
 	
@@ -38,7 +38,7 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new TranslationEntry[processor.getNumPhysPages()];
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];
     	
     	super.initialize(args);	
     }
@@ -88,7 +88,7 @@ public class VMKernel extends UserKernel {
     	this._globalPageTable.put(processID, entry);
     	
     	//add entry to core map
-    	this._globalCoreMap[entry.ppn] = entry;
+    	this._globalCoreMap[entry.ppn] = new CoreMapEntry(processID, entry);
     }
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
@@ -154,27 +154,27 @@ public class VMKernel extends UserKernel {
      */
     private int evictPage(int processID)
     {
-    	TranslationEntry entry = null;
+    	CoreMapEntry mapEntry = null;
     	
     	int physPageNum = -1;
     			
-    	while(entry == null || entry.used)
+    	while(mapEntry == null || mapEntry.entry == null || mapEntry.entry.used)
     	{
     		//Currently chooses page at random. TODO: implement nth chance algorithm
     		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
     	
-    		entry = this._globalCoreMap[physPageNum];
+    		mapEntry = this._globalCoreMap[physPageNum];
     	}
     	
-    	if(entry == null) return -1;
+    	if(mapEntry == null) return -1;
     	
     	//write old page to the swap file
-    	this._globalSwapFileAccess.writePage(processID, entry);
+    	this._globalSwapFileAccess.writePage(processID, mapEntry.entry);
     	
     	//remove references to the page from core map and global inverted page table
     	this._globalCoreMap[physPageNum] = null;
     	
-    	this._globalPageTable.remove(processID, entry.vpn);    	    	
+    	this._globalPageTable.remove(mapEntry.processID, mapEntry.entry.vpn);    	    	
     	
     	return physPageNum;
     }
@@ -210,6 +210,19 @@ public class VMKernel extends UserKernel {
 
     private static final char dbgVM = 'v';
     
+    private class CoreMapEntry
+    {
+    	public int processID;
+    	
+    	public TranslationEntry entry;
+    	
+    	public CoreMapEntry(int pid, TranslationEntry entry)
+    	{
+    		this.processID = pid;
+    		
+    		this.entry = entry;
+    	}
+    }
     /** 
      * An inverted page table. The constructor takes as arguments
      * the estimated number of processes the OS should support at once,
