@@ -154,10 +154,17 @@ public class VMKernel extends UserKernel {
      */
     private int evictPage(int processID)
     {
-    	//Currently chooses page at random. TODO: implement nth chance algorithm
-    	int physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    	TranslationEntry entry = null;
     	
-    	TranslationEntry entry = this._globalCoreMap[physPageNum];
+    	int physPageNum = -1;
+    			
+    	while(entry == null || entry.used)
+    	{
+    		//Currently chooses page at random. TODO: implement nth chance algorithm
+    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    	
+    		entry = this._globalCoreMap[physPageNum];
+    	}
     	
     	if(entry == null) return -1;
     	
