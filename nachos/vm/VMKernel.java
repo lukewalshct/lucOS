@@ -439,16 +439,14 @@ public class VMKernel extends UserKernel {
     			return null;
     		}
 		
-    		SwapEntry entry = processSwapLookup.get(vpn);
+    		SwapEntry entry = processSwapLookup.get(vpn);   		    		
     		
-    		if(entry == null)
+    		if(!load(entry))
     		{
     			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
     			
     			return null;
-    		}
-    		
-    		load(entry);
+    		}    		    		
     		
     		return entry.translation;
     	}
@@ -487,7 +485,7 @@ public class VMKernel extends UserKernel {
     		//if write successful, add entry to lookup
     		if(success)
     		{
-    			processSwapLookup.put(pid,  swapEntry);
+    			processSwapLookup.put(entry.vpn,  swapEntry);
     		}
     		
     		return success;
@@ -525,8 +523,11 @@ public class VMKernel extends UserKernel {
     	 * Loads page retrieved from swap file into memory.
     	 * @param entry
     	 */
-    	private void load(SwapEntry entry)
+    	private boolean load(SwapEntry entry)
     	{
+    		if(entry == null) return false;
+    		
+    		return false;
     		//TODO: load page into main memory
     		
     	}
