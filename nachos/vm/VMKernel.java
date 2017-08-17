@@ -427,14 +427,26 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry loadPage(int pid, int vpn)
     	{
+    		Lib.debug('s', "Attempting to load from swap (PID " + pid + " VPN " + vpn + ")");
+    		
     		Hashtable<Integer, SwapEntry> processSwapLookup 
 				= this._swapLookup.get(pid);
 		
-    		if(processSwapLookup == null) return null;
+    		if(processSwapLookup == null)
+    		{
+    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
+    			
+    			return null;
+    		}
 		
     		SwapEntry entry = processSwapLookup.get(vpn);
     		
-    		if(entry == null) return null;
+    		if(entry == null)
+    		{
+    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
+    			
+    			return null;
+    		}
     		
     		load(entry);
     		
@@ -448,7 +460,9 @@ public class VMKernel extends UserKernel {
     	public boolean writePage(int pid, TranslationEntry entry)
     	{
     		if(entry == null) return false;
-    		    		
+    		    
+    		Lib.debug('s', "Attempting to write to swap (PID " + pid + " VPN " + entry.vpn + ")");
+    		
     		//get the swap lookup for the process, create if doesn't exist
     		Hashtable<Integer, SwapEntry> processSwapLookup 
 				= this._swapLookup.get(pid);
@@ -465,7 +479,12 @@ public class VMKernel extends UserKernel {
     		
     		if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
     		
-    		return writeToSwap(swapEntry);
+    		boolean success = writeToSwap(swapEntry);
+    		
+    		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
+    				"successful (PID " + pid + " VPN " + entry.vpn + ")");
+    		
+    		return success;
     	}
     	
     	private boolean writeToSwap(SwapEntry swapEntry)
