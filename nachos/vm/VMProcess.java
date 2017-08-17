@@ -100,7 +100,7 @@ public class VMProcess extends UserProcess {
     		
     	    	int vpn = section.getFirstVPN()+i;		
     	    	 	    	    	    
-    			TranslationEntry entry = newPage(vpn, true, section.isReadOnly(),
+    			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
     					false, false);
     			
     	    	//load the section into memory
@@ -109,7 +109,7 @@ public class VMProcess extends UserProcess {
     	}
     	
     	//allocate first page for stack
-    	newPage(this.getInitialSP() / pageSize, true, false, false, false);
+    	kernel.newPage(this.processID, this.getInitialSP() / pageSize, true, false, false, false);
     	
 
     	return true;    	
@@ -123,34 +123,12 @@ public class VMProcess extends UserProcess {
     {
     	int argVAddr = this.getArgV() / pageSize;
     	
-    	if(((VMKernel)Kernel.kernel).getTranslation(this.processID, argVAddr) == null)
-    	{
-    		newPage(argVAddr, true, false, false, false);
-    	}    	
-    }
-    /**
-     * Creates a new page and translation entry for that page..
-     * @return
-     */
-    private TranslationEntry newPage(int vpn, boolean valid, boolean readOnly,
-    		boolean used, boolean dirty)
-    {
     	VMKernel kernel = (VMKernel) Kernel.kernel;
     	
-    	//obtain a free page of physical memory
-    	UserKernel.MemNode freeMemPage = kernel.getNextFreeMemPage(this.processID);
-    	
-    	//calculate the physical page number
-    	int physPageNum = freeMemPage.endIndex / pageSize; 
-    	
-    	//create a translation entry
-    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
-    			valid, readOnly, used, dirty);
-    	
-    	//add the entry to the global inverted page table
-    	kernel.putTranslation(this.processID, entry);   
-    	
-    	return entry;
+    	if(kernel.getTranslation(this.processID, argVAddr) == null)
+    	{
+    		kernel.newPage(this.processID, argVAddr, true, false, false, false);
+    	}    	
     }
  
     /*
@@ -217,21 +195,21 @@ public class VMProcess extends UserProcess {
     private TranslationEntry handlePageFault(int vpn)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());   	
+    	    	
+    	VMKernel kernel = (VMKernel) Kernel.kernel;
     	
-    	//TODO: handle page fault
-    	
-    	TranslationEntry entry = ((VMKernel)Kernel.kernel).loadPageFromSwap(this.processID, vpn);
+    	TranslationEntry entry = kernel.loadPageFromSwap(this.processID, vpn);
     	
     	//handle cases where the page does not exist in main mem or swap
     	if(entry == null)
     	{
     		//if stack page and within stack size limit, create new stack page
-    		if(isStackPage(vpn)) entry = newPage(vpn, true, false, false, false);
+    		if(isStackPage(vpn)) entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     	}    	    	     	 
     	
     	//fatal error if entry is null (should exist or be created) TODO: kill process
     	Lib.assertTrue(entry != null, "Entry is null -- pid: " + this.processID + " vpn: " + vpn);    	
-    	
+    	    	
     	return entry;
     }
     

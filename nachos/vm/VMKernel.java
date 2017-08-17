@@ -72,6 +72,8 @@ public class VMKernel extends UserKernel {
     	
     	if(entry != null) entry.valid = true;
     	
+    	putTranslation(pid, entry);
+    	
     	return entry;
     }
     
@@ -82,6 +84,7 @@ public class VMKernel extends UserKernel {
     			entry.ppn >= Machine.processor().getMemory().length)
     	{
     		//TODO: better handle bad translation entries
+    		Lib.debug('s', "Failed to put translation");
     		
     		return;
     	}
@@ -149,6 +152,29 @@ public class VMKernel extends UserKernel {
 		memNode.endIndex = memNode.startIndex + pageSize - 1;
     	
     	return memNode;
+    }
+    
+    /**
+     * Creates a new page and translation entry for that page..
+     * @return
+     */
+    public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
+    		boolean used, boolean dirty)
+    {   	
+    	//obtain a free page of physical memory
+    	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid);
+    	
+    	//calculate the physical page number
+    	int physPageNum = freeMemPage.endIndex / Machine.processor().pageSize; 
+    	
+    	//create a translation entry
+    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
+    			valid, readOnly, used, dirty);
+    	
+    	//add the entry to the global inverted page table
+    	putTranslation(pid, entry);   
+    	
+    	return entry;
     }
     
     /*
@@ -525,11 +551,15 @@ public class VMKernel extends UserKernel {
     	 */
     	private boolean load(SwapEntry entry)
     	{
-    		if(entry == null) return false;
+    		if(entry == null || entry.translation == null) return false;
     		
-    		return false;
-    		//TODO: load page into main memory
+    		Machine.interrupt().disable();
     		
+    		//TODO: load page to memory
+    		
+    		Machine.interrupt().enable();
+    		
+    		return false;   		    		
     	}
     	
     	public void terminate()
