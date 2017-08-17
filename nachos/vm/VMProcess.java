@@ -197,7 +197,7 @@ public class VMProcess extends UserProcess {
     	//if there's no entry or if it's invalid, handle page fault
     	if(entry == null || !entry.valid)
     	{
-    		entry = handlePageFault(this.processID, vpn);
+    		entry = handlePageFault(vpn);
     	}
     		
     	//load the translation entry into processor's TLB
@@ -214,20 +214,23 @@ public class VMProcess extends UserProcess {
      * @param vpn
      * @return
      */
-    private TranslationEntry handlePageFault(int pid, int vpn)
+    private TranslationEntry handlePageFault(int vpn)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());   	
     	
     	//TODO: handle page fault
     	
-    	TranslationEntry entry = ((VMKernel)Kernel.kernel).loadPageFromSwap(pid, vpn);
+    	TranslationEntry entry = ((VMKernel)Kernel.kernel).loadPageFromSwap(this.processID, vpn);
     	
     	//handle cases where the page does not exist in main mem or swap
     	if(entry == null)
     	{
     		//if stack page and within stack size limit, create new stack page
     		if(isStackPage(vpn)) entry = newPage(vpn, true, false, false, false);
-    	}
+    	}    	    	     	 
+    	
+    	//fatal error if entry is null (should exist or be created) TODO: kill process
+    	Lib.assertTrue(entry != null, "Entry is null -- pid: " + this.processID + " vpn: " + vpn);    	
     	
     	return entry;
     }
