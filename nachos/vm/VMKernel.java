@@ -171,6 +171,17 @@ public class VMKernel extends UserKernel {
     	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
     			valid, readOnly, used, dirty);
     	
+
+    	int pageSize = Processor.pageSize;
+    	
+    	byte[] memory = Machine.processor().getMemory();
+    	
+    	int paddr = entry.ppn*pageSize;
+    	
+    	if(paddr < 0 || paddr >= memory.length) return null;
+    	
+    	Arrays.fill(memory, paddr, paddr+pageSize, (byte) 0);
+    	
     	//add the entry to the global inverted page table
     	putTranslation(pid, entry);   
     	
@@ -467,14 +478,16 @@ public class VMKernel extends UserKernel {
 		
     		SwapEntry entry = processSwapLookup.get(vpn);   		    		
     		
-    		if(!load(entry))
+    		TranslationEntry translation = load(pid, entry);
+    		
+    		if(translation == null)
     		{
     			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
     			
     			return null;
     		}    		    		
     		
-    		return entry.translation;
+    		return translation;
     	}
     	
     	/**
@@ -549,17 +562,20 @@ public class VMKernel extends UserKernel {
     	 * Loads page retrieved from swap file into memory.
     	 * @param entry
     	 */
-    	private boolean load(SwapEntry entry)
+    	private TranslationEntry load(int pid, SwapEntry entry)
     	{
-    		if(entry == null || entry.translation == null) return false;
+    		if(entry == null || entry.translation == null) return null;
     		
     		Machine.interrupt().disable();
+    		    		
+    		TranslationEntry translation = entry.translation;
     		
-    		//TODO: load page to memory
+    	    TranslationEntry newEntry = ((VMKernel)Kernel.kernel).newPage(pid, translation.vpn,
+    	    		translation.valid, translation.readOnly, false, false);   	    		    		
     		
     		Machine.interrupt().enable();
     		
-    		return false;   		    		
+    		return newEntry;   		    		
     	}
     	
     	public void terminate()
