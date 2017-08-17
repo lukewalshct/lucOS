@@ -84,7 +84,7 @@ public class VMKernel extends UserKernel {
     			entry.ppn >= Machine.processor().getMemory().length)
     	{
     		//TODO: better handle bad translation entries
-    		Lib.debug('s', "Failed to put translation (PID " + processID + " VPN " + 
+    		Lib.debug('s', "Kernel failed to put translation (PID " + processID + " VPN " + 
     				(entry == null ? "null" : entry.vpn) + ")");
     		
     		return;
@@ -95,6 +95,9 @@ public class VMKernel extends UserKernel {
     	
     	//add entry to core map
     	this._globalCoreMap[entry.ppn] = new CoreMapEntry(processID, entry);
+    	
+    	Lib.debug('s', "Kernel putTranslation success (PID " + processID + " VPN " 
+    			+ entry.vpn + ")"); 
     }
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
@@ -162,7 +165,7 @@ public class VMKernel extends UserKernel {
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
     		boolean used, boolean dirty)
     {   	
-    	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn);
+    	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	//obtain a free page of physical memory
     	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid);
     	
