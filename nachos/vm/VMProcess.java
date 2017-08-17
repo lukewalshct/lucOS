@@ -152,7 +152,26 @@ public class VMProcess extends UserProcess {
     	
     	return entry;
     }
-     
+ 
+    /*
+     * Deallocates memory upon process exit and cleans up
+     * tranlsations, TLB, etc.
+     */
+    @Override
+    protected void deallocateMemory()
+    {
+    	Machine.interrupt().disable();
+    	
+    	Lib.debug('s', "Process deallocating memory...");
+    	
+    	//invalidate TLB cache
+    	invalidateTLBEntries();
+    	
+    	//return physical memory, page table entries, swap entries in use    	   
+    	((VMKernel)Kernel.kernel).deallocateProcessMemory(this.processID);
+    	
+    	Machine.interrupt().enable();
+    }
     /**
      * Release any resources allocated by <tt>loadSections()</tt>.
      */

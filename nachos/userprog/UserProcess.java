@@ -124,7 +124,7 @@ public class UserProcess {
      * Deallocates memory from this process after
      * process is finished or it is killed off.
      */
-    private void deallocateMemory()
+    protected void deallocateMemory()
     {
     	if(this.physMemPages == null) return;
     	
@@ -647,6 +647,8 @@ public class UserProcess {
     	
     	this.exitStatus = status;
     	
+    	deallocateMemory();
+    	
     	if(this.parentProcess != null)
     	{
     		Machine.interrupt().disable();
@@ -660,9 +662,7 @@ public class UserProcess {
 			}
     		
     		this.parentProcess.removeChildProcess(this);
-    	}
-    	
-    	deallocateMemory();
+    	}    	    	
     	
     	//if it's the last process, kill the machine
     	if(globalProcessCount == 1) handleHalt();

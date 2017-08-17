@@ -4,6 +4,8 @@ import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
 import nachos.vm.*;
+
+import java.util.Arrays;
 import java.util.Hashtable;;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -201,6 +203,33 @@ public class VMKernel extends UserKernel {
     	}
     }
     
+    /*
+     * Deallocates memory for a process and cleans up
+     * tranlsations, TLB, etc.
+     */
+    protected void deallocateProcessMemory(int processID)
+    {    
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
+    	//free up any pages in swap file
+    	
+    	//remove translations from core map
+    	TranslationEntry[] entries = this._globalPageTable.getAll(processID);
+    	
+    	if(entries == null) return;
+    	
+    	for(int i = 0; i < entries.length; i++)
+    	{
+    		if(entries[i] != null)
+    		{
+    			this._globalCoreMap[entries[i].ppn] = null;
+    		}
+    	}
+    	
+    	//remove translations from global page table
+    	this._globalPageTable.removeAll(processID);
+    }
+    
     /**
      * Test this kernel.
      */	
@@ -307,6 +336,21 @@ public class VMKernel extends UserKernel {
     		return processPageTable.get(virtualPageNumber);
     	}
     	
+    	/*
+    	 * Gets all translation entries for a process.
+    	 */
+    	public TranslationEntry[] getAll(int processID)
+    	{
+    		Hashtable<Integer, TranslationEntry> processPageTable
+    			= this._pageTable.get(processID);
+    		
+    		if(processPageTable == null || processPageTable.values() == null) return null;
+    		
+    		Object[] values = processPageTable.values().toArray();
+    		    		
+    		return Arrays.copyOf(values, values.length, TranslationEntry[].class);
+    	}
+    	
     	public TranslationEntry remove(int processID, int virtualPageNumber)
     	{
     		Hashtable<Integer, TranslationEntry> processPageTable 
@@ -315,6 +359,14 @@ public class VMKernel extends UserKernel {
     		if(processPageTable == null) return null;
 		
     		return processPageTable.remove(virtualPageNumber);	
+    	}
+    	
+    	/*
+    	 * Removes all translations for a process.
+    	 */
+    	public void removeAll(int processID)
+    	{
+    		this._pageTable.remove(processID);
     	}
     	
     }
