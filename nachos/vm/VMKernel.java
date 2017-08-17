@@ -70,9 +70,9 @@ public class VMKernel extends UserKernel {
     	
     	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn);
     	
-    	if(entry != null) entry.valid = true;
+    	//if(entry != null) entry.valid = true;
     	
-    	putTranslation(pid, entry);
+    	//putTranslation(pid, entry);
     	
     	return entry;
     }
@@ -576,7 +576,7 @@ public class VMKernel extends UserKernel {
     		TranslationEntry translation = entry.translation;
     		
     	    TranslationEntry newEntry = ((VMKernel)Kernel.kernel).newPage(pid, translation.vpn,
-    	    		translation.valid, translation.readOnly, false, false);   	    		    		
+    	    		true, translation.readOnly, false, false);   	    		    		
     		
     		Machine.interrupt().enable();
     		
