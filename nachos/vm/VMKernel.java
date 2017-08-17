@@ -84,7 +84,8 @@ public class VMKernel extends UserKernel {
     			entry.ppn >= Machine.processor().getMemory().length)
     	{
     		//TODO: better handle bad translation entries
-    		Lib.debug('s', "Failed to put translation");
+    		Lib.debug('s', "Failed to put translation (PID " + processID + " VPN " + 
+    				(entry == null ? "null" : entry.vpn) + ")");
     		
     		return;
     	}

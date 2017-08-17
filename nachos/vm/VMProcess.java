@@ -108,7 +108,6 @@ public class VMProcess extends UserProcess {
     	//allocate first page for stack
     	kernel.newPage(this.processID, this.getInitialSP() / pageSize, true, false, false, false);
     	
-
     	return true;    	
     }
     
@@ -201,7 +200,8 @@ public class VMProcess extends UserProcess {
     	if(entry == null)
     	{
     		//if stack page and within stack size limit, create new stack page
-    		if(isStackPage(vpn)) entry = kernel.newPage(this.processID, vpn, true, false, false, false);
+    		if(isStackPage(vpn)) 
+    			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     	}    	    	     	 
     	
     	//fatal error if entry is null (should exist or be created) TODO: kill process
