@@ -484,6 +484,12 @@ public class VMKernel extends UserKernel {
     		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
     				"successful (PID " + pid + " VPN " + entry.vpn + ")");
     		
+    		//if write successful, add entry to lookup
+    		if(success)
+    		{
+    			processSwapLookup.put(pid,  swapEntry);
+    		}
+    		
     		return success;
     	}
     	
@@ -505,11 +511,11 @@ public class VMKernel extends UserKernel {
     		
     		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
     		
-    		int pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
+    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
     				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
     				
     		//write page to swap
-    		int bytesWritten = _swapFile.write(pageFrameIndex, 
+    		int bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
     				pageToWrite, 0, pageToWrite.length);
     		
     		return bytesWritten == Machine.processor().pageSize;
