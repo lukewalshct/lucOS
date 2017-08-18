@@ -198,7 +198,7 @@ public class VMKernel extends UserKernel {
      * Evicts a page from main memory.
      */
     private int evictPage(int processID)
-    {
+    {    	
     	CoreMapEntry mapEntry = null;
     	
     	int physPageNum = -1;
@@ -211,17 +211,20 @@ public class VMKernel extends UserKernel {
     		mapEntry = this._globalCoreMap[physPageNum];
     	}
     	
-    	if(mapEntry == null) return -1;
+    	if(mapEntry == null) return -1;   	    	
+    	
+    	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
+    			" VPN: " + mapEntry.entry.vpn + ")");
     	
     	//write old page to the swap file
-    	this._globalSwapFileAccess.writePage(processID, mapEntry.entry);
+    	this._globalSwapFileAccess.writePage(mapEntry.processID, mapEntry.entry);
     	
     	//remove references to the page from core map and global inverted page table
     	this._globalCoreMap[physPageNum] = null;
     	
     	this._globalPageTable.remove(mapEntry.processID, mapEntry.entry.vpn);
     	
-    	if(mapEntry.processID == processID) invalidateTLBEntry(mapEntry.entry.vpn);
+    	if(mapEntry.processID == processID) invalidateTLBEntry(mapEntry.entry.vpn);    
     	
     	return physPageNum;
     }
