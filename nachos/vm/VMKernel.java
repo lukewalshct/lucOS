@@ -436,6 +436,8 @@ public class VMKernel extends UserKernel {
     	//nad virtual page number
     	private Hashtable<Integer, Hashtable<Integer, SwapEntry>> _swapLookup;
     	
+    	private Lock _swapLock;
+    	
     	public void initialize()
     	{
         	//set up swap file
@@ -456,6 +458,8 @@ public class VMKernel extends UserKernel {
         	this._freePageFrames = new LinkedList<Integer>();
         	
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
+        	
+        	this._swapLock = new Lock();
     	}
     	 
     	/**
@@ -550,15 +554,27 @@ public class VMKernel extends UserKernel {
     		
     		//get page to be written from main memory
     		byte[] pageToWrite = new byte[Machine.processor().pageSize];
-    		
+    		    		
     		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
     		
-    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
-    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
-    				
-    		//write page to swap
-    		int bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
-    				pageToWrite, 0, pageToWrite.length);
+    		int bytesWritten;
+    		
+    		//critical section
+    		try
+    		{
+    			this._swapLock.acquire();
+    			
+	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
+	    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
+	    				
+	    		//write page to swap
+	    		bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
+	    				pageToWrite, 0, pageToWrite.length);
+    		}
+    		finally
+    		{
+    			this._swapLock.release();
+    		}
     		
     		return bytesWritten == Machine.processor().pageSize;
     	}
