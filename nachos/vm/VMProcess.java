@@ -99,9 +99,11 @@ public class VMProcess extends UserProcess {
     	    for (int i=0; i<section.getLength(); i++) {
     		
     	    	int vpn = section.getFirstVPN()+i;		
-    	    	 	    	    	    
+    	    	
     			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
     					false, false);
+    			
+    			section.loadPage(i, entry.ppn);
     	    }
     	}
     	
@@ -200,7 +202,7 @@ public class VMProcess extends UserProcess {
     	if(entry == null)
     	{
     		//if stack page and within stack size limit, create new stack page
-    		if(isStackPage(vpn)) 
+    		//if(isStackPage(vpn)) 
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     	}    	    	     	 
     	
