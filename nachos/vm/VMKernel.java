@@ -34,15 +34,17 @@ public class VMKernel extends UserKernel {
      * Initialize this kernel.
      */
     public void initialize(String[] args) { 
+    	super.initialize(args);
+    	
        	//set up global inverted page table
-    	this._globalPageTable = new InvertedPageTable(8, 8);
+    	this._globalPageTable = new InvertedPageTable();
+    	
+    	this._globalPageTable.initialize(8, 8);
     	
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];
-    	
-    	super.initialize(args);	
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];   	    		
     }
     
     /**
@@ -333,12 +335,16 @@ public class VMKernel extends UserKernel {
     	
     	private int _numPagesPerProcess;
     	
-    	public InvertedPageTable(int numProcesses, int numPagesPerProcess)
+    	private Lock _pageTableLock;    	
+    	
+    	public void initialize(int numProcesses, int numPagesPerProcess)
     	{
     		this._numPagesPerProcess = numPagesPerProcess;
     		
     		this._pageTable = new Hashtable<Integer, 
-    				Hashtable<Integer, TranslationEntry>>(numProcesses);    		    		
+    				Hashtable<Integer, TranslationEntry>>(numProcesses); 
+    		
+    		this._pageTableLock = new nachos.threads.Lock();
     	}
     	
     	/**
@@ -350,17 +356,26 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry put(int processID, TranslationEntry entry)
     	{
-    		Hashtable<Integer, TranslationEntry> processPageTable = 
-    				this._pageTable.get(processID);
-    		
-    		if(processPageTable == null)
+    		try
     		{
-    			processPageTable = new Hashtable<Integer, TranslationEntry>(this._numPagesPerProcess);
-    			
-    			this._pageTable.put(processID, processPageTable);
+    			this._pageTableLock.acquire();
+	    		
+	    		Hashtable<Integer, TranslationEntry> processPageTable = 
+	    				this._pageTable.get(processID);
+	    		
+	    		if(processPageTable == null)
+	    		{
+	    			processPageTable = new Hashtable<Integer, TranslationEntry>(this._numPagesPerProcess);
+	    			
+	    			this._pageTable.put(processID, processPageTable);
+	    		}
+	    		
+	    		processPageTable.put(entry.vpn, entry);
     		}
-    		
-    		processPageTable.put(entry.vpn, entry);
+    		finally
+    		{
+    			this._pageTableLock.release();
+    		}
     		
     		return entry;
     	}
@@ -463,7 +478,7 @@ public class VMKernel extends UserKernel {
         	
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
         	
-        	this._swapLock = new Lock();
+        	this._swapLock = new nachos.threads.Lock();
     	}
     	 
     	/**
