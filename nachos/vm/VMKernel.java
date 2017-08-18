@@ -185,6 +185,7 @@ public class VMKernel extends UserKernel {
     	
     	if(paddr < 0 || paddr >= memory.length) return null;
     	
+    	//clear out the bytes
     	Arrays.fill(memory, paddr, paddr+pageSize, (byte) 0);
     	
     	//add the entry to the global inverted page table
@@ -587,13 +588,33 @@ public class VMKernel extends UserKernel {
     	{
     		if(entry == null || entry.translation == null) return null;
     		
-    		Machine.interrupt().disable();
-    		    		
-    		TranslationEntry translation = entry.translation;
+    		Machine.interrupt().disable(); 	    		    		
     		
-    	    TranslationEntry newEntry = ((VMKernel)Kernel.kernel).newPage(pid, translation.vpn,
-    	    		true, translation.readOnly, false, false);   	    		    		
+    	    //get page to load
+    	    byte[] pageToLoad = new byte[Machine.processor().pageSize];    	    
+    
+    	    int bytesRead = _swapFile.read(entry.pageFrameIndex, 
+    				pageToLoad, 0, pageToLoad.length);
+    	    
+    	    //check to make sure the read from swap was successful
+    	    if(bytesRead != Machine.processor().pageSize) return null;			    	    
+			    		
+    	    //get a free page from main memory
+			TranslationEntry translation = entry.translation;
+			
+			TranslationEntry newEntry = ((VMKernel)Kernel.kernel).newPage(pid, translation.vpn,
+					true, translation.readOnly, false, false);  
+			
+    		//get main memory from the processor
+    		byte[] memory = Machine.processor().getMemory();
     		
+    		//validate physical page number
+    		if (newEntry.ppn < 0 || newEntry.ppn + Machine.processor().pageSize >= memory.length)
+    		    return null;    		 
+    		
+    	    //load page from swap into main memory		
+    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);
+    	    
     		Machine.interrupt().enable();
     		
     		return newEntry;   		    		
