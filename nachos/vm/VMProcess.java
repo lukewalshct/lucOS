@@ -202,7 +202,7 @@ public class VMProcess extends UserProcess {
     	if(entry == null)
     	{
     		//if stack page and within stack size limit, create new stack page
-    		//if(isStackPage(vpn)) 
+    		if(isStackPage(vpn)) 
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     	}    	    	     	 
     	
