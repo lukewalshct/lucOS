@@ -517,7 +517,7 @@ public class VMKernel extends UserKernel {
     		}
     		
     		//try to get the existing page frame index    		    	
-    		SwapEntry swapEntry = processSwapLookup.get(pid);
+    		SwapEntry swapEntry = processSwapLookup.get(entry.vpn);
     		
     		if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
     		
