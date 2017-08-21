@@ -37,6 +37,8 @@ public class VMProcess extends UserProcess {
      */
     private void invalidateTLBEntries()
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	Processor processor = Machine.processor();
     	
     	for(int i = 0; i < processor.getTLBSize(); i++)
@@ -63,6 +65,8 @@ public class VMProcess extends UserProcess {
     @Override
     protected void initializeTranslations()
     {   	
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	VMKernel kernel = (VMKernel) Kernel.kernel;
     	
 		for (int i=0; i<this.numPages; i++)
@@ -84,7 +88,11 @@ public class VMProcess extends UserProcess {
      */
     protected boolean loadSections() {
     	
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	VMKernel kernel = (VMKernel) Kernel.kernel;
+    	
+    	invalidateTLBEntries();
     	
     	//if swap file doesn't yet exist, initialize it
     	if(kernel.getSwapFileAccess() == null) kernel.initializeSwapFileAccess();
@@ -119,6 +127,8 @@ public class VMProcess extends UserProcess {
     @Override
     protected void allocateArgs()
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	int argVAddr = this.getArgV() / pageSize;
     	
     	VMKernel kernel = (VMKernel) Kernel.kernel;
@@ -161,6 +171,8 @@ public class VMProcess extends UserProcess {
     private void handleTLBMiss()
     {
     	Machine.interrupt().disable();
+    	    	
+    	Lib.debug('t', "Handling TLB Miss, interrupt disabled (PID " + this.processID + ")");
     	
     	Processor processor = Machine.processor();
     	
@@ -178,6 +190,9 @@ public class VMProcess extends UserProcess {
     		
     	//load the translation entry into processor's TLB
     	loadTLBEntry(entry); 			
+    	
+    	Lib.debug('t', "Handled TLB Miss, enabling interrupt (PID " + 
+    			this.processID + " VPN " + entry.vpn + ")");
     	
     	Machine.interrupt().enable();   	    	
     }
@@ -220,6 +235,8 @@ public class VMProcess extends UserProcess {
     
     private void loadTLBEntry(TranslationEntry entry)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	if(entry == null) return;
     	
     	Processor processor = Machine.processor();
@@ -241,12 +258,16 @@ public class VMProcess extends UserProcess {
     @Override
     protected TranslationEntry getTranslation(int vpn)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	return getTranslation(vpn, false);
     }
     
     @Override
     protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn, nonEvictable);
     }
     

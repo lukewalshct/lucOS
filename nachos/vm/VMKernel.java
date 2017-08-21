@@ -72,7 +72,7 @@ public class VMKernel extends UserKernel {
     	
     	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn);
     	
-    	//if(entry != null) entry.valid = true;
+    	if(entry != null) entry.valid = true;
     	
     	//putTranslation(pid, entry);
     	
@@ -82,6 +82,8 @@ public class VMKernel extends UserKernel {
     
     public void putTranslation(int processID, TranslationEntry entry)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	if(entry == null || entry.ppn < 0 || 
     			entry.ppn >= Machine.processor().getMemory().length)
     	{
@@ -104,12 +106,16 @@ public class VMKernel extends UserKernel {
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	return getTranslation(processID, virtualPageNumber, false);    	
     }    
     
     public TranslationEntry getTranslation(int processID, 
     		int virtualPageNumber, boolean nonEvictable)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	TranslationEntry entry;
     	
     	if(nonEvictable)
@@ -167,6 +173,8 @@ public class VMKernel extends UserKernel {
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
     		boolean used, boolean dirty)
     {   	
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	//obtain a free page of physical memory
     	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid);
@@ -201,6 +209,8 @@ public class VMKernel extends UserKernel {
      */
     private int evictPage(int processID)
     {    	
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	CoreMapEntry mapEntry = null;
     	
     	int physPageNum = -1;
@@ -236,6 +246,8 @@ public class VMKernel extends UserKernel {
      */
     private void invalidateTLBEntry(int vpn)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	Processor processor = Machine.processor();
     	
     	for(int i = 0; i < processor.getTLBSize(); i++)
@@ -356,6 +368,8 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry put(int processID, TranslationEntry entry)
     	{
+    		Lib.assertTrue(Machine.interrupt().disabled());
+    		
     		try
     		{
     			this._pageTableLock.acquire();
@@ -389,6 +403,8 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry get(int processID, int virtualPageNumber)
     	{
+    		Lib.assertTrue(Machine.interrupt().disabled());
+    		
     		Hashtable<Integer, TranslationEntry> processPageTable 
     			= this._pageTable.get(processID);
     		
@@ -402,6 +418,8 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry[] getAll(int processID)
     	{
+    		Lib.assertTrue(Machine.interrupt().disabled());
+    		
     		Hashtable<Integer, TranslationEntry> processPageTable
     			= this._pageTable.get(processID);
     		
@@ -414,6 +432,8 @@ public class VMKernel extends UserKernel {
     	
     	public TranslationEntry remove(int processID, int virtualPageNumber)
     	{
+    		Lib.assertTrue(Machine.interrupt().disabled());
+    		
     		Hashtable<Integer, TranslationEntry> processPageTable 
     			= this._pageTable.get(processID);
 		
@@ -427,6 +447,8 @@ public class VMKernel extends UserKernel {
     	 */
     	public void removeAll(int processID)
     	{
+    		Lib.assertTrue(Machine.interrupt().disabled());
+    		
     		this._pageTable.remove(processID);
     	}
     	
@@ -606,7 +628,7 @@ public class VMKernel extends UserKernel {
     	{
     		if(entry == null || entry.translation == null) return null;
     		
-    		Machine.interrupt().disable(); 	    		    		
+    		//Machine.interrupt().disable(); 	    		    		
     		
     	    //get page to load
     	    byte[] pageToLoad = new byte[Machine.processor().pageSize];    	    
@@ -633,7 +655,7 @@ public class VMKernel extends UserKernel {
     	    //load page from swap into main memory		
     	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);
     	    
-    		Machine.interrupt().enable();
+    		//Machine.interrupt().enable();
     		
     		return newEntry;   		    		
     	}
