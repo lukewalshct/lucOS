@@ -27,6 +27,8 @@ public class VMProcess extends UserProcess {
     	
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
+    	Lib.debug('s', "Prepring for context switch (PID " + this.processID + ")");
+    	
     	invalidateTLBEntries();
     	
     	super.saveState();
@@ -58,7 +60,8 @@ public class VMProcess extends UserProcess {
      * Restore the state of this process after a context switch. Called by
      * <tt>UThread.restoreState()</tt>.
      */
-    public void restoreState() {  	
+    public void restoreState() {
+    	Lib.debug('s', "Restoring context (PID " + this.processID + ")");
     }
 
     
@@ -106,12 +109,12 @@ public class VMProcess extends UserProcess {
 
     	    for (int i=0; i<section.getLength(); i++) {
     		
-    	    	int vpn = section.getFirstVPN()+i;		
+    	    	int vpn = section.getFirstVPN()+i;	
     	    	
     			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
     					false, false);
-    			
-    			section.loadPage(i, entry.ppn);
+
+    			section.loadPage(i, entry.ppn);    			
     	    }
     	}
     	

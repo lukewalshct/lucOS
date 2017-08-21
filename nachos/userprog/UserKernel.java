@@ -82,9 +82,9 @@ public class UserKernel extends ThreadedKernel {
      */
     public MemNode getNextFreeMemPage(int processID)
     {
-    	MemNode result = null;
+    	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	boolean intStatus = Machine.interrupt().disable();
+    	MemNode result = null;    	    	
     	
     	//enter critical section
     	this.freeMemLock.acquire();
@@ -103,9 +103,7 @@ public class UserKernel extends ThreadedKernel {
     	finally
     	{
         	//exit critical section
-        	this.freeMemLock.release();
-        	
-        	Machine.interrupt().restore(intStatus);
+        	this.freeMemLock.release();        	        	
         	
         	return result;
     	}

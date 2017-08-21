@@ -283,6 +283,8 @@ public class UserProcess {
 				 int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
+	boolean intStatus = Machine.interrupt().disable();
+	
 	byte[] memory = Machine.processor().getMemory();
 	
 	int paddr = translateVAddrToPAdrr(vaddr);
@@ -306,6 +308,8 @@ public class UserProcess {
 		if(entry != null) entry.used = false;
 	}
 
+	Machine.interrupt().restore(intStatus);
+	
 	return amount;
     }
 
@@ -402,7 +406,7 @@ public class UserProcess {
      * @return the translated physical address
      */
     private int translateVAddrToPAdrr(int vaddr)
-    {
+    {    	
     	if(vaddr < 0) return -1;
     	
     	//get the virtual page number based on vaddr
@@ -417,7 +421,7 @@ public class UserProcess {
     	if(entry == null) return -1;
     
     	//calculate physical address
-    	int paddr = (entry.ppn*pageSize) + addressOffset;
+    	int paddr = (entry.ppn*pageSize) + addressOffset;    	    
     	
     	return paddr;
     }
