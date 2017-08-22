@@ -6,7 +6,8 @@ import nachos.userprog.*;
 import nachos.vm.*;
 
 import java.util.Arrays;
-import java.util.Hashtable;;
+import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -22,6 +23,10 @@ public class VMKernel extends UserKernel {
 	private CoreMapEntry[] _globalCoreMap;
 	
 	private SwapFileAccess _globalSwapFileAccess;	
+	
+	//pages (pyhiscal page numbers )in use and cannot be 
+	//evicted (e.g. page is being loaded, read/written, etc)
+	private HashSet<Integer> _pagesInUse;
 	
     /**
      * Allocate a new VM kernel.
@@ -44,7 +49,9 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];   	    		
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];  
+    	
+    	this._pagesInUse = new HashSet<Integer>();
     }
     
     /**
@@ -56,8 +63,6 @@ public class VMKernel extends UserKernel {
     	
     	this._globalSwapFileAccess.initialize();    	
     }
-    
-    public SwapFileAccess getSwapFileAccess() { return this._globalSwapFileAccess; }
     
     /**
      * Loads the page from swap file on the file system and returns
