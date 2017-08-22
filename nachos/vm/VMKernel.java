@@ -83,6 +83,30 @@ public class VMKernel extends UserKernel {
     }
     
     
+    /*
+     * Sets a physical page as in use and cannot be evicted.
+     */
+    protected void setPageInUse(int ppn)
+    {
+    	this._pagesInUse.add(ppn);
+    }
+    
+    /*
+     * Sets a physical page to be not in use and OK to be evicted.
+     */
+    protected void setPageNotInUse(int ppn)
+    {
+    	this._pagesInUse.remove(ppn);
+    }
+    
+    /*
+     * Returuns whether page is in use and cannot be evicted.
+     */
+    public boolean pageInUse(int ppn)
+    {
+    	return this._pagesInUse.contains(ppn);
+    }
+    
     public void putTranslation(int processID, TranslationEntry entry)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
