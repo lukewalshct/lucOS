@@ -49,7 +49,7 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];  
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];     	
     	
     	this._pagesInUse = new HashSet<Integer>();
     }
@@ -61,7 +61,7 @@ public class VMKernel extends UserKernel {
     {    	
     	this._globalSwapFileAccess = new SwapFileAccess();
     	
-    	this._globalSwapFileAccess.initialize();    	
+    	this._globalSwapFileAccess.initialize(this);    	
     }
     
     /**
@@ -480,9 +480,12 @@ public class VMKernel extends UserKernel {
     	//nad virtual page number
     	private Hashtable<Integer, Hashtable<Integer, SwapEntry>> _swapLookup;
     	
-    	private Lock _swapLock;
+    	private Lock _swapLock;    	
     	
-    	public void initialize()
+    	//the kernel to which this swap file access belongs
+    	private VMKernel _kernel;
+    	
+    	public void initialize(VMKernel kernel)
     	{
         	//set up swap file
         	FileSystem fileSys = Machine.stubFileSystem();       	        	
@@ -504,6 +507,8 @@ public class VMKernel extends UserKernel {
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
         	
         	this._swapLock = new nachos.threads.Lock();
+        	
+        	this._kernel = kernel;
     	}
     	 
     	/**
