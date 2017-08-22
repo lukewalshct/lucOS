@@ -252,13 +252,20 @@ public class VMKernel extends UserKernel {
     			
     	while(mapEntry == null || mapEntry.entry == null || mapEntry.entry.used)
     	{
+    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
+    		
     		//Currently chooses page at random. TODO: implement nth chance algorithm
     		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
     	
     		mapEntry = this._globalCoreMap[physPageNum];
     	}
     	
-    	if(mapEntry == null) return -1;   	    	
+    	if(mapEntry == null)
+    	{
+    		Lib.debug('s', "Failed to evict page (PID " + processID + ")");
+    		
+    		return -1;   	    	
+    	}
     	
     	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
     			" VPN: " + mapEntry.entry.vpn + ")");
