@@ -517,6 +517,11 @@ public class VMKernel extends UserKernel {
     	//the kernel to which this swap file access belongs
     	private VMKernel _kernel;
     	
+    	//indidcates wether swap file is trying to load a page. If it is, it 
+    	//should not release _swapLock after it writes page (e.g. if main memory
+    	//neeeds to make room to load the page
+    	private boolean _isLoading;
+    	
     	public void initialize(VMKernel kernel)
     	{
         	//set up swap file
@@ -564,6 +569,8 @@ public class VMKernel extends UserKernel {
     			
     			this._swapLock.acquire();
     			
+    			this._isLoading = true;
+    			
     			Lib.debug('s', "Acquired swap lock (PID " + pid + ")");
     			
     			Hashtable<Integer, SwapEntry> processSwapLookup 
@@ -589,6 +596,8 @@ public class VMKernel extends UserKernel {
     		finally
     		{
     			Lib.debug('s', "Releasing swap lock (PID " + pid + ")");
+    			
+    			this._isLoading = false;
     			
     			this._swapLock.release();
     		}
@@ -661,7 +670,7 @@ public class VMKernel extends UserKernel {
     		{    			    		
     			Lib.debug('s', "Acquiring swap lock (write page)");
     			
-    			this._swapLock.acquire();
+    			this._swapLock.acquire();    			    			
     			
     			Lib.debug('s', "Acquired swap lock (write page)");
     			
@@ -674,11 +683,18 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
-    			Lib.debug('s', "Releasing swap lock (write page)");
+    			    			
+    			//don't release the lock if the swap file is trying to load
+    			//a page - it will do so after it is done loading
+    			if(!this._isLoading)
+    			{
+    				Lib.debug('s', "Releasing swap lock (write page)");
+    				
+    				this._swapLock.release();
+    				
+    				Lib.debug('s', "Released swap lock (write page)");
+    			}   			
     			
-    			this._swapLock.release();
-    			
-    			Lib.debug('s', "Released swap lock (write page)");
     		}
     		
     		return bytesWritten == Machine.processor().pageSize;
