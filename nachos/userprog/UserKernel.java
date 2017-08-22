@@ -14,10 +14,10 @@ public class UserKernel extends ThreadedKernel {
 	private List<MemNode> freeMemory;
 	
 	//a lock protecting access to free memory
-	private Lock freeMemLock;
+	private nachos.threads.Lock freeMemLock;
 	
 	//used to protect pages being marked as non/evictable
-	protected Lock _pageEvictionLock;
+	protected nachos.threads.Lock _pageEvictionLock;
 	
     /**
      * Allocate a new user kernel.
@@ -39,7 +39,7 @@ public class UserKernel extends ThreadedKernel {
 		public void run() { exceptionHandler(); }
 	    });
 	
-	this._pageEvictionLock = new Lock();
+	this._pageEvictionLock = new nachos.threads.Lock();
 	
 	initializeFreeMemory();
 	
@@ -84,6 +84,8 @@ public class UserKernel extends ThreadedKernel {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
+    	Lib.debug('s', "Process requesting free memory (PID " + processID + ")");
+    	
     	MemNode result = null;    	    	
     	
     	//enter critical section
@@ -104,6 +106,8 @@ public class UserKernel extends ThreadedKernel {
     	{
         	//exit critical section
         	this.freeMemLock.release();        	        	
+        	
+        	Lib.debug('s', "Returning free memory (PID " + processID + ")");
         	
         	return result;
     	}

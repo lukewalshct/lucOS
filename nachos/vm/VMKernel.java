@@ -516,26 +516,35 @@ public class VMKernel extends UserKernel {
     	{
     		Lib.debug('s', "Attempting to load from swap (PID " + pid + " VPN " + vpn + ")");
     		
-    		Hashtable<Integer, SwapEntry> processSwapLookup 
-				= this._swapLookup.get(pid);
-		
-    		if(processSwapLookup == null)
-    		{
-    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
+    		TranslationEntry translation = null;
+    		
+    		try
+    		{    			
+    			this._swapLock.acquire();
     			
-    			return null;
+    			Hashtable<Integer, SwapEntry> processSwapLookup 
+					= this._swapLookup.get(pid);
+		
+	    		if(processSwapLookup == null)
+	    		{
+	    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");	    			
+	    		}
+	    		else
+	    		{			
+		    		SwapEntry entry = processSwapLookup.get(vpn);   		    		
+		    		
+		    		translation = load(pid, entry);
+		    		
+		    		if(translation == null)
+		    		{
+		    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
+		    		}    		    		
+	    		}
     		}
-		
-    		SwapEntry entry = processSwapLookup.get(vpn);   		    		
-    		
-    		TranslationEntry translation = load(pid, entry);
-    		
-    		if(translation == null)
+    		finally
     		{
-    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
-    			
-    			return null;
-    		}    		    		
+    			this._swapLock.release();
+    		}
     		
     		return translation;
     	}
@@ -602,7 +611,7 @@ public class VMKernel extends UserKernel {
     		
     		//critical section
     		try
-    		{
+    		{    			    		
     			this._swapLock.acquire();
     			
 	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
