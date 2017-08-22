@@ -559,8 +559,12 @@ public class VMKernel extends UserKernel {
     		TranslationEntry translation = null;
     		
     		try
-    		{    			
+    		{   
+    			Lib.debug('s', "Acquiring swap lock (PID " + pid + ")");
+    			
     			this._swapLock.acquire();
+    			
+    			Lib.debug('s', "Acquired swap lock (PID " + pid + ")");
     			
     			Hashtable<Integer, SwapEntry> processSwapLookup 
 					= this._swapLookup.get(pid);
@@ -584,6 +588,8 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
+    			Lib.debug('s', "Releasing swap lock (PID " + pid + ")");
+    			
     			this._swapLock.release();
     		}
     		
@@ -653,7 +659,11 @@ public class VMKernel extends UserKernel {
     		//critical section
     		try
     		{    			    		
+    			Lib.debug('s', "Acquiring swap lock (write page)");
+    			
     			this._swapLock.acquire();
+    			
+    			Lib.debug('s', "Acquired swap lock (write page)");
     			
 	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
 	    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
@@ -664,7 +674,11 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
+    			Lib.debug('s', "Releasing swap lock (write page)");
+    			
     			this._swapLock.release();
+    			
+    			Lib.debug('s', "Released swap lock (write page)");
     		}
     		
     		return bytesWritten == Machine.processor().pageSize;
