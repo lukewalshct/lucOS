@@ -64,6 +64,11 @@ public class VMKernel extends UserKernel {
     	this._globalSwapFileAccess.initialize(this);    	
     }
     
+    public boolean swapExists()
+    {
+    	return this._globalSwapFileAccess != null;
+    }
+    
     /**
      * Loads the page from swap file on the file system and returns
      * the associated translation entry. 
@@ -178,6 +183,8 @@ public class VMKernel extends UserKernel {
     @Override
     protected MemNode freeUpMemory(int processID)
     {
+    	Lib.assertTrue(Machine.interrupt().disabled());
+    	
     	int freePageNum = evictPage(processID);
     	
     	if(freePageNum < 0) return null;
@@ -203,6 +210,7 @@ public class VMKernel extends UserKernel {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
+    	
     	//obtain a free page of physical memory
     	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid);
     	
@@ -562,8 +570,9 @@ public class VMKernel extends UserKernel {
 	    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");	    			
 	    		}
 	    		else
-	    		{			
-		    		SwapEntry entry = processSwapLookup.get(vpn);   		    		
+	    		{	
+	    			//get the swap entry
+		    		SwapEntry entry = processSwapLookup.get(vpn);  		    				    		
 		    		
 		    		translation = load(pid, entry);
 		    		
@@ -667,9 +676,7 @@ public class VMKernel extends UserKernel {
     	 */
     	private TranslationEntry load(int pid, SwapEntry entry)
     	{
-    		if(entry == null || entry.translation == null) return null;
-    		
-    		//Machine.interrupt().disable(); 	    		    		
+    		if(entry == null || entry.translation == null) return null;    		    	
     		
     	    //get page to load
     	    byte[] pageToLoad = new byte[Machine.processor().pageSize];    	    
@@ -683,7 +690,7 @@ public class VMKernel extends UserKernel {
     	    //get a free page from main memory
 			TranslationEntry translation = entry.translation;
 			
-			TranslationEntry newEntry = ((VMKernel)Kernel.kernel).newPage(pid, translation.vpn,
+			TranslationEntry newEntry = this._kernel.newPage(pid, translation.vpn,
 					true, translation.readOnly, false, false);  
 			
     		//get main memory from the processor
@@ -694,9 +701,7 @@ public class VMKernel extends UserKernel {
     		    return null;    		 
     		
     	    //load page from swap into main memory		
-    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);
-    	    
-    		//Machine.interrupt().enable();
+    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);    	        	
     		
     		return newEntry;   		    		
     	}

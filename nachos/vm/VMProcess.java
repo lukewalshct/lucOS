@@ -98,7 +98,7 @@ public class VMProcess extends UserProcess {
     	invalidateTLBEntries();
     	
     	//if swap file doesn't yet exist, initialize it
-    	if(kernel.getSwapFileAccess() == null) kernel.initializeSwapFileAccess();
+    	if(!kernel.swapExists()) kernel.initializeSwapFileAccess();
     	
     	// load sections
     	for (int s=0; s<coff.getNumSections(); s++) {
