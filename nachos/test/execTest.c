@@ -3,7 +3,7 @@
  * 	by creating new processes.
  */
 
-int NUM_PROGRAMS = 5;
+int NUM_PROGRAMS = 2;
 
 int main()
 {
