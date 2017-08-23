@@ -584,13 +584,16 @@ public class VMKernel extends UserKernel {
     		
     		try
     		{   
-    			Lib.debug('s', "Acquiring swap lock (PID " + pid + ")");
+    			if(!this._swapLock.isHeldByCurrentThread())
+    			{
+    				Lib.debug('s', "Acquiring swap lock (PID " + pid + ")");
+    			    			
+    				this._swapLock.acquire();
+    				
+    				Lib.debug('s', "Acquired swap lock (PID " + pid + ")");
+    			}
     			
-    			this._swapLock.acquire();
-    			
-    			this._isLoading = true;
-    			
-    			Lib.debug('s', "Acquired swap lock (PID " + pid + ")");
+    			this._isLoading = true;   			    			
     			
     			Hashtable<Integer, SwapEntry> processSwapLookup 
 					= this._swapLookup.get(pid);
@@ -686,12 +689,15 @@ public class VMKernel extends UserKernel {
     		
     		//critical section
     		try
-    		{    			    		
-    			Lib.debug('s', "Acquiring swap lock (write page)");
+    		{  
+    			if(!this._swapLock.isHeldByCurrentThread())
+    			{    				
+    				Lib.debug('s', "Acquiring swap lock (write page)");
     			
-    			this._swapLock.acquire();    			    			
+    				this._swapLock.acquire();    			    			
     			
-    			Lib.debug('s', "Acquired swap lock (write page)");
+    				Lib.debug('s', "Acquired swap lock (write page)");
+    			}
     			
 	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
 	    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
