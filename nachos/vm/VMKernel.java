@@ -39,7 +39,7 @@ public class VMKernel extends UserKernel {
        	//set up global inverted page table
     	this._globalPageTable = new InvertedPageTable();
     	
-    	this._globalPageTable.initialize(8, 8);
+    	this._globalPageTable.initialize(8, 8, this);
     	
     	//set up global core map
     	Processor processor = Machine.processor();
@@ -383,9 +383,11 @@ public class VMKernel extends UserKernel {
     	
     	private int _numPagesPerProcess;
     	
-    	private Lock _pageTableLock;    	
+    	private Lock _pageTableLock;
     	
-    	public void initialize(int numProcesses, int numPagesPerProcess)
+    	private VMKernel _kernel;
+    	
+    	public void initialize(int numProcesses, int numPagesPerProcess, VMKernel kernel)
     	{
     		this._numPagesPerProcess = numPagesPerProcess;
     		
@@ -393,6 +395,8 @@ public class VMKernel extends UserKernel {
     				Hashtable<Integer, TranslationEntry>>(numProcesses); 
     		
     		this._pageTableLock = new nachos.threads.Lock();
+    		
+    		this._kernel = kernel;
     	}
     	
     	/**
@@ -410,7 +414,7 @@ public class VMKernel extends UserKernel {
     		{
     			this._pageTableLock.acquire();
 	    		
-    			Lib.debug('s', "Acquired page table lock (PID " + processID + ")");
+    			Lib.debug('s', "Acquired page table lock - put (PID " + processID + ")");
     			
 	    		Hashtable<Integer, TranslationEntry> processPageTable = 
 	    				this._pageTable.get(processID);
@@ -426,7 +430,7 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
-    			Lib.debug('s', "Releasing page table lock (PID " + processID + ")");
+    			Lib.debug('s', "Releasing page table lock - put (PID " + processID + ")");
     			
     			this._pageTableLock.release();
     		}
@@ -449,6 +453,8 @@ public class VMKernel extends UserKernel {
     		try
     		{
     			this._pageTableLock.acquire();    		
+    			
+    			Lib.debug('s', "Acquired page table lock - get (PID " + processID + ")");
 	    		
 	    		Hashtable<Integer, TranslationEntry> processPageTable 
 	    			= this._pageTable.get(processID);
@@ -456,10 +462,14 @@ public class VMKernel extends UserKernel {
 	    		if(processPageTable != null)
 	    		{
 	    			entry = processPageTable.get(virtualPageNumber);	    		
-	    		}   			    		
+	    		}   			    
+	    		
+	    		if(entry != null && markPageInUse) this._kernel.setPageInUse(entry.ppn);
     		}
     		finally
     		{
+    			Lib.debug('s', "Releasing page table lock - get (PID " + processID + ")");
+    			
     			this._pageTableLock.release();
     		}
     		
