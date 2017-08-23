@@ -92,23 +92,29 @@ public class UserKernel extends ThreadedKernel {
     	Lib.debug('s', "Process requesting free memory (PID " + processID + ")");
     	
     	MemNode result = null;    	    	
-    	
-    	//enter critical section
-    	this.freeMemLock.acquire();
-    	
+    	    	
     	try
     	{    	
+        	//enter critical section
+        	this.freeMemLock.acquire();
+        	
     		if(!this.freeMemory.isEmpty())
     		{
+    			Lib.debug('s', "Accessing free memory in main mem (PID " + processID + ")");
+    			
     			result = this.freeMemory.remove(0);
     		}
     		else
     		{
+    			Lib.debug('s', "Main mem full. Freeing memory (PID " + processID + ")");
+    			
     			result = ((UserKernel)(Kernel.kernel)).freeUpMemory(processID); 
     		}
     	}
     	finally
     	{
+    		Lib.assertTrue(result != null, "Memory result null (PID " + processID + ")");
+    		
     		if(markPageInUse) this._pagesInUse.add(result.endIndex);
     		
         	//exit critical section

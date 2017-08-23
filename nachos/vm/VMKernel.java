@@ -180,7 +180,7 @@ public class VMKernel extends UserKernel {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	Lib.debug('s', "Main mem full. Freeing up memory (PID " + processID + ")");
+    	Lib.debug('s', "Attempting to free up memory (PID " + processID + ")");
     	
     	int freePageNum = evictPage(processID);
     	
