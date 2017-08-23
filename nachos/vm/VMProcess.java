@@ -212,6 +212,8 @@ public class VMProcess extends UserProcess {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());   	
     	    	
+    	Lib.debug('s', "Handling page fault (PID " + this.processID + "VPN " + vpn + ")");
+    	
     	VMKernel kernel = (VMKernel) Kernel.kernel;
     	
     	TranslationEntry entry = kernel.loadPageFromSwap(this.processID, vpn);
@@ -227,6 +229,8 @@ public class VMProcess extends UserProcess {
     	//fatal error if entry is null (should exist or be created) TODO: kill process
     	Lib.assertTrue(entry != null, "Entry is null -- pid: " + this.processID + " vpn: " + vpn);    	
     	    	
+    	Lib.debug('s', "Page fault handled (PID " + this.processID + "VPN " + vpn + ")");
+    	
     	return entry;
     }
     
