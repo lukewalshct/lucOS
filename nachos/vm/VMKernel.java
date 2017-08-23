@@ -22,12 +22,7 @@ public class VMKernel extends UserKernel {
 	//a global core map with physical page # as index
 	private CoreMapEntry[] _globalCoreMap;
 	
-	private SwapFileAccess _globalSwapFileAccess;	
-	
-	//pages (pyhiscal page numbers )in use and cannot be 
-	//evicted (e.g. page is being loaded, read/written, etc)
-	private HashSet<Integer> _pagesInUse;
-	
+	private SwapFileAccess _globalSwapFileAccess;		
     /**
      * Allocate a new VM kernel.
      */
@@ -209,19 +204,27 @@ public class VMKernel extends UserKernel {
     	return memNode;
     }
     
+    /*
+     * NewPage overload (doesn't have markpageinuse)
+     */
+    public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
+    		boolean used, boolean dirty)
+    {
+    	return newPage(pid, vpn, valid, readOnly, used, dirty, false);
+    }
     /**
      * Creates a new page and translation entry for that page..
      * @return
      */
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
-    		boolean used, boolean dirty)
+    		boolean used, boolean dirty, boolean markPageInUse)
     {   	
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
     	//obtain a free page of physical memory
-    	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid);
+    	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid, markPageInUse);
     	
     	//calculate the physical page number
     	int physPageNum = freeMemPage.endIndex / Machine.processor().pageSize; 
@@ -736,7 +739,7 @@ public class VMKernel extends UserKernel {
 			TranslationEntry translation = entry.translation;
 			
 			TranslationEntry newEntry = this._kernel.newPage(pid, translation.vpn,
-					true, translation.readOnly, false, false);  
+					true, translation.readOnly, false, false, true);  
 			
     		//get main memory from the processor
     		byte[] memory = Machine.processor().getMemory();
@@ -746,8 +749,11 @@ public class VMKernel extends UserKernel {
     		    return null;    		 
     		
     	    //load page from swap into main memory		
-    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);    	        	
-    		
+    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);    	        	    		
+    	    
+    	    //after loading, set the physical page as OK for eviction
+    	    this._kernel.setPageNotInUse(translation.ppn);
+    	    
     		return newEntry;   		    		
     	}
     	

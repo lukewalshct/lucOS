@@ -19,6 +19,11 @@ public class UserKernel extends ThreadedKernel {
 	//used to protect pages being marked as non/evictable
 	protected nachos.threads.Lock _pageEvictionLock;
 	
+	//pages (pyhiscal page numbers )in use and cannot be 
+	//evicted (e.g. page is being loaded, read/written, etc)
+	protected HashSet<Integer> _pagesInUse;
+	
+	
     /**
      * Allocate a new user kernel.
      */
@@ -80,7 +85,7 @@ public class UserKernel extends ThreadedKernel {
      * 
      * @return the next MemNode containing free page of memory indices
      */
-    public MemNode getNextFreeMemPage(int processID)
+    public MemNode getNextFreeMemPage(int processID, boolean markPageInUse)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
@@ -104,6 +109,8 @@ public class UserKernel extends ThreadedKernel {
     	}
     	finally
     	{
+    		if(markPageInUse) this._pagesInUse.add(result.endIndex);
+    		
         	//exit critical section
         	this.freeMemLock.release();        	        	
         	
