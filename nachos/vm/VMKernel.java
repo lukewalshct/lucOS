@@ -139,32 +139,14 @@ public class VMKernel extends UserKernel {
     }    
     
     public TranslationEntry getTranslation(int processID, 
-    		int virtualPageNumber, boolean nonEvictable)
+    		int virtualPageNumber, boolean markPageInUse)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
     	TranslationEntry entry;
-    	
-    	if(nonEvictable)
-    	{
-    		this._pageEvictionLock.acquire();    	
-    		
-    		try
-    		{
-    			entry = this._globalPageTable.get(processID, virtualPageNumber);
+
+  		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);
     			
-    			if(entry != null) entry.used = true;
-    		}
-    		finally
-    		{
-    			this._pageEvictionLock.release();
-    		}
-    	}
-    	else
-    	{
-    		entry = this._globalPageTable.get(processID, virtualPageNumber);
-    	}   	
-    	
     	return entry;    	
     }
 
@@ -455,7 +437,7 @@ public class VMKernel extends UserKernel {
     	 * @param virtualPageNumber
     	 * @return
     	 */
-    	public TranslationEntry get(int processID, int virtualPageNumber)
+    	public TranslationEntry get(int processID, int virtualPageNumber, boolean markPageInUse)
     	{
     		Lib.assertTrue(Machine.interrupt().disabled());
     		
