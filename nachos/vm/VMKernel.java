@@ -261,7 +261,8 @@ public class VMKernel extends UserKernel {
     	
     	int physPageNum = -1;
     			
-    	while(mapEntry == null || mapEntry.entry == null || mapEntry.entry.used)
+    	while(mapEntry == null || mapEntry.entry == null || mapEntry.entry.used || 
+    			this._pagesInUse.contains(mapEntry.entry.ppn))
     	{
     		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
     		
