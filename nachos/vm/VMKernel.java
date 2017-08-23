@@ -410,6 +410,8 @@ public class VMKernel extends UserKernel {
     		{
     			this._pageTableLock.acquire();
 	    		
+    			Lib.debug('s', "Acquired page table lock (PID " + processID + ")");
+    			
 	    		Hashtable<Integer, TranslationEntry> processPageTable = 
 	    				this._pageTable.get(processID);
 	    		
@@ -424,6 +426,8 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
+    			Lib.debug('s', "Releasing page table lock (PID " + processID + ")");
+    			
     			this._pageTableLock.release();
     		}
     		
@@ -439,14 +443,27 @@ public class VMKernel extends UserKernel {
     	 */
     	public TranslationEntry get(int processID, int virtualPageNumber, boolean markPageInUse)
     	{
-    		Lib.assertTrue(Machine.interrupt().disabled());
+    		TranslationEntry entry = null;
     		
-    		Hashtable<Integer, TranslationEntry> processPageTable 
-    			= this._pageTable.get(processID);
+    		//critical section
+    		try
+    		{
+    			this._pageTableLock.acquire();    		
+	    		
+	    		Hashtable<Integer, TranslationEntry> processPageTable 
+	    			= this._pageTable.get(processID);
+	    		
+	    		if(processPageTable != null)
+	    		{
+	    			entry = processPageTable.get(virtualPageNumber);	    		
+	    		}   			    		
+    		}
+    		finally
+    		{
+    			this._pageTableLock.release();
+    		}
     		
-    		if(processPageTable == null) return null;
-    		
-    		return processPageTable.get(virtualPageNumber);
+    		return entry;
     	}
     	
     	/*
