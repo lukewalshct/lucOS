@@ -107,7 +107,7 @@ public class UserKernel extends ThreadedKernel {
         	//exit critical section
         	this.freeMemLock.release();        	        	
         	
-        	Lib.debug('s', "Returning free memory (PID " + processID + ")");
+        	Lib.debug('s', "Returning free memory to process (PID " + processID + ")");
         	
         	return result;
     	}

@@ -185,9 +185,16 @@ public class VMKernel extends UserKernel {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
+    	Lib.debug('s', "Main mem full. Freeing up memory (PID " + processID + ")");
+    	
     	int freePageNum = evictPage(processID);
     	
-    	if(freePageNum < 0) return null;
+    	if(freePageNum < 0)
+    	{
+    		Lib.debug('s', "Failed to free memory (PID " + processID + ")");
+    		
+    		return null;
+    	}
     	
     	int pageSize = Machine.processor().pageSize;   	
     	
@@ -197,6 +204,8 @@ public class VMKernel extends UserKernel {
 		
 		memNode.endIndex = memNode.startIndex + pageSize - 1;
     	
+		Lib.debug('s', "Memory freed, returning (PID " + processID + ")");
+		
     	return memNode;
     }
     
@@ -219,8 +228,7 @@ public class VMKernel extends UserKernel {
     	
     	//create a translation entry
     	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
-    			valid, readOnly, used, dirty);
-    	
+    			valid, readOnly, used, dirty);    	
 
     	int pageSize = Processor.pageSize;
     	
