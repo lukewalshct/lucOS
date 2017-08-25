@@ -21,7 +21,10 @@ public class UserKernel extends ThreadedKernel {
 	
 	//pages (pyhiscal page numbers )in use and cannot be 
 	//evicted (e.g. page is being loaded, read/written, etc)
-	protected HashSet<Integer> _pagesInUse;
+	private HashSet<Integer> _pagesInUse;
+	
+	//protects access to adding/removing pages from list of pages in use
+	private Lock _pageUseLock;
 	
 	
     /**
@@ -45,6 +48,10 @@ public class UserKernel extends ThreadedKernel {
 	    });
 	
 	this._pageEvictionLock = new nachos.threads.Lock();
+	
+	this._pagesInUse = new HashSet<Integer>();
+	
+	this._pageUseLock = new nachos.threads.Lock();
 	
 	initializeFreeMemory();
 	
@@ -162,7 +169,16 @@ public class UserKernel extends ThreadedKernel {
      */
     protected void setPageInUse(int ppn)
     {
-    	this._pagesInUse.add(ppn);
+    	this._pageUseLock.acquire();
+    
+    	try
+    	{
+    		this._pagesInUse.add(ppn);
+    	}
+    	finally
+    	{
+    		this._pageUseLock.release();
+    	}    	
     }
     
     /*
@@ -170,7 +186,37 @@ public class UserKernel extends ThreadedKernel {
      */
     protected void setPageNotInUse(int ppn)
     {
-    	this._pagesInUse.remove(ppn);
+    	this._pageUseLock.acquire();
+    	
+    	try
+    	{
+    		this._pagesInUse.remove(ppn);
+    	}
+    	finally
+    	{
+    		this._pageUseLock.release();
+    	}    	
+    }
+    
+    /*
+     *  Returuns whether physical page is in use and cannot be evicted.
+     */
+    protected boolean pageInUse(int ppn)
+    {
+    	this._pageUseLock.acquire();
+    	
+    	boolean result;
+    	
+    	try
+    	{
+    		result = this._pagesInUse.contains(ppn);
+    	}
+    	finally
+    	{
+    		this._pageUseLock.release();
+    	}
+    	
+    	return result;
     }
     
     public void printPagesInUse(char dbgFlag)
