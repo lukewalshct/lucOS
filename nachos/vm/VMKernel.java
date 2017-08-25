@@ -550,6 +550,24 @@ public class VMKernel extends UserKernel {
         	this._kernel = kernel;
     	}
     	 
+    	/*
+    	 * Marks the page frame as in-use, meaning a process is performing
+    	 * an operation on it (loading, writing, etc).
+    	 */
+    	private void markFrameInUse(int pageFrameIndex)
+    	{
+    		
+    	}
+    	
+    	/*
+    	 * Marks the page frame as NOT in-use, meaning a process is no longer
+    	 * performing an operation on it (loading, writing, etc).
+    	 */
+    	private void markFrameNotInUse(int pageFrameIndex)
+    	{
+    		
+    	}
+    	
     	/**
     	 * Looks up the page in the swap file for the given process id and
     	 * virtual page number. Loads the page into main memory, and returns
@@ -594,7 +612,8 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{   			   			    			    		
-    			//TODO: mark swap frame as in use if entry is not null
+    			//mark swap frame as in use if entry is not null
+    			if(entry != null) markFrameInUse(entry.pageFrameIndex);
     			
     			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")"); 
     			
@@ -602,10 +621,18 @@ public class VMKernel extends UserKernel {
     			this._swapLookupLock.release();
     		}   		    		
     		
-    		//TODO: return if entry is null (could not find page in swap file)
+    		//return if entry is null (could not find page in swap file)
+    		if(entry == null)
+    		{
+    			Lib.debug('s', "Swap load failed - entry not found (PID " 
+    					+ pid + " VPN " + vpn + ")");
+    			
+    			return null;
+    		}
     		translation = load(pid, entry);    		    		
     		
-    		//TODO: mark swap frame as not in use
+    		//we're finished loading attempt - mark the page frame as not in use
+    		markFrameNotInUse(entry.pageFrameIndex);
     		
     		if(translation == null)
     		{
