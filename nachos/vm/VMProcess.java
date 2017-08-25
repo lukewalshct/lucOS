@@ -275,6 +275,8 @@ public class VMProcess extends UserProcess {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
+    	Lib.debug('s', "VMProcess retrieving translation, nonEvictable = " + nonEvictable);
+    	
     	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn, nonEvictable);
     }
     

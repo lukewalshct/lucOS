@@ -108,7 +108,7 @@ public class UserProcess {
     	
     	for(int i = 0; i < this.numPages; i++)
     	{
-    		MemNode memNode = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID);
+    		MemNode memNode = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID, false);
     		
     		if(memNode == null) return false;
     		
@@ -283,6 +283,8 @@ public class UserProcess {
 				 int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
+	Lib.debug('s', "Reading virtual memory (PID " + this.processID + ")");
+	
 	boolean intStatus = Machine.interrupt().disable();
 	
 	byte[] memory = Machine.processor().getMemory();
@@ -343,6 +345,8 @@ public class UserProcess {
     public int writeVirtualMemory(int vaddr, byte[] data, int offset,
 				  int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
+	
+	Lib.debug('s', "Writing virtual memory (PID " + this.processID + ")");
 	
 	byte[] memory = Machine.processor().getMemory();
 	
