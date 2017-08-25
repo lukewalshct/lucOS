@@ -513,15 +513,14 @@ public class VMKernel extends UserKernel {
     	//nad virtual page number
     	private Hashtable<Integer, Hashtable<Integer, SwapEntry>> _swapLookup;
     	
-    	private Lock _swapLock;    	
+    	//protects access to the swap lookup
+    	private Lock _swapLookupLock;    	
+    	
+    	//protects swap file from multiple writes at the same time
+    	private Lock _swapWriteLock;
     	
     	//the kernel to which this swap file access belongs
     	private VMKernel _kernel;
-    	
-    	//indidcates wether swap file is trying to load a page. If it is, it 
-    	//should not release _swapLock after it writes page (e.g. if main memory
-    	//neeeds to make room to load the page
-    	private boolean _isLoading;
     	
     	public void initialize(VMKernel kernel)
     	{
@@ -544,7 +543,9 @@ public class VMKernel extends UserKernel {
         	
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
         	
-        	this._swapLock = new nachos.threads.Lock();
+        	this._swapLookupLock = new nachos.threads.Lock();
+        	
+        	this._swapWriteLock = new nachos.threads.Lock();
         	
         	this._kernel = kernel;
     	}
@@ -564,18 +565,15 @@ public class VMKernel extends UserKernel {
     		
     		TranslationEntry translation = null;
     		
+    		SwapEntry entry = null;
+    		
     		try
     		{   
-    			if(!this._swapLock.isHeldByCurrentThread())
-    			{
-    				Lib.debug('s', "Acquiring swap lock (PID " + pid + ")");
+    			Lib.debug('s', "Acquiring swap lookup lock (PID " + pid + ")");
     			    			
-    				this._swapLock.acquire();
+    			this._swapLookupLock.acquire();
     				
-    				Lib.debug('s', "Acquired swap lock (PID " + pid + ")");
-    			}
-    			
-    			this._isLoading = true;   			    			
+    			Lib.debug('s', "Acquired swap lokoup lock (PID " + pid + ")");    			   			   			    		
     			
     			Hashtable<Integer, SwapEntry> processSwapLookup 
 					= this._swapLookup.get(pid);
@@ -587,24 +585,26 @@ public class VMKernel extends UserKernel {
 	    		else
 	    		{	
 	    			//get the swap entry
-		    		SwapEntry entry = processSwapLookup.get(vpn);  		    				    		
-		    		
-		    		translation = load(pid, entry);
-		    		
-		    		if(translation == null)
-		    		{
-		    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
-		    		}    		    		
+		    		entry = processSwapLookup.get(vpn);  		    				    				    				    	
 	    		}
     		}
     		finally
     		{
-    			Lib.debug('s', "Releasing swap lock (PID " + pid + ")");
+    			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")");    			    			
     			
-    			this._isLoading = false;
-    			
-    			this._swapLock.release();
+    			this._swapLookupLock.release();
     		}
+    		
+    		//TODO: mark swap frame as in use?
+    		
+    		translation = load(pid, entry);    		    		
+    		
+    		//TODO: mark swap frame as not in use?
+    		
+    		if(translation == null)
+    		{
+    			Lib.debug('s', "Swap load failed (PID " + pid + " VPN " + vpn + ")");
+    		}    
     		
     		return translation;
     	}
@@ -619,21 +619,33 @@ public class VMKernel extends UserKernel {
     		    
     		Lib.debug('s', "Attempting to write to swap (PID " + pid + " VPN " + entry.vpn + ")");
     		
-    		//get the swap lookup for the process, create if doesn't exist
-    		Hashtable<Integer, SwapEntry> processSwapLookup 
-				= this._swapLookup.get(pid);
+    		Hashtable<Integer, SwapEntry> processSwapLookup = null;
     		
-    		if(processSwapLookup == null)
+    		SwapEntry swapEntry = null;
+    		
+    		try
     		{
-    			processSwapLookup = new Hashtable<Integer, SwapEntry>();    			
-    			
-    			this._swapLookup.put(pid, processSwapLookup);
+    			this._swapLookupLock.acquire();
+    		
+	    		//get the swap lookup for the process, create if doesn't exist
+	    		processSwapLookup = this._swapLookup.get(pid);
+    		
+	    		if(processSwapLookup == null)
+	    		{
+	    			processSwapLookup = new Hashtable<Integer, SwapEntry>();    			
+	    			
+	    			this._swapLookup.put(pid, processSwapLookup);
+	    		}
+    		
+	    		//try to get the existing page frame index    		    	
+	    		swapEntry = processSwapLookup.get(entry.vpn);
+    		}
+    		finally
+    		{
+    			this._swapLookupLock.release();
     		}
     		
-    		//try to get the existing page frame index    		    	
-    		SwapEntry swapEntry = processSwapLookup.get(entry.vpn);
-    		
-    		if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
+	    	if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
     		
     		boolean success = writeToSwap(swapEntry);
     		
@@ -643,7 +655,16 @@ public class VMKernel extends UserKernel {
     		//if write successful, add entry to lookup
     		if(success)
     		{
-    			processSwapLookup.put(entry.vpn,  swapEntry);
+    			try
+    			{
+    				this._swapLookupLock.acquire();
+    			
+    				processSwapLookup.put(entry.vpn,  swapEntry);
+    			}
+    			finally
+    			{
+    				this._swapLookupLock.release();
+    			}
     		}
     		
     		return success;
@@ -672,14 +693,13 @@ public class VMKernel extends UserKernel {
     		//critical section
     		try
     		{  
-    			if(!this._swapLock.isHeldByCurrentThread())
-    			{    				
-    				Lib.debug('s', "Acquiring swap lock (write page)");
-    			
-    				this._swapLock.acquire();    			    			
-    			
-    				Lib.debug('s', "Acquired swap lock (write page)");
-    			}
+    				
+				Lib.debug('s', "Acquiring swap lock (write page)");
+			
+				this._swapWriteLock.acquire();    			    			
+			
+				Lib.debug('s', "Acquired swap lock (write page)");
+
     			
 	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
 	    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
@@ -689,18 +709,12 @@ public class VMKernel extends UserKernel {
 	    				pageToWrite, 0, pageToWrite.length);
     		}
     		finally
-    		{
-    			    			
-    			//don't release the lock if the swap file is trying to load
-    			//a page - it will do so after it is done loading
-    			if(!this._isLoading)
-    			{
-    				Lib.debug('s', "Releasing swap lock (write page)");
-    				
-    				this._swapLock.release();
-    				
-    				Lib.debug('s', "Released swap lock (write page)");
-    			}   			
+    		{    			    			
+				Lib.debug('s', "Releasing swap lock (write page)");
+				
+				this._swapWriteLock.release();
+				
+				Lib.debug('s', "Released swap lock (write page)");    			  		
     			
     		}
     		
