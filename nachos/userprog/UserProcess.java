@@ -301,13 +301,23 @@ public class UserProcess {
 	
 	TranslationEntry entry = getTranslation(vpn, true);			
 	
+	UserKernel kernel = (UserKernel) Kernel.kernel;
+	
 	try
 	{
+		Lib.debug('r', "Reading from phys addr " + paddr);
+	
+		kernel.printPagesInUse('r');
+		
 		System.arraycopy(memory, paddr, data, offset, amount);
 	}
 	finally
 	{
-		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUse(entry.ppn);		
+		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUse(entry.ppn);	
+		
+		Lib.debug('r', "Reading complete from phys addr " + paddr);
+		
+		kernel.printPagesInUse('r');
 	}
 
 	Machine.interrupt().restore(intStatus);

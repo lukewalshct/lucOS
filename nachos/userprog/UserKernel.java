@@ -173,6 +173,17 @@ public class UserKernel extends ThreadedKernel {
     	this._pagesInUse.remove(ppn);
     }
     
+    public void printPagesInUse(char dbgFlag)
+    {
+    	StringBuilder sb = new StringBuilder("Physical pages marked as in use: ");    	
+    	
+    	for(Integer i : this._pagesInUse)
+    	{    		
+    		sb.append(i.toString() + ", ");
+    	}
+    	
+    	Lib.debug(dbgFlag, sb.toString());
+    }
     /**
      * Test the console device.
      */	
