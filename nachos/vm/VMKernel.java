@@ -563,18 +563,22 @@ public class VMKernel extends UserKernel {
     	{
     		Lib.debug('s', "Attempting to load from swap (PID " + pid + " VPN " + vpn + ")");
     		
+    		//the translation to retrun (non-null if successful load)
     		TranslationEntry translation = null;
     		
+    		//the swap entry that references where the page is in the swap file
     		SwapEntry entry = null;
     		
     		try
     		{   
     			Lib.debug('s', "Acquiring swap lookup lock (PID " + pid + ")");
     			    			
+    			//enter critical section
     			this._swapLookupLock.acquire();
     				
-    			Lib.debug('s', "Acquired swap lokoup lock (PID " + pid + ")");    			   			   			    		
+    			Lib.debug('s', "Acquired swap lookup lock (PID " + pid + ")");    			   			   			    		
     			
+    			//get the swal lookup table for the process
     			Hashtable<Integer, SwapEntry> processSwapLookup 
 					= this._swapLookup.get(pid);
 		
@@ -584,22 +588,24 @@ public class VMKernel extends UserKernel {
 	    		}
 	    		else
 	    		{	
-	    			//get the swap entry
+	    			//get the swap entry from the lookup table
 		    		entry = processSwapLookup.get(vpn);  		    				    				    				    	
 	    		}
     		}
     		finally
-    		{
-    			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")");    			    			
+    		{   			   			    			    		
+    			//TODO: mark swap frame as in use if entry is not null
     			
+    			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")"); 
+    			
+    			//exit critical section
     			this._swapLookupLock.release();
-    		}
+    		}   		    		
     		
-    		//TODO: mark swap frame as in use?
-    		
+    		//TODO: return if entry is null (could not find page in swap file)
     		translation = load(pid, entry);    		    		
     		
-    		//TODO: mark swap frame as not in use?
+    		//TODO: mark swap frame as not in use
     		
     		if(translation == null)
     		{
@@ -642,12 +648,14 @@ public class VMKernel extends UserKernel {
     		}
     		finally
     		{
+    			//TODO: mark as in use
+    			
     			this._swapLookupLock.release();
     		}
     		
 	    	if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
     		
-    		boolean success = writeToSwap(swapEntry);
+    		boolean success = writeToSwap(swapEntry);   		
     		
     		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
     				"successful (PID " + pid + " VPN " + entry.vpn + ")");
