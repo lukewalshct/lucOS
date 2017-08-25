@@ -307,7 +307,7 @@ public class UserProcess {
 	}
 	finally
 	{
-		if(entry != null) entry.used = false;
+		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUse(entry.ppn);		
 	}
 
 	Machine.interrupt().restore(intStatus);
