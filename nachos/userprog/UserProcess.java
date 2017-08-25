@@ -387,10 +387,18 @@ public class UserProcess {
 
 	int amount = Math.min(length, memory.length-paddr);		
 		
+	Lib.debug('r', "Writing to phys addr " + paddr);
+	
+	kernel.printPagesInUse('w');
+	
 	System.arraycopy(data, offset, memory, paddr, amount);
 
 	if(entry != null) kernel.setPageNotInUse(entry.ppn);			
 
+	Lib.debug('r', "Writing complete to phys addr " + paddr);
+	
+	kernel.printPagesInUse('w');
+	
 	return amount;
     }
     
