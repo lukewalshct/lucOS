@@ -348,6 +348,8 @@ public class UserProcess {
 	
 	Lib.debug('s', "Writing virtual memory (PID " + this.processID + ")");
 	
+	UserKernel kernel = (UserKernel) Kernel.kernel;
+	
 	byte[] memory = Machine.processor().getMemory();
 	
 	//get virtual page number
@@ -358,7 +360,7 @@ public class UserProcess {
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
 	{
-		if(entry != null) entry.used = false;
+		if(entry != null) kernel.setPageNotInUse(entry.ppn);		
 		
 		return 0;
 	}
@@ -368,23 +370,16 @@ public class UserProcess {
 	// for now, just assume that virtual addresses equal physical addresses
 	if (paddr < 0 || paddr >= memory.length)
 	{
-		entry.used = false;
+		if(entry != null) kernel.setPageNotInUse(entry.ppn);		
 		
 		return 0;
 	}	    
 
-	int amount = Math.min(length, memory.length-paddr);
-	
-	UserKernel kernel = (UserKernel) Kernel.kernel;
-	
-	try
-	{		
-		System.arraycopy(data, offset, memory, paddr, amount);
-	}
-	finally
-	{
-		entry.used = false;
-	}		
+	int amount = Math.min(length, memory.length-paddr);		
+		
+	System.arraycopy(data, offset, memory, paddr, amount);
+
+	if(entry != null) kernel.setPageNotInUse(entry.ppn);			
 
 	return amount;
     }
