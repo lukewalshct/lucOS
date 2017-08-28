@@ -144,7 +144,10 @@ public class VMProcess extends UserProcess {
     	
     	if(kernel.getTranslation(this.processID, argVAddr) == null)
     	{
-    		kernel.newPage(this.processID, argVAddr, true, false, false, false);
+    		TranslationEntry argEntry = kernel.newPage(this.processID, 
+    				argVAddr, true, false, false, false);
+    		
+    		kernel.setPageNotInUse(argEntry.ppn);
     	}    	
     }
  
