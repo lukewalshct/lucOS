@@ -108,7 +108,7 @@ public class UserProcess {
     	
     	for(int i = 0; i < this.numPages; i++)
     	{
-    		PageFrame frame = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID, false);
+    		PageFrame frame = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID);
     		
     		if(frame == null) return false;
     		
@@ -313,7 +313,7 @@ public class UserProcess {
 	}
 	finally
 	{
-		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUse(entry.ppn);	
+		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUseAndLock(entry.ppn);	
 		
 		Lib.debug('r', "Reading complete from phys addr " + paddr);
 		
@@ -370,7 +370,7 @@ public class UserProcess {
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
 	{
-		if(entry != null) kernel.setPageNotInUse(entry.ppn);		
+		if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);		
 		
 		return 0;
 	}
@@ -380,7 +380,7 @@ public class UserProcess {
 	// for now, just assume that virtual addresses equal physical addresses
 	if (paddr < 0 || paddr >= memory.length)
 	{
-		if(entry != null) kernel.setPageNotInUse(entry.ppn);		
+		if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);		
 		
 		return 0;
 	}	    
@@ -393,7 +393,7 @@ public class UserProcess {
 	
 	System.arraycopy(data, offset, memory, paddr, amount);
 
-	if(entry != null) kernel.setPageNotInUse(entry.ppn);			
+	if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);			
 
 	Lib.debug('r', "Writing complete to phys addr " + paddr);
 	

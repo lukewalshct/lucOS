@@ -117,7 +117,7 @@ public class VMProcess extends UserProcess {
     			section.loadPage(i, entry.ppn);    		
     			
     			//load complete - set page to not in use
-    			kernel.setPageNotInUse(entry.ppn);
+    			kernel.setPageNotInUseAndLock(entry.ppn);
     	    }
     	}
     	
@@ -125,7 +125,7 @@ public class VMProcess extends UserProcess {
     	TranslationEntry stackEntry = kernel.newPage(this.processID, 
     			this.getInitialSP() / pageSize, true, false, false, false);
     	
-    	kernel.setPageNotInUse(stackEntry.ppn);
+    	kernel.setPageNotInUseAndLock(stackEntry.ppn);
     	
     	return true;    	
     }
@@ -236,7 +236,7 @@ public class VMProcess extends UserProcess {
     		{
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     			
-    			kernel.setPageNotInUse(entry.vpn);
+    			kernel.setPageNotInUseAndLock(entry.vpn);
     		}
     			
     	}    	    	     	 

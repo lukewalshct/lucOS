@@ -76,28 +76,41 @@ public class VMKernel extends UserKernel {
      */
     public TranslationEntry loadPageFromSwap(int pid, int vpn)
     {   	
-    	//get a free page frame where the new page can go, mark
-    	//it as in-use
-    	PageFrame targetFrame = getNextFreeMemPage(pid);
+    	TranslationEntry entry = null;
     	
-    	Lib.assertTrue(targetFrame != null);
-    	
-    	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
-    	
-    	if(entry != null)
+    	try
     	{
-    		entry.valid = true;    		
-    		
-    		putTranslation(pid, entry);    		
+    		//enter criical section
+    		this._pageAccessLock.acquire();
+	    	
+	    	//get a free page frame where the new page can go, mark
+	    	//it as in-use
+	    	PageFrame targetFrame = getNextFreeMemPage(pid);
+	    	
+	    	Lib.assertTrue(targetFrame != null);
+	    	
+	    	entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
+	    	
+	    	if(entry != null)
+	    	{
+	    		entry.valid = true;    		
+	    		
+	    		putTranslation(pid, entry);    		
+	    	}
+	    	else
+	    	{        	
+	    		//load failed - return the target frame to pool of free mem
+	    		returnFreeMemPage(targetFrame);
+	    	}    	
+	
+	    	//load attempt complete - mark the target page frame as not in use
+	    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
     	}
-    	else
-    	{        	
-    		//load failed - return the target frame to pool of free mem
-    		returnFreeMemPage(targetFrame);
-    	}    	
-
-    	//load attempt complete - mark the target page frame as not in use
-    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
+    	finally
+    	{
+    		//exit critical section
+    		this._pageAccessLock.release();
+    	}
     	
     	return entry;
     }
@@ -136,8 +149,27 @@ public class VMKernel extends UserKernel {
     {
     	TranslationEntry entry;
 
-  		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);
+  		entry = getTranslation(processID, virtualPageNumber, markPageInUse, true);
     			
+    	return entry;    	
+    }
+    
+    public TranslationEntry getTranslation(int processID, 
+    		int virtualPageNumber, boolean markPageInUse, boolean shouldLock)
+    {
+    	TranslationEntry entry;
+    	
+    	try
+    	{
+    		if(shouldLock) this._pageAccessLock.acquire();
+    	
+    		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);
+    	}
+    	finally
+    	{
+    		if(shouldLock) this._pageAccessLock.release();
+    	}
+    	
     	return entry;    	
     }
 

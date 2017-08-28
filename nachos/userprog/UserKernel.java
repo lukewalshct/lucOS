@@ -151,21 +151,28 @@ public class UserKernel extends ThreadedKernel {
         }
     }
     
-    /*
-     * Sets a physical page as in use and cannot be evicted.
-     */
-    public void setPageInUse(int ppn)
+    public void setPageNotInUseAndLock(int ppn)
     {
     	this._pageAccessLock.acquire();
-    
+    	
     	try
     	{
-    		this._pagesInUse.add(ppn);
+    		setPageNotInUse(ppn);
     	}
     	finally
     	{
     		this._pageAccessLock.release();
     	}    	
+    }
+        
+    /*
+     * Sets a physical page as in use and cannot be evicted.
+     */
+    public void setPageInUse(int ppn)
+    {
+    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+
+    	this._pagesInUse.add(ppn);	
     }
     
     /*
@@ -173,16 +180,9 @@ public class UserKernel extends ThreadedKernel {
      */
     public void setPageNotInUse(int ppn)
     {
-    	this._pageAccessLock.acquire();
+    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
-    	try
-    	{
-    		this._pagesInUse.remove(ppn);
-    	}
-    	finally
-    	{
-    		this._pageAccessLock.release();
-    	}    	
+    	this._pagesInUse.remove(ppn); 	
     }
     
     /*
