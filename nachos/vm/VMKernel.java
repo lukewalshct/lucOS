@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
+
 /**
  * A kernel that can support multiple demand-paging user processes.
  */
@@ -70,13 +71,27 @@ public class VMKernel extends UserKernel {
      * @return
      */
     public TranslationEntry loadPageFromSwap(int pid, int vpn)
-    {
-    	Lib.assertTrue(Machine.interrupt().disabled());
+    {   	
+    	//get a free page frame where the new page can go, mark
+    	//it as in-use
+    	PageFrame targetFrame = getNextFreeMemPage(pid, true);
     	
-    	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn);
+    	Lib.assertTrue(targetFrame != null);
     	
-    	if(entry != null) entry.valid = true;    	    	
+    	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
     	
+    	//load attempt complete - mark the target page frame as not in use
+    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
+    	
+    	if(entry != null)
+    	{
+    		entry.valid = true;    		
+    	}
+    	else
+    	{
+    		//load failed - return the target frame to pool of free mem
+    		returnFreeMemPage(targetFrame);
+    	}
     	return entry;
     }
     
@@ -554,7 +569,7 @@ public class VMKernel extends UserKernel {
     	 * Marks the page frame as in-use, meaning a process is performing
     	 * an operation on it (loading, writing, etc).
     	 */
-    	private void markFrameInUse(int pageFrameIndex)
+    	private void markSwapFrameInUse(int pageFrameIndex)
     	{
     		
     	}
@@ -563,7 +578,7 @@ public class VMKernel extends UserKernel {
     	 * Marks the page frame as NOT in-use, meaning a process is no longer
     	 * performing an operation on it (loading, writing, etc).
     	 */
-    	private void markFrameNotInUse(int pageFrameIndex)
+    	private void markSwapFrameNotInUse(int pageFrameIndex)
     	{
     		
     	}
@@ -573,11 +588,12 @@ public class VMKernel extends UserKernel {
     	 * virtual page number. Loads the page into main memory, and returns
     	 * the translation entry for the page.
     	 * 
-    	 * @param pid
-    	 * @param vpn
+    	 * @param pid process ID
+    	 * @param vpn virtual page number
+    	 * @param targetFrame frame of main memory to load into
     	 * @return
     	 */
-    	public TranslationEntry loadPage(int pid, int vpn)
+    	public TranslationEntry loadPage(int pid, int vpn, PageFrame targetFrame)
     	{
     		Lib.debug('s', "Attempting to load from swap (PID " + pid + " VPN " + vpn + ")");
     		
@@ -596,7 +612,7 @@ public class VMKernel extends UserKernel {
     				
     			Lib.debug('s', "Acquired swap lookup lock (PID " + pid + ")");    			   			   			    		
     			
-    			//get the swal lookup table for the process
+    			//get the swap lookup table for the process
     			Hashtable<Integer, SwapEntry> processSwapLookup 
 					= this._swapLookup.get(pid);
 		
@@ -613,7 +629,7 @@ public class VMKernel extends UserKernel {
     		finally
     		{   			   			    			    		
     			//mark swap frame as in use if entry is not null
-    			if(entry != null) markFrameInUse(entry.pageFrameIndex);
+    			if(entry != null) markSwapFrameInUse(entry.pageFrameIndex);
     			
     			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")"); 
     			
@@ -629,10 +645,13 @@ public class VMKernel extends UserKernel {
     			
     			return null;
     		}
-    		translation = load(pid, entry);    		    		
     		
-    		//we're finished loading attempt - mark the page frame as not in use
-    		markFrameNotInUse(entry.pageFrameIndex);
+    		//load the entry, get the translation
+    		translation = load(pid, entry, targetFrame);    		    		
+    		
+    		//we're finished loading attempt - mark the page frame in 
+    		//the swap file as not in use
+    		markSwapFrameNotInUse(entry.pageFrameIndex);
     		
     		if(translation == null)
     		{
@@ -760,7 +779,7 @@ public class VMKernel extends UserKernel {
     	 * Loads page retrieved from swap file into memory.
     	 * @param entry
     	 */
-    	private TranslationEntry load(int pid, SwapEntry entry)
+    	private TranslationEntry load(int pid, SwapEntry entry, PageFrame targetFrame)
     	{
     		if(entry == null || entry.translation == null) return null;    		    	
     		
