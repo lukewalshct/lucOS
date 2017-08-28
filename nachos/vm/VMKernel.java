@@ -163,12 +163,7 @@ public class VMKernel extends UserKernel {
     	
     	int freePageNum = evictPage(processID);
     	
-    	if(freePageNum < 0)
-    	{
-    		Lib.debug('s', "Failed to free memory (PID " + processID + ")");
-    		
-    		return null;
-    	}
+    	Lib.assertTrue(freePageNum >= 0, "Failed to free memory (PID " + processID + ")");    	
     	
     	int pageSize = Machine.processor().pageSize;   	
     	
@@ -230,7 +225,11 @@ public class VMKernel extends UserKernel {
     }
     
     /*
-     * Evicts a page from main memory.
+     * Evicts a page from main memory and writes it to the swap file.
+     * 
+     * NOTE - this method marks the page as in-use after eviction is
+     * complete. The calling code needs to ensure this is set as not
+     * in use after it performs its critical operations.
      */
     private int evictPage(int processID)
     {   	    	
