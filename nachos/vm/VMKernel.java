@@ -80,18 +80,21 @@ public class VMKernel extends UserKernel {
     	
     	TranslationEntry entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
     	
-    	//load attempt complete - mark the target page frame as not in use
-    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
-    	
     	if(entry != null)
     	{
     		entry.valid = true;    		
+    		
+    		putTranslation(pid, entry);    		
     	}
     	else
-    	{
+    	{        	
     		//load failed - return the target frame to pool of free mem
     		returnFreeMemPage(targetFrame);
-    	}
+    	}    	
+
+    	//load attempt complete - mark the target page frame as not in use
+    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
+    	
     	return entry;
     }
     
@@ -783,7 +786,7 @@ public class VMKernel extends UserKernel {
     	{
     		if(entry == null || entry.translation == null) return null;    		    	
     		
-    	    //get page to load
+    	    //get page to load from the swap file
     	    byte[] pageToLoad = new byte[Machine.processor().pageSize];    	    
     
     	    int bytesRead = _swapFile.read(entry.pageFrameIndex, 
@@ -792,26 +795,20 @@ public class VMKernel extends UserKernel {
     	    //check to make sure the read from swap was successful
     	    if(bytesRead != Machine.processor().pageSize) return null;			    	    
 			    		
-    	    //get a free page from main memory
-			TranslationEntry translation = entry.translation;
-			
-			TranslationEntry newEntry = this._kernel.newPage(pid, translation.vpn,
-					true, translation.readOnly, false, false, true);  
-			
     		//get main memory from the processor
     		byte[] memory = Machine.processor().getMemory();
     		
+    		int ppn = targetFrame.startIndex / Machine.processor().pageSize;
+    		
     		//validate physical page number
-    		if (newEntry.ppn < 0 || newEntry.ppn + Machine.processor().pageSize >= memory.length)
+    		if (ppn < 0 || ppn + Machine.processor().pageSize >= memory.length)
     		    return null;    		 
     		
     	    //load page from swap into main memory		
-    	    System.arraycopy(pageToLoad, 0, memory, newEntry.ppn, Machine.processor().pageSize);    	        	    		
-    	    
-    	    //after loading, set the physical page as OK for eviction
-    	    this._kernel.setPageNotInUse(translation.ppn);
-    	    
-    		return newEntry;   		    		
+    	    System.arraycopy(pageToLoad, 0, memory, ppn, Machine.processor().pageSize);    	        	    		
+    	        	    
+    		return new TranslationEntry(entry.translation.vpn, ppn, true, 
+    				entry.translation.readOnly,false, false);
     	}
     	
     	public void terminate()
