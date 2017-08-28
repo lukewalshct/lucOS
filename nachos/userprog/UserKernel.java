@@ -190,20 +190,9 @@ public class UserKernel extends ThreadedKernel {
      */
     protected boolean pageInUse(int ppn)
     {
-    	this._pageAccessLock.acquire();
+    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
-    	boolean result;
-    	
-    	try
-    	{
-    		result = this._pagesInUse.contains(ppn);
-    	}
-    	finally
-    	{
-    		this._pageAccessLock.release();
-    	}
-    	
-    	return result;
+    	return this._pagesInUse.contains(ppn);
     }
     
     public void printPagesInUse(char dbgFlag)

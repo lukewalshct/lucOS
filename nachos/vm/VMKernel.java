@@ -127,17 +127,13 @@ public class VMKernel extends UserKernel {
     }
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
-    {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
-    	
+    {    	
     	return getTranslation(processID, virtualPageNumber, false);    	
     }    
     
     public TranslationEntry getTranslation(int processID, 
     		int virtualPageNumber, boolean markPageInUse)
     {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
-    	
     	TranslationEntry entry;
 
   		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);

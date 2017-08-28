@@ -133,6 +133,7 @@ public class VMProcess extends UserProcess {
     /*
      * allocates a page for arguments, if they exist
      */
+    /*
     @Override
     protected void allocateArgs()
     {
@@ -149,7 +150,7 @@ public class VMProcess extends UserProcess {
     		
     		kernel.setPageNotInUse(argEntry.ppn);
     	}    	
-    }
+    }*/
  
     /*
      * Deallocates memory upon process exit and cleans up
