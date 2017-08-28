@@ -127,11 +127,11 @@ public class VMKernel extends UserKernel {
      * Called when main memory is full but a process needs a 
      * free page of memory. Frees up a page in main memory by
      * writing the page to the swap file (if applicable) and 
-     * returns a MemNode that represents the new empty slot in 
+     * returns a PageFrame that represents the new empty slot in 
      * main memory.
      */    
     @Override
-    protected MemNode freeUpMemory(int processID)
+    protected PageFrame freeUpMemory(int processID)
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
@@ -148,15 +148,15 @@ public class VMKernel extends UserKernel {
     	
     	int pageSize = Machine.processor().pageSize;   	
     	
-		MemNode memNode = new MemNode();
+		PageFrame frame = new PageFrame();
 		
-		memNode.startIndex = freePageNum * pageSize;
+		frame.startIndex = freePageNum * pageSize;
 		
-		memNode.endIndex = memNode.startIndex + pageSize - 1;
+		frame.endIndex = frame.startIndex + pageSize - 1;
     	
 		Lib.debug('s', "Memory freed, returning (PID " + processID + ")");
 		
-    	return memNode;
+    	return frame;
     }
     
     /*
@@ -179,7 +179,7 @@ public class VMKernel extends UserKernel {
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
     	//obtain a free page of physical memory
-    	UserKernel.MemNode freeMemPage = getNextFreeMemPage(pid, markPageInUse);
+    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid, markPageInUse);
     	
     	//calculate the physical page number
     	int physPageNum = freeMemPage.endIndex / Machine.processor().pageSize; 

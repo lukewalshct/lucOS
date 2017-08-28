@@ -3,7 +3,7 @@ package nachos.userprog;
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
-import nachos.userprog.UserKernel.MemNode;
+import nachos.userprog.UserKernel.PageFrame;
 
 import java.io.EOFException;
 import java.nio.ByteBuffer;
@@ -34,7 +34,7 @@ public class UserProcess {
 	private OpenFile[] openFiles;
 	
 	//represents the phsyical memory pages to which this process' virtual memory maps	
-	protected MemNode[] physMemPages;	
+	protected PageFrame[] physMemPages;	
 
     /** The program being run by this process. */
     protected Coff coff;
@@ -104,15 +104,15 @@ public class UserProcess {
     	if(this.numPages == 0) return false;
     	
     	//create a "blank" virtual address space of size numPages
-    	this.physMemPages = new MemNode[this.numPages];
+    	this.physMemPages = new PageFrame[this.numPages];
     	
     	for(int i = 0; i < this.numPages; i++)
     	{
-    		MemNode memNode = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID, false);
+    		PageFrame frame = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID, false);
     		
-    		if(memNode == null) return false;
+    		if(frame == null) return false;
     		
-    		this.physMemPages[i] = memNode;
+    		this.physMemPages[i] = frame;
     	}   	    	
     	
     	initializeTranslations();
@@ -132,9 +132,9 @@ public class UserProcess {
     	
     	for(int i= 0; i < this.physMemPages.length; i++)
     	{
-    		MemNode nodeToReturn = this.physMemPages[i];
+    		PageFrame frameToReturn = this.physMemPages[i];
     		
-    		((UserKernel)Kernel.kernel).returnFreeMemPage(nodeToReturn);
+    		((UserKernel)Kernel.kernel).returnFreeMemPage(frameToReturn);
     		
     		this.physMemPages[i] = null;
     	}
