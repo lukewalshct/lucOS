@@ -151,8 +151,7 @@ public class VMKernel extends UserKernel {
      * writing the page to the swap file (if applicable) and 
      * returns a PageFrame that represents the new empty slot in 
      * main memory.
-     */    
-    @Override
+     */        
     protected PageFrame freeUpMemory(int processID)
     {    	
     
@@ -185,29 +184,50 @@ public class VMKernel extends UserKernel {
     {       	    	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
-    	//obtain a free page of physical memory
-    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid);
+    	TranslationEntry entry = null;
     	
-    	//calculate the physical page number
-    	int physPageNum = freeMemPage.endIndex / Machine.processor().pageSize; 
-    	
-    	//create a translation entry
-    	TranslationEntry entry = new TranslationEntry(vpn,physPageNum, 
-    			valid, readOnly, used, dirty);    	
-
-    	int pageSize = Processor.pageSize;
-    	
-    	byte[] memory = Machine.processor().getMemory();
-    	
-    	int paddr = entry.ppn*pageSize;
-    	
-    	if(paddr < 0 || paddr >= memory.length) return null;
-    	
-    	//clear out the bytes
-    	Arrays.fill(memory, paddr, paddr+pageSize, (byte) 0);
-    	
-    	//add the entry to the global inverted page table
-    	putTranslation(pid, entry);      	    	
+    	try
+    	{
+    		this._pageAccessLock.acquire();
+    		
+    		int physPageNum = -1;
+    		
+	    	//obtain a free page of physical memory
+	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid);
+	    	
+	    	if(freeMemPage != null)
+	    	{ 
+	    		physPageNum = freeMemPage.endIndex / Machine.processor().pageSize;
+	    	}
+	    	else
+	    	{
+	    		physPageNum = evictPage(pid);
+	    	}
+	    	
+	    	Lib.assertTrue(physPageNum >= 0, "Error creating new page: free page is null");	    	
+	    	
+	    	//create a translation entry
+	    	entry = new TranslationEntry(vpn,physPageNum, 
+	    			valid, readOnly, used, dirty);    	
+	
+	    	int pageSize = Processor.pageSize;
+	    	
+	    	byte[] memory = Machine.processor().getMemory();
+	    	
+	    	int paddr = entry.ppn*pageSize;
+	    	
+	    	if(paddr < 0 || paddr >= memory.length) return null;
+	    	
+	    	//clear out the bytes
+	    	Arrays.fill(memory, paddr, paddr+pageSize, (byte) 0);
+	    	
+	    	//add the entry to the global inverted page table
+	    	putTranslation(pid, entry);     
+    	}
+    	finally
+    	{
+    		this._pageAccessLock.release();
+    	}
     	
     	return entry;
     }
@@ -221,40 +241,30 @@ public class VMKernel extends UserKernel {
      */
     private int evictPage(int processID)
     {   	    	
+    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	
     	CoreMapEntry mapEntry = null;
     	
-    	int physPageNum = -1;
-    			
-    	//enter critical seciont
-    	try
+    	int physPageNum = -1;    			
+    
+    	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
     	{
-    		//this._evictionLock.acquire();
-    		this._pageAccessLock.acquire();
-	    	
-	    	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
-	    	{
-	    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
-	    		
-	    		//Currently chooses page at random. TODO: implement nth chance algorithm
-	    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
-	    	
-	    		mapEntry = this._globalCoreMap[physPageNum];
-	    	}
-	    	
-	    	Lib.assertTrue(mapEntry != null && mapEntry.entry != null, 
-	    			"Error eviction page: entry is null");
-	    	
-	    	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
-	    			" VPN: " + mapEntry.entry.vpn + ")");
-	    	
-	    	//TODO: mark the page as in use so it can't be evicted by other processes
-	    	setPageInUse(mapEntry.entry.ppn);
+    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
+    		
+    		//Currently chooses page at random. TODO: implement nth chance algorithm
+    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    	
+    		mapEntry = this._globalCoreMap[physPageNum];
     	}
-    	finally
-    	{
-    		//exit critical section
-    		this._pageAccessLock.release();
-    	}
+    	
+    	Lib.assertTrue(mapEntry != null && mapEntry.entry != null, 
+    			"Error eviction page: entry is null");
+    	
+    	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
+    			" VPN: " + mapEntry.entry.vpn + ")");
+    	
+    	//TODO: mark the page as in use so it can't be evicted by other processes
+    	setPageInUse(mapEntry.entry.ppn);    	
     	
     	//write old page to the swap file
     	this._globalSwapFileAccess.writePage(mapEntry.processID, mapEntry.entry);
