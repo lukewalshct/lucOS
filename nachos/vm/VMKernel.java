@@ -87,6 +87,19 @@ public class VMKernel extends UserKernel {
 	    	//it as in-use
 	    	PageFrame targetFrame = getNextFreeMemPage(pid);
 	    	
+	    	if(targetFrame == null)
+	    	{
+	    		int pageSize = Machine.processor().pageSize;
+	    		
+	    		int physPageNum = evictPage(pid);
+	    		
+	    		targetFrame = new PageFrame();
+	    		
+	    		targetFrame.startIndex = physPageNum * pageSize;
+	    		
+	    		targetFrame.endIndex = (physPageNum * pageSize) + pageSize - 1;
+	    	}
+	    	
 	    	Lib.assertTrue(targetFrame != null);
 	    	
 	    	entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
