@@ -178,20 +178,13 @@ public class VMKernel extends UserKernel {
     	return frame;
     }
     
-    /*
-     * NewPage overload (doesn't have markpageinuse)
-     */
-    public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
-    		boolean used, boolean dirty)
-    {
-    	return newPage(pid, vpn, valid, readOnly, used, dirty, false);
-    }
+
     /**
      * Creates a new page and translation entry for that page..
      * @return
      */
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
-    		boolean used, boolean dirty, boolean markPageInUse)
+    		boolean used, boolean dirty)
     {   	
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
@@ -219,9 +212,7 @@ public class VMKernel extends UserKernel {
     	Arrays.fill(memory, paddr, paddr+pageSize, (byte) 0);
     	
     	//add the entry to the global inverted page table
-    	putTranslation(pid, entry);   
-    	
-    	setPageNotInUse(physPageNum);
+    	putTranslation(pid, entry);      	    	
     	
     	return entry;
     }

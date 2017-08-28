@@ -163,7 +163,7 @@ public class UserKernel extends ThreadedKernel {
     /*
      * Sets a physical page as in use and cannot be evicted.
      */
-    protected void setPageInUse(int ppn)
+    public void setPageInUse(int ppn)
     {
     	this._pageUseLock.acquire();
     
@@ -180,7 +180,7 @@ public class UserKernel extends ThreadedKernel {
     /*
      * Sets a physical page to be not in use and OK to be evicted.
      */
-    protected void setPageNotInUse(int ppn)
+    public void setPageNotInUse(int ppn)
     {
     	this._pageUseLock.acquire();
     	

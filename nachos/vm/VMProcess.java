@@ -114,7 +114,10 @@ public class VMProcess extends UserProcess {
     			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
     					false, false);
 
-    			section.loadPage(i, entry.ppn);    			
+    			section.loadPage(i, entry.ppn);    		
+    			
+    			//load complete - set page to not in use
+    			kernel.setPageNotInUse(entry.ppn);
     	    }
     	}
     	
