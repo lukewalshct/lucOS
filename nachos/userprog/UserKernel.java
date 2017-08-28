@@ -21,8 +21,8 @@ public class UserKernel extends ThreadedKernel {
 	//evicted (e.g. page is being loaded, read/written, etc)
 	private HashSet<Integer> _pagesInUse;
 	
-	//protects access to adding/removing pages from list of pages in use
-	private Lock _pageUseLock;
+	//protects access to page table and list of pages in use
+	protected Lock _pageAccessLock;
 	
 	
     /**
@@ -47,7 +47,7 @@ public class UserKernel extends ThreadedKernel {
 	
 	this._pagesInUse = new HashSet<Integer>();
 	
-	this._pageUseLock = new nachos.threads.Lock();
+	this._pageAccessLock = new nachos.threads.Lock();
 	
 	initializeFreeMemory();
 	
@@ -165,7 +165,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public void setPageInUse(int ppn)
     {
-    	this._pageUseLock.acquire();
+    	this._pageAccessLock.acquire();
     
     	try
     	{
@@ -173,7 +173,7 @@ public class UserKernel extends ThreadedKernel {
     	}
     	finally
     	{
-    		this._pageUseLock.release();
+    		this._pageAccessLock.release();
     	}    	
     }
     
@@ -182,7 +182,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public void setPageNotInUse(int ppn)
     {
-    	this._pageUseLock.acquire();
+    	this._pageAccessLock.acquire();
     	
     	try
     	{
@@ -190,7 +190,7 @@ public class UserKernel extends ThreadedKernel {
     	}
     	finally
     	{
-    		this._pageUseLock.release();
+    		this._pageAccessLock.release();
     	}    	
     }
     
@@ -199,7 +199,7 @@ public class UserKernel extends ThreadedKernel {
      */
     protected boolean pageInUse(int ppn)
     {
-    	this._pageUseLock.acquire();
+    	this._pageAccessLock.acquire();
     	
     	boolean result;
     	
@@ -209,7 +209,7 @@ public class UserKernel extends ThreadedKernel {
     	}
     	finally
     	{
-    		this._pageUseLock.release();
+    		this._pageAccessLock.release();
     	}
     	
     	return result;

@@ -26,7 +26,7 @@ public class VMKernel extends UserKernel {
 	private SwapFileAccess _globalSwapFileAccess;
 	
 	//ensures only one eviction can  be happneing at once
-	private Lock _evictionLock;
+	//private Lock _evictionLock;
 	
     /**
      * Allocate a new VM kernel.
@@ -49,9 +49,7 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];    
-    	
-    	this._evictionLock = new nachos.threads.Lock();
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];        	    	
     }
     
     /**
@@ -156,9 +154,8 @@ public class VMKernel extends UserKernel {
      */    
     @Override
     protected PageFrame freeUpMemory(int processID)
-    {
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
+    {    	
+    
     	Lib.debug('s', "Attempting to free up memory (PID " + processID + ")");
     	
     	int freePageNum = evictPage(processID);
@@ -231,7 +228,8 @@ public class VMKernel extends UserKernel {
     	//enter critical seciont
     	try
     	{
-    		this._evictionLock.acquire();
+    		//this._evictionLock.acquire();
+    		this._pageAccessLock.acquire();
 	    	
 	    	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
 	    	{
@@ -255,7 +253,7 @@ public class VMKernel extends UserKernel {
     	finally
     	{
     		//exit critical section
-    		this._evictionLock.release();
+    		this._pageAccessLock.release();
     	}
     	
     	//write old page to the swap file
