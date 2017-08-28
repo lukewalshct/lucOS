@@ -122,7 +122,10 @@ public class VMProcess extends UserProcess {
     	}
     	
     	//allocate first page for stack
-    	kernel.newPage(this.processID, this.getInitialSP() / pageSize, true, false, false, false);
+    	TranslationEntry stackEntry = kernel.newPage(this.processID, 
+    			this.getInitialSP() / pageSize, true, false, false, false);
+    	
+    	kernel.setPageNotInUse(stackEntry.ppn);
     	
     	return true;    	
     }
