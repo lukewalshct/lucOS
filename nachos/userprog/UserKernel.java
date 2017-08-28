@@ -118,7 +118,7 @@ public class UserKernel extends ThreadedKernel {
     	{
     		Lib.assertTrue(result != null, "Memory result null (PID " + processID + ")");
     		
-    		this._pagesInUse.add(result.endIndex);
+    		setPageInUse(result.startIndex / Machine.processor().pageSize);
     		
         	//exit critical section
         	this.freeMemLock.release();        	        	
