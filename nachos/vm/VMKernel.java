@@ -80,7 +80,7 @@ public class VMKernel extends UserKernel {
     {   	
     	//get a free page frame where the new page can go, mark
     	//it as in-use
-    	PageFrame targetFrame = getNextFreeMemPage(pid, true);
+    	PageFrame targetFrame = getNextFreeMemPage(pid);
     	
     	Lib.assertTrue(targetFrame != null);
     	
@@ -198,7 +198,7 @@ public class VMKernel extends UserKernel {
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
     	//obtain a free page of physical memory
-    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid, markPageInUse);
+    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid);
     	
     	//calculate the physical page number
     	int physPageNum = freeMemPage.endIndex / Machine.processor().pageSize; 
@@ -220,6 +220,8 @@ public class VMKernel extends UserKernel {
     	
     	//add the entry to the global inverted page table
     	putTranslation(pid, entry);   
+    	
+    	setPageNotInUse(physPageNum);
     	
     	return entry;
     }

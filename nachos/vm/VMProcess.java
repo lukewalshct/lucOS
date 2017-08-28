@@ -27,7 +27,7 @@ public class VMProcess extends UserProcess {
     	
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	Lib.debug('s', "Prepring for context switch (PID " + this.processID + ")");
+    	Lib.debug('s', "Preparing for context switch (PID " + this.processID + ")");
     	
     	invalidateTLBEntries();
     	
