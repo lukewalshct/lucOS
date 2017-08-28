@@ -106,35 +106,26 @@ public class UserKernel extends ThreadedKernel {
     			Lib.debug('s', "Accessing free memory in main mem (PID " + processID + ")");
     			
     			result = this.freeMemory.remove(0);
-    		}
-    		else
-    		{
-    			Lib.debug('s', "Main mem full. Freeing memory (PID " + processID + ")");
     			
-    			result = ((UserKernel)(Kernel.kernel)).freeUpMemory(processID); 
+        		Lib.assertTrue(result != null, "Memory result null (PID " + processID + ")");        		        	
     		}
     	}
     	finally
-    	{
-    		Lib.assertTrue(result != null, "Memory result null (PID " + processID + ")");
-    		
-    		setPageInUse(result.startIndex / Machine.processor().pageSize);
-    		
+    	{    		
         	//exit critical section
         	this.freeMemLock.release();        	        	
         	
-        	Lib.debug('s', "Returning free memory to process (PID " + processID + ")");
+        	if(result == null)
+        	{
+        		Lib.debug('s', "Main mem full. Returning null (PID " + processID + ")");
+        	}
+        	else
+        	{
+        		Lib.debug('s', "Returning free memory to process (PID " + processID + ")");
+        	}        	
         	
         	return result;
     	}
-    }
-    
-    /*
-     * Implemented only in VMKernel. Not implemented in UserKernel.
-     */
-    protected PageFrame freeUpMemory(int processID)
-    {
-    	return null;    
     }
     
     /**
