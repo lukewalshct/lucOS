@@ -23,7 +23,11 @@ public class VMKernel extends UserKernel {
 	//a global core map with physical page # as index
 	private CoreMapEntry[] _globalCoreMap;
 	
-	private SwapFileAccess _globalSwapFileAccess;		
+	private SwapFileAccess _globalSwapFileAccess;
+	
+	//ensures only one eviction can  be happneing at once
+	private Lock _evictionLock;
+	
     /**
      * Allocate a new VM kernel.
      */
@@ -45,7 +49,9 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];    	    	    	
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];    
+    	
+    	this._evictionLock = new nachos.threads.Lock();
     }
     
     /**
@@ -227,33 +233,40 @@ public class VMKernel extends UserKernel {
      * Evicts a page from main memory.
      */
     private int evictPage(int processID)
-    {    	
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
+    {   	    	
     	CoreMapEntry mapEntry = null;
     	
     	int physPageNum = -1;
     			
-    	while(mapEntry == null || mapEntry.entry == null || mapEntry.entry.used || 
-    			pageInUse(mapEntry.entry.ppn))
+    	//enter critical seciont
+    	try
     	{
-    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
-    		
-    		//Currently chooses page at random. TODO: implement nth chance algorithm
-    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
-    	
-    		mapEntry = this._globalCoreMap[physPageNum];
+    		this._evictionLock.acquire();
+	    	
+	    	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
+	    	{
+	    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
+	    		
+	    		//Currently chooses page at random. TODO: implement nth chance algorithm
+	    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+	    	
+	    		mapEntry = this._globalCoreMap[physPageNum];
+	    	}
+	    	
+	    	Lib.assertTrue(mapEntry != null && mapEntry.entry != null, 
+	    			"Error eviction page: entry is null");
+	    	
+	    	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
+	    			" VPN: " + mapEntry.entry.vpn + ")");
+	    	
+	    	//TODO: mark the page as in use so it can't be evicted by other processes
+	    	setPageInUse(mapEntry.entry.ppn);
     	}
-    	
-    	if(mapEntry == null)
+    	finally
     	{
-    		Lib.debug('s', "Failed to evict page (PID " + processID + ")");
-    		
-    		return -1;   	    	
+    		//exit critical section
+    		this._evictionLock.release();
     	}
-    	
-    	Lib.debug('s', "Evicted page from main memory (PID: " + mapEntry.processID + 
-    			" VPN: " + mapEntry.entry.vpn + ")");
     	
     	//write old page to the swap file
     	this._globalSwapFileAccess.writePage(mapEntry.processID, mapEntry.entry);
