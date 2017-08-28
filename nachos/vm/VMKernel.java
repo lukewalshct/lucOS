@@ -185,9 +185,7 @@ public class VMKernel extends UserKernel {
      */
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
     		boolean used, boolean dirty)
-    {   	
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
+    {       	    	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
     	//obtain a free page of physical memory
