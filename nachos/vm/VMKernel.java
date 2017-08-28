@@ -536,11 +536,8 @@ public class VMKernel extends UserKernel {
     	//nad virtual page number
     	private Hashtable<Integer, Hashtable<Integer, SwapEntry>> _swapLookup;
     	
-    	//protects access to the swap lookup
-    	private Lock _swapLookupLock;    	
-    	
-    	//protects swap file from multiple writes at the same time
-    	private Lock _swapWriteLock;
+    	//protects access to the swap file
+    	private Lock _swapLock;    	    
     	
     	//the kernel to which this swap file access belongs
     	private VMKernel _kernel;
@@ -566,30 +563,10 @@ public class VMKernel extends UserKernel {
         	
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
         	
-        	this._swapLookupLock = new nachos.threads.Lock();
-        	
-        	this._swapWriteLock = new nachos.threads.Lock();
+        	this._swapLock = new nachos.threads.Lock();       	        	
         	
         	this._kernel = kernel;
-    	}
-    	 
-    	/*
-    	 * Marks the page frame as in-use, meaning a process is performing
-    	 * an operation on it (loading, writing, etc).
-    	 */
-    	private void markSwapFrameInUse(int pageFrameIndex)
-    	{
-    		
-    	}
-    	
-    	/*
-    	 * Marks the page frame as NOT in-use, meaning a process is no longer
-    	 * performing an operation on it (loading, writing, etc).
-    	 */
-    	private void markSwapFrameNotInUse(int pageFrameIndex)
-    	{
-    		
-    	}
+    	}    	 
     	
     	/**
     	 * Looks up the page in the swap file for the given process id and
@@ -613,12 +590,12 @@ public class VMKernel extends UserKernel {
     		
     		try
     		{   
-    			Lib.debug('s', "Acquiring swap lookup lock (PID " + pid + ")");
+    			Lib.debug('s', "Acquiring swap lock (PID " + pid + ")");
     			    			
     			//enter critical section
-    			this._swapLookupLock.acquire();
+    			this._swapLock.acquire();
     				
-    			Lib.debug('s', "Acquired swap lookup lock (PID " + pid + ")");    			   			   			    		
+    			Lib.debug('s', "Acquired swap lock (PID " + pid + ")");    			   			   			    		
     			
     			//get the swap lookup table for the process
     			Hashtable<Integer, SwapEntry> processSwapLookup 
@@ -633,33 +610,21 @@ public class VMKernel extends UserKernel {
 	    			//get the swap entry from the lookup table
 		    		entry = processSwapLookup.get(vpn);  		    				    				    				    	
 	    		}
+	    		
+	    		// if entry is null (could not find page in swap file)
+	    		if(entry == null) Lib.debug('s', "Swap load failed - entry not found (PID " 
+	    			+ pid + " VPN " + vpn + ")");	    				    			    		
+	    		
+	    		//load the entry, get the translation
+	    		translation = load(pid, entry, targetFrame);    	
     		}
     		finally
-    		{   			   			    			    		
-    			//mark swap frame as in use if entry is not null
-    			if(entry != null) markSwapFrameInUse(entry.pageFrameIndex);
-    			
+    		{   			   			    			    		    			
     			Lib.debug('s', "Releasing swap lookup lock (PID " + pid + ")"); 
     			
     			//exit critical section
-    			this._swapLookupLock.release();
-    		}   		    		
-    		
-    		//return if entry is null (could not find page in swap file)
-    		if(entry == null)
-    		{
-    			Lib.debug('s', "Swap load failed - entry not found (PID " 
-    					+ pid + " VPN " + vpn + ")");
-    			
-    			return null;
-    		}
-    		
-    		//load the entry, get the translation
-    		translation = load(pid, entry, targetFrame);    		    		
-    		
-    		//we're finished loading attempt - mark the page frame in 
-    		//the swap file as not in use
-    		markSwapFrameNotInUse(entry.pageFrameIndex);
+    			this._swapLock.release();
+    		}  	    		    			    		
     		
     		if(translation == null)
     		{
@@ -670,126 +635,14 @@ public class VMKernel extends UserKernel {
     	}
     	
     	/**
-    	 * Writes page from main memory to swap file.
-    	 * @return
-    	 */
-    	public boolean writePage(int pid, TranslationEntry entry)
-    	{
-    		if(entry == null) return false;
-    		    
-    		Lib.debug('s', "Attempting to write to swap (PID " + pid + " VPN " + entry.vpn + ")");
-    		
-    		Hashtable<Integer, SwapEntry> processSwapLookup = null;
-    		
-    		SwapEntry swapEntry = null;
-    		
-    		try
-    		{
-    			this._swapLookupLock.acquire();
-    		
-	    		//get the swap lookup for the process, create if doesn't exist
-	    		processSwapLookup = this._swapLookup.get(pid);
-    		
-	    		if(processSwapLookup == null)
-	    		{
-	    			processSwapLookup = new Hashtable<Integer, SwapEntry>();    			
-	    			
-	    			this._swapLookup.put(pid, processSwapLookup);
-	    		}
-    		
-	    		//try to get the existing page frame index    		    	
-	    		swapEntry = processSwapLookup.get(entry.vpn);
-    		}
-    		finally
-    		{
-    			//TODO: mark as in use
-    			
-    			this._swapLookupLock.release();
-    		}
-    		
-	    	if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
-    		
-    		boolean success = writeToSwap(swapEntry);   		
-    		
-    		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
-    				"successful (PID " + pid + " VPN " + entry.vpn + ")");
-    		
-    		//if write successful, add entry to lookup
-    		if(success)
-    		{
-    			try
-    			{
-    				this._swapLookupLock.acquire();
-    			
-    				processSwapLookup.put(entry.vpn,  swapEntry);
-    			}
-    			finally
-    			{
-    				this._swapLookupLock.release();
-    			}
-    		}
-    		
-    		return success;
-    	}
-    	
-    	private boolean writeToSwap(SwapEntry swapEntry)
-    	{
-    		if(swapEntry == null || swapEntry.translation == null) return false;
-    		
-    		//get main memory from the processor
-    		byte[] memory = Machine.processor().getMemory();
-    		
-    		int ppn = swapEntry.translation.ppn;
-    		
-    		//validate physical page number
-    		if (ppn < 0 || ppn >= memory.length)
-    		    return false;    		 
-    		
-    		//get page to be written from main memory
-    		byte[] pageToWrite = new byte[Machine.processor().pageSize];
-    		    		
-    		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
-    		
-    		int bytesWritten;
-    		
-    		//critical section
-    		try
-    		{  
-    				
-				Lib.debug('s', "Acquiring swap lock (write page)");
-			
-				this._swapWriteLock.acquire();    			    			
-			
-				Lib.debug('s', "Acquired swap lock (write page)");
-
-    			
-	    		swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
-	    				swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
-	    				
-	    		//write page to swap
-	    		bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
-	    				pageToWrite, 0, pageToWrite.length);
-    		}
-    		finally
-    		{    			    			
-				Lib.debug('s', "Releasing swap lock (write page)");
-				
-				this._swapWriteLock.release();
-				
-				Lib.debug('s', "Released swap lock (write page)");    			  		
-    			
-    		}
-    		
-    		return bytesWritten == Machine.processor().pageSize;
-    	}
-    	
-    	/**
     	 * Loads page retrieved from swap file into memory.
     	 * @param entry
     	 */
     	private TranslationEntry load(int pid, SwapEntry entry, PageFrame targetFrame)
     	{
     		if(entry == null || entry.translation == null) return null;    		    	
+    		
+    		Lib.assertTrue(this._swapLock.isHeldByCurrentThread());
     		
     	    //get page to load from the swap file
     	    byte[] pageToLoad = new byte[Machine.processor().pageSize];    	    
@@ -815,6 +668,102 @@ public class VMKernel extends UserKernel {
     		return new TranslationEntry(entry.translation.vpn, ppn, true, 
     				entry.translation.readOnly,false, false);
     	}
+    	
+    	/**
+    	 * Writes page from main memory to swap file.
+    	 * @return
+    	 */
+    	public boolean writePage(int pid, TranslationEntry entry)
+    	{
+    		if(entry == null) return false;
+    		    
+    		Lib.debug('s', "Attempting to write to swap (PID " + pid + " VPN " + entry.vpn + ")");
+    		
+    		Hashtable<Integer, SwapEntry> processSwapLookup = null;
+    		
+    		SwapEntry swapEntry = null;
+    		
+    		boolean success = false;
+    		
+    		//enter critical section
+    		try
+    		{
+    			Lib.debug('s', "Acquiring swap lock (write page)");
+    			
+    			this._swapLock.acquire();
+    		
+    			Lib.debug('s', "Acquired swap lock (write page)");
+    			
+	    		//get the swap lookup for the process, create if doesn't exist
+	    		processSwapLookup = this._swapLookup.get(pid);
+    		
+	    		if(processSwapLookup == null)
+	    		{
+	    			processSwapLookup = new Hashtable<Integer, SwapEntry>();    			
+	    			
+	    			this._swapLookup.put(pid, processSwapLookup);
+	    		}
+    		
+	    		//try to get the existing page frame index    		    	
+	    		swapEntry = processSwapLookup.get(entry.vpn);	    		
+
+	    		//if it doesn't exist, create a new one
+		    	if(swapEntry == null) swapEntry = new SwapEntry(-1, entry);
+	    		
+		    	//write the page to swap
+	    		success = writeToSwap(swapEntry);   		
+	    		
+	    		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
+	    				"successful (PID " + pid + " VPN " + entry.vpn + ")");
+	    		
+	    		//if write successful, add entry to lookup
+	    		if(success) processSwapLookup.put(entry.vpn,  swapEntry);    		    				    		
+    		}
+    		finally
+    		{   	
+    			Lib.debug('s', "Releasing swap lock (write page)");
+    			
+    			this._swapLock.release();
+    			
+    			Lib.debug('s', "Released swap lock (write page)");    
+    		}    		
+    		
+    		return success;
+    	}
+    	
+    	private boolean writeToSwap(SwapEntry swapEntry)
+    	{
+    		Lib.assertTrue(this._swapLock.isHeldByCurrentThread());
+    		
+    		if(swapEntry == null || swapEntry.translation == null) return false;
+    		
+    		//get main memory from the processor
+    		byte[] memory = Machine.processor().getMemory();
+    		
+    		int ppn = swapEntry.translation.ppn;
+    		
+    		//validate physical page number
+    		if (ppn < 0 || ppn >= memory.length)
+    		    return false;    		 
+    		
+    		//get page to be written from main memory
+    		byte[] pageToWrite = new byte[Machine.processor().pageSize];
+    		    		
+    		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
+    		
+    		int bytesWritten;    		    			    									
+    			
+	    	swapEntry.pageFrameIndex = swapEntry.pageFrameIndex >= 0 ? 
+	    		swapEntry.pageFrameIndex : Math.max(_swapFile.length(), 0);
+	    				
+	    		//write page to swap
+	    	bytesWritten = _swapFile.write(swapEntry.pageFrameIndex, 
+	    		pageToWrite, 0, pageToWrite.length);
+    		    		
+    		return bytesWritten == Machine.processor().pageSize;
+    	}
+    	
+    	
     	
     	public void terminate()
     	{
