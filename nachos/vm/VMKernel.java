@@ -59,7 +59,7 @@ public class VMKernel extends UserKernel {
     {    	
     	this._globalSwapFileAccess = new SwapFileAccess();
     	
-    	this._globalSwapFileAccess.initialize(this);    	
+    	this._globalSwapFileAccess.initialize();    	
     }
     
     public boolean swapExists()
@@ -586,10 +586,7 @@ public class VMKernel extends UserKernel {
     	//protects access to the swap file
     	private Lock _swapLock;    	    
     	
-    	//the kernel to which this swap file access belongs
-    	private VMKernel _kernel;
-    	
-    	public void initialize(VMKernel kernel)
+    	public void initialize()
     	{
         	//set up swap file
         	FileSystem fileSys = Machine.stubFileSystem();       	        	
@@ -610,9 +607,7 @@ public class VMKernel extends UserKernel {
         	
         	this._swapLookup = new Hashtable<Integer, Hashtable<Integer, SwapEntry>>();
         	
-        	this._swapLock = new nachos.threads.Lock();       	        	
-        	
-        	this._kernel = kernel;
+        	this._swapLock = new nachos.threads.Lock();      	        	       	        	
     	}    	 
     	
     	/**
