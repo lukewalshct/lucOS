@@ -41,6 +41,8 @@ public class VMProcess extends UserProcess {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
+    	Lib.debug('t', "INVAILDATING TLB ENTRIES");
+    	
     	Processor processor = Machine.processor();
     	
     	for(int i = 0; i < processor.getTLBSize(); i++)
@@ -54,6 +56,8 @@ public class VMProcess extends UserProcess {
     			processor.writeTLBEntry(i, entry);    		
     		}   		    		
     	}
+    	
+    	Lib.debug('t', "TLB ENTRIES INVALIDATED");
     }
     
     /**
@@ -62,6 +66,12 @@ public class VMProcess extends UserProcess {
      */
     public void restoreState() {
     	Lib.debug('s', "Restoring context (PID " + this.processID + ")");
+    	
+    	boolean status = Machine.interrupt().disable();
+    	
+    	invalidateTLBEntries();
+    	
+    	Machine.interrupt().restore(status);
     }
 
     
@@ -279,17 +289,13 @@ public class VMProcess extends UserProcess {
     
     @Override
     protected TranslationEntry getTranslation(int vpn)
-    {
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
+    {    	
     	return getTranslation(vpn, false);
     }
     
     @Override
     protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
-    {
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
+    {    	
     	Lib.debug('s', "VMProcess retrieving translation, nonEvictable = " + nonEvictable);
     	
     	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn, nonEvictable);

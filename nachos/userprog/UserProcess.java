@@ -285,7 +285,7 @@ public class UserProcess {
 	
 	Lib.debug('r', "Reading virtual memory (PID " + this.processID + ")");
 	
-	boolean intStatus = Machine.interrupt().disable();
+	//boolean intStatus = Machine.interrupt().disable();
 	
 	byte[] memory = Machine.processor().getMemory();
 	
@@ -324,7 +324,7 @@ public class UserProcess {
 		kernel.printPagesInUse('r');
 	}
 
-	Machine.interrupt().restore(intStatus);
+	//Machine.interrupt().restore(intStatus);
 	
 	return amount;
     }
