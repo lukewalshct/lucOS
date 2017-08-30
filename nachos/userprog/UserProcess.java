@@ -283,23 +283,27 @@ public class UserProcess {
 				 int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
-	Lib.debug('s', "Reading virtual memory (PID " + this.processID + ")");
+	Lib.debug('r', "Reading virtual memory (PID " + this.processID + ")");
 	
 	boolean intStatus = Machine.interrupt().disable();
 	
 	byte[] memory = Machine.processor().getMemory();
 	
-	int paddr = translateVAddrToPAdrr(vaddr);
+	//get virtual page number
+	int vpn = vaddr / pageSize;		
+	
+	TranslationEntry entry = getTranslation(vpn, true);	
+	
+	if (entry == null) return 0;
+	
+	int addressOffset = vaddr % pageSize;
+	
+	int paddr = (entry.ppn*pageSize) + addressOffset;	
 
 	if (paddr < 0 || paddr >= memory.length)
 	    return 0;
 	
-	int amount = Math.min(length, memory.length-paddr);
-	
-	//get virtual page number
-	int vpn = vaddr / pageSize;
-	
-	TranslationEntry entry = getTranslation(vpn, true);			
+	int amount = Math.min(length, memory.length-paddr);	
 	
 	UserKernel kernel = (UserKernel) Kernel.kernel;
 	
@@ -313,7 +317,7 @@ public class UserProcess {
 	}
 	finally
 	{
-		if(entry != null) ((UserKernel)Kernel.kernel).setPageNotInUseAndLock(entry.ppn);	
+		((UserKernel)Kernel.kernel).setPageNotInUseAndLock(entry.ppn);	
 		
 		Lib.debug('r', "Reading complete from phys addr " + paddr);
 		
@@ -356,7 +360,7 @@ public class UserProcess {
 				  int length) {
 	Lib.assertTrue(offset >= 0 && length >= 0 && offset+length <= data.length);
 	
-	Lib.debug('s', "Writing virtual memory (PID " + this.processID + ")");
+	Lib.debug('w', "Writing virtual memory (PID " + this.processID + ")");
 	
 	UserKernel kernel = (UserKernel) Kernel.kernel;
 	
@@ -375,7 +379,9 @@ public class UserProcess {
 		return 0;
 	}
 	
-	int paddr = translateVAddrToPAdrr(vaddr);
+	int addressOffset = vaddr % pageSize;
+	
+	int paddr = (entry.ppn*pageSize) + addressOffset;
 	
 	// for now, just assume that virtual addresses equal physical addresses
 	if (paddr < 0 || paddr >= memory.length)
@@ -387,7 +393,7 @@ public class UserProcess {
 
 	int amount = Math.min(length, memory.length-paddr);		
 		
-	Lib.debug('r', "Writing to phys addr " + paddr);
+	Lib.debug('w', "Writing to phys addr " + paddr);
 	
 	kernel.printPagesInUse('w');
 	
@@ -395,7 +401,7 @@ public class UserProcess {
 
 	if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);			
 
-	Lib.debug('r', "Writing complete to phys addr " + paddr);
+	Lib.debug('w', "Writing complete to phys addr " + paddr);
 	
 	kernel.printPagesInUse('w');
 	
@@ -412,35 +418,6 @@ public class UserProcess {
     	if(vpn < 0 || vpn >= this.pageTable.length) return null;
     	
     	return this.pageTable[vpn];
-    }
-    
-    /**
-     * Translates virtual address to physical address.
-     * 
-     * Returns -1 if vaddress is bad.
-     * 
-     * @param vaddr
-     * @return the translated physical address
-     */
-    private int translateVAddrToPAdrr(int vaddr)
-    {    	
-    	if(vaddr < 0) return -1;
-    	
-    	//get the virtual page number based on vaddr
-    	int vpn = vaddr / pageSize;   	
-    	
-    	//calculate the offset into the page 
-    	int addressOffset = vaddr % pageSize;
-    	
-    	//get the translation entry
-    	TranslationEntry entry = getTranslation(vpn);
-    	
-    	if(entry == null) return -1;
-    
-    	//calculate physical address
-    	int paddr = (entry.ppn*pageSize) + addressOffset;    	    
-    	
-    	return paddr;
     }
 
     /**
