@@ -41,7 +41,7 @@ public class VMProcess extends UserProcess {
     {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
-    	Lib.debug('t', "INVAILDATING TLB ENTRIES");
+    	Lib.debug('t', "INVALIDATING TLB ENTRIES");
     	
     	Processor processor = Machine.processor();
     	
@@ -203,7 +203,7 @@ public class VMProcess extends UserProcess {
     	
     	int vpn = badVAddr / pageSize;
     	
-    	TranslationEntry entry = ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn);    	
+    	TranslationEntry entry = getTranslation(vpn, true);    	
     	    	
     	//if there's no entry or if it's invalid, handle page fault
     	if(entry == null || !entry.valid)

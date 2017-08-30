@@ -315,7 +315,7 @@ public class VMKernel extends UserKernel {
     	
     	this._globalPageTable.remove(mapEntry.processID, mapEntry.entry.vpn);    	
     	
-    	invalidateTLBEntry(mapEntry.entry.vpn);    
+    	invalidateTLBEntry(mapEntry.entry.vpn);    	    	
     	
     	return physPageNum;
     }
