@@ -139,28 +139,6 @@ public class VMProcess extends UserProcess {
     	
     	return true;    	
     }
-    
-    /*
-     * allocates a page for arguments, if they exist
-     */
-    /*
-    @Override
-    protected void allocateArgs()
-    {
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
-    	int argVAddr = this.getArgV() / pageSize;
-    	
-    	VMKernel kernel = (VMKernel) Kernel.kernel;
-    	
-    	if(kernel.getTranslation(this.processID, argVAddr) == null)
-    	{
-    		TranslationEntry argEntry = kernel.newPage(this.processID, 
-    				argVAddr, true, false, false, false);
-    		
-    		kernel.setPageNotInUse(argEntry.ppn);
-    	}    	
-    }*/
  
     /*
      * Deallocates memory upon process exit and cleans up
@@ -247,8 +225,7 @@ public class VMProcess extends UserProcess {
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     			
     			kernel.setPageNotInUseAndLock(entry.vpn);
-    		}
-    			
+    		}    			
     	}    	    	     	 
     	
     	//fatal error if entry is null (should exist or be created) TODO: kill process
