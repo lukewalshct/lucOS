@@ -29,6 +29,8 @@ public class VMProcess extends UserProcess {
     	
     	Lib.debug('s', "Preparing for context switch (PID " + this.processID + ")");
     	
+    	((UserKernel)Kernel.kernel).printPagesInUse('s');
+    	
     	invalidateTLBEntries();
     	
     	super.saveState();
@@ -42,6 +44,8 @@ public class VMProcess extends UserProcess {
     	Lib.assertTrue(Machine.interrupt().disabled());
     	
     	Lib.debug('t', "INVALIDATING TLB ENTRIES");
+    	
+    	((UserKernel)Kernel.kernel).printPagesInUse('s');
     	
     	Processor processor = Machine.processor();
     	
@@ -119,6 +123,10 @@ public class VMProcess extends UserProcess {
 
     	    for (int i=0; i<section.getLength(); i++) {
     		
+    	    	Lib.debug('s', "Loading page " + i + " of " + section.getLength() +
+    	    			", section " + s + " of " + coff.getNumSections() + "(PID " + 
+    	    			this.processID + ")");
+    	    	
     	    	int vpn = section.getFirstVPN()+i;	
     	    	
     			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
@@ -128,6 +136,12 @@ public class VMProcess extends UserProcess {
     			
     			//load complete - set page to not in use
     			kernel.setPageNotInUseAndLock(entry.ppn);
+    			
+    			Lib.debug('s', "Finished loading page " + i + " of " + section.getLength() +
+    	    			", section " + s + " of " + coff.getNumSections() + "(PID " + 
+    	    			this.processID + ")");
+    			
+    			kernel.printPagesInUse('s');
     	    }
     	}
     	
