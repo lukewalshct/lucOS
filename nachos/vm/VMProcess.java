@@ -209,6 +209,8 @@ public class VMProcess extends UserProcess {
     	Lib.debug('t', "Handled TLB Miss, enabling interrupt (PID " + 
     			this.processID + " VPN " + entry.vpn + ")");    	
     	
+    	((VMKernel)Kernel.kernel).setPageNotInUseAndLock(entry.vpn);
+    	
     	Machine.interrupt().enable();   	    	
     }
     
