@@ -152,16 +152,28 @@ public class UserKernel extends ThreadedKernel {
     }
     
     public void setPageNotInUseAndLock(int ppn)
-    {
+    {    	    
+    	Lib.debug('s', "Acquiring page in use lock for ppn " + ppn);
+    	
     	this._pageAccessLock.acquire();
+    	
+    	Lib.debug('s', "Acquiried page in use lock for ppn " + ppn);
     	
     	try
     	{
+    		Lib.debug('s', "Setting page not in use (AND LOCK) - PPN: " + ppn);
+    		
     		setPageNotInUse(ppn);
+    		
+    		Lib.debug('s', "Successfuly set page not in use (AND LOCK) - PPN: " + ppn);
     	}
     	finally
     	{
+    		Lib.debug('s', "Releasing page in use lock for ppn " + ppn);
+    		
     		this._pageAccessLock.release();
+    		
+    		Lib.debug('s', "Released page in use lock for ppn " + ppn);
     	}    	
     }
         
@@ -171,6 +183,8 @@ public class UserKernel extends ThreadedKernel {
     public void setPageInUse(int ppn)
     {
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	
+    	Lib.debug('s', "Setting page in use - PPN: " + ppn);
 
     	this._pagesInUse.add(ppn);	
     }
@@ -182,6 +196,8 @@ public class UserKernel extends ThreadedKernel {
     {
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
+    	Lib.debug('s', "Setting page not in use - PPN: " + ppn);
+    	
     	this._pagesInUse.remove(ppn); 	
     }
     
@@ -190,7 +206,7 @@ public class UserKernel extends ThreadedKernel {
      */
     protected boolean pageInUse(int ppn)
     {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());   	    	
     	
     	return this._pagesInUse.contains(ppn);
     }
