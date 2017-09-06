@@ -153,27 +153,27 @@ public class UserKernel extends ThreadedKernel {
     
     public void setPageNotInUseAndLock(int ppn)
     {    	    
-    	Lib.debug('s', "Acquiring page in use lock for ppn " + ppn);
+    	Lib.debug('u', "Acquiring page in use lock for ppn " + ppn);
     	
     	this._pageAccessLock.acquire();
     	
-    	Lib.debug('s', "Acquiried page in use lock for ppn " + ppn);
+    	Lib.debug('u', "Acquiried page in use lock for ppn " + ppn);
     	
     	try
     	{
-    		Lib.debug('s', "Setting page not in use (AND LOCK) - PPN: " + ppn);
+    		Lib.debug('u', "Setting page not in use (AND LOCK) - PPN: " + ppn);
     		
     		setPageNotInUse(ppn);
     		
-    		Lib.debug('s', "Successfuly set page not in use (AND LOCK) - PPN: " + ppn);
+    		Lib.debug('u', "Successfuly set page not in use (AND LOCK) - PPN: " + ppn);
     	}
     	finally
     	{
-    		Lib.debug('s', "Releasing page in use lock for ppn " + ppn);
+    		Lib.debug('u', "Releasing page in use lock for ppn " + ppn);
     		
     		this._pageAccessLock.release();
     		
-    		Lib.debug('s', "Released page in use lock for ppn " + ppn);
+    		Lib.debug('u', "Released page in use lock for ppn " + ppn);
     	}    	
     }
         
