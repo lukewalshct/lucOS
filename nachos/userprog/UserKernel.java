@@ -184,11 +184,11 @@ public class UserKernel extends ThreadedKernel {
     {
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
-    	Lib.debug('s', "Setting page in use - PPN: " + ppn);
+    	Lib.debug('u', "Setting page in use - PPN: " + ppn);
 
     	this._pagesInUse.add(ppn);	
     	
-    	printPagesInUse('s');
+    	printPagesInUse('u');
     }
     
     /*
@@ -198,11 +198,11 @@ public class UserKernel extends ThreadedKernel {
     {
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
-    	Lib.debug('s', "Setting page not in use - PPN: " + ppn);    	    	
+    	Lib.debug('u', "Setting page not in use - PPN: " + ppn);    	    	
     	
     	this._pagesInUse.remove(ppn);
     	
-    	printPagesInUse('s');
+    	printPagesInUse('u');
     }
     
     /*
