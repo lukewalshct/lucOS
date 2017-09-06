@@ -73,11 +73,14 @@ public class UserProcess {
     //number of outstanding child processes to join on
     private int outstandingChildJoins;
 	
+    protected static  UserProcess currentProcess;
     /**
      * Allocate a new process.
      */
     public UserProcess() 
     { 	    
+    	currentProcess = this;
+    	
 		openFiles = new OpenFile[MAX_OPEN_FILES];
 		
 		this.childProcesses = new HashMap<Integer, UserProcess>(10);
@@ -94,6 +97,10 @@ public class UserProcess {
 		numOpenFiles += 2;	
 	}
     
+    public static UserProcess currentProcess()
+    {
+    	return currentProcess;
+    }
     /**
      * Allocates memory for this process up-front upon
      * process creation. Includes space for the code data
@@ -221,7 +228,10 @@ public class UserProcess {
      * <tt>UThread.restoreState()</tt>.
      */
     public void restoreState() {
-	Machine.processor().setPageTable(pageTable);
+    	
+    	currentProcess = this;
+	
+    	Machine.processor().setPageTable(pageTable);
     }
 
     /**
