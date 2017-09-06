@@ -206,6 +206,15 @@ public class UserKernel extends ThreadedKernel {
     	
     	Lib.debug(dbgFlag, sb.toString());
     }
+    
+    /*
+     * Returns length of free memory list
+     */
+    public int freeMemoryAvailable()
+    {
+    	return this.freeMemory.size();
+    }
+    
     /**
      * Test the console device.
      */	
