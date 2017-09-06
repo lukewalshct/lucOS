@@ -127,6 +127,9 @@ public class VMProcess extends UserProcess {
     	    			", section " + s + " of " + coff.getNumSections() + "(PID " + 
     	    			this.processID + ")");
     	    	
+    	    	Lib.debug('s', "Num free mem pages in kernel: " + 
+    	    			kernel.freeMemoryAvailable() + " (PID " + this.processID + ")");
+    	    	
     	    	int vpn = section.getFirstVPN()+i;	
     	    	
     			TranslationEntry entry = kernel.newPage(this.processID, vpn, true, section.isReadOnly(),
@@ -140,6 +143,9 @@ public class VMProcess extends UserProcess {
     			Lib.debug('s', "Finished loading page " + i + " of " + section.getLength() +
     	    			", section " + s + " of " + coff.getNumSections() + "(PID " + 
     	    			this.processID + ")");
+    			
+    			Lib.debug('s', "Num free mem pages in kernel: " + 
+    	    			kernel.freeMemoryAvailable() + " (PID " + this.processID + ")");
     			
     			kernel.printPagesInUse('s');
     	    }
