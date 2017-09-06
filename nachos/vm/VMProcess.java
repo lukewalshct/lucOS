@@ -246,7 +246,7 @@ public class VMProcess extends UserProcess {
     		{
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     			
-    			kernel.setPageNotInUseAndLock(entry.vpn);
+    			kernel.setPageNotInUseAndLock(entry.ppn);
     		}    			
     	}    	    	     	 
     	
