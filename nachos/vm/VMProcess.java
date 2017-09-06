@@ -70,12 +70,7 @@ public class VMProcess extends UserProcess {
      */
     public void restoreState() {
     	Lib.debug('s', "Restoring context (PID " + this.processID + ")");
-    	
-    	boolean status = Machine.interrupt().disable();
-    	
-    	invalidateTLBEntries();
-    	
-    	Machine.interrupt().restore(status);
+   
     }
 
     

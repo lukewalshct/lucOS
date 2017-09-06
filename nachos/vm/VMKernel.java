@@ -755,6 +755,8 @@ public class VMKernel extends UserKernel {
 		    	//write the page to swap
 	    		success = writeToSwap(swapEntry);   		
 	    		
+	    		Lib.assertTrue(success);
+	    		
 	    		Lib.debug('s', "Write to swap " + (success ? "" : "un") + 
 	    				"successful (PID " + pid + " VPN " + entry.vpn + ")");
 	    		
