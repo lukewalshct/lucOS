@@ -93,7 +93,7 @@ public class VMKernel extends UserKernel {
 	    	{
 	    		int pageSize = Machine.processor().pageSize;
 	    		
-	    		int physPageNum = evictPage(pid);
+	    		int physPageNum = evictPage();
 	    		
 	    		targetFrame = new PageFrame();
 	    		
@@ -200,7 +200,7 @@ public class VMKernel extends UserKernel {
     
     	Lib.debug('s', "Attempting to free up memory (PID " + processID + ")");
     	
-    	int freePageNum = evictPage(processID);
+    	int freePageNum = evictPage();
     	
     	Lib.assertTrue(freePageNum >= 0, "Failed to free memory (PID " + processID + ")");    	
     	
@@ -246,7 +246,7 @@ public class VMKernel extends UserKernel {
 	    	}
 	    	else
 	    	{
-	    		physPageNum = evictPage(pid);
+	    		physPageNum = evictPage();
 	    	}
 	    	
 	    	Lib.assertTrue(physPageNum >= 0, "Error creating new page: free page is null");	    	
@@ -284,7 +284,7 @@ public class VMKernel extends UserKernel {
      * complete. The calling code needs to ensure this is set as not
      * in use after it performs its critical operations.
      */
-    private int evictPage(int processID)
+    private int evictPage()
     {   	    	
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
@@ -293,9 +293,7 @@ public class VMKernel extends UserKernel {
     	int physPageNum = -1;    			
     
     	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
-    	{
-    		Lib.debug('s', "Attempting to evict page (PID " + processID + ")");
-    		
+    	{    		
     		//Currently chooses page at random. TODO: implement nth chance algorithm
     		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
     	
