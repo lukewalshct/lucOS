@@ -71,7 +71,7 @@ public class VMProcess extends UserProcess {
     public void restoreState() {
     	Lib.debug('s', "Restoring context (PID " + this.processID + ")");
     	
-    	super.restoreState();
+    	currentProcess = this;
     }
 
     
