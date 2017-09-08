@@ -92,7 +92,7 @@ public class VMKernel extends UserKernel {
     		
 	    	PageFrame targetFrame = getNextFreeMemPage();
 	    	
-	    	Lib.debug('s', "Obtained free memory (PID " + pid + ")");
+	    	if(targetFrame != null) Lib.debug('s', "Obtained free memory (PID " + pid + ")");
 	    	
 	    	if(targetFrame == null)
 	    	{
@@ -245,7 +245,7 @@ public class VMKernel extends UserKernel {
 	    	//obtain a free page of physical memory
 	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage();
 	    	
-	    	Lib.debug('s', "Obtained free memory (PID " + pid + ")");
+	    	if(freeMemPage != null) Lib.debug('s', "Obtained free memory (PID " + pid + ")");
 	    	
 	    	if(freeMemPage != null)
 	    	{ 
