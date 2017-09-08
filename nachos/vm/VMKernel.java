@@ -225,9 +225,7 @@ public class VMKernel extends UserKernel {
     public TranslationEntry newPage(int pid, int vpn, boolean valid, boolean readOnly,
     		boolean used, boolean dirty)
     {       	    	
-    	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
-    	
-    	Lib.assertTrue(UserProcess.currentProcess().getProcessID() == pid);
+    	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");    	   
     	
     	TranslationEntry entry = null;
     	
