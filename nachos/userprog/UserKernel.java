@@ -208,7 +208,7 @@ public class UserKernel extends ThreadedKernel {
     /*
      *  Returuns whether physical page is in use and cannot be evicted.
      */
-    protected boolean pageInUse(int ppn)
+    public boolean pageInUse(int ppn)
     {
     	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());   	    	
     	

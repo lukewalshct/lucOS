@@ -491,7 +491,7 @@ public class VMKernel extends UserKernel {
     	public TranslationEntry get(int processID, int virtualPageNumber, boolean markPageInUse)
     	{
     		TranslationEntry entry = null;
-    		
+    		    		
     		//critical section
     		try
     		{
@@ -506,6 +506,8 @@ public class VMKernel extends UserKernel {
 	    		{
 	    			entry = processPageTable.get(virtualPageNumber);	    		
 	    		}   			    
+	    		
+	    		if(entry != null) Lib.assertTrue(!this._kernel.pageInUse(entry.ppn));
 	    		
 	    		if(entry != null && markPageInUse) this._kernel.setPageInUse(entry.ppn);
     		}
