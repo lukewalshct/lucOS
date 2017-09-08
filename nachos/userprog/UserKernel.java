@@ -88,11 +88,9 @@ public class UserKernel extends ThreadedKernel {
      * 
      * @return the next PageFrame containing free page of memory indices
      */
-    public PageFrame getNextFreeMemPage(int processID)
+    public PageFrame getNextFreeMemPage()
     {
-    	Lib.assertTrue(Machine.interrupt().disabled());    	    	
-    	
-    	Lib.debug('s', "Process requesting free memory (PID " + processID + ")");
+    	Lib.assertTrue(Machine.interrupt().disabled());   	    	
     	
     	PageFrame result = null;    	    	
     	    	
@@ -103,26 +101,17 @@ public class UserKernel extends ThreadedKernel {
         	
     		if(!this.freeMemory.isEmpty())
     		{
-    			Lib.debug('s', "Accessing free memory in main mem (PID " + processID + ")");
+    			Lib.debug('s', "Accessing free memory in main mem");
     			
     			result = this.freeMemory.remove(0);
     			
-        		Lib.assertTrue(result != null, "Memory result null (PID " + processID + ")");        		        	
+        		Lib.assertTrue(result != null, "Memory result null");        		        	
     		}
     	}
     	finally
     	{    		
         	//exit critical section
-        	this.freeMemLock.release();        	        	
-        	
-        	if(result == null)
-        	{
-        		Lib.debug('s', "Main mem full. Returning null (PID " + processID + ")");
-        	}
-        	else
-        	{
-        		Lib.debug('s', "Returning free memory to process (PID " + processID + ")");
-        	}        	
+        	this.freeMemLock.release();        	        	        
         	
         	return result;
     	}

@@ -87,7 +87,12 @@ public class VMKernel extends UserKernel {
 	    	
 	    	//get a free page frame where the new page can go, mark
 	    	//it as in-use
-	    	PageFrame targetFrame = getNextFreeMemPage(pid);
+    		
+    		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");
+    		
+	    	PageFrame targetFrame = getNextFreeMemPage();
+	    	
+	    	Lib.debug('s', "Obtained free memory (PID " + pid + ")");
 	    	
 	    	if(targetFrame == null)
 	    	{
@@ -226,7 +231,7 @@ public class VMKernel extends UserKernel {
     		boolean used, boolean dirty)
     {       	    	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");    	   
-    	
+    			
     	TranslationEntry entry = null;
     	
     	try
@@ -234,9 +239,13 @@ public class VMKernel extends UserKernel {
     		this._pageAccessLock.acquire();
     		
     		int physPageNum = -1;
-    		
+    	
+    		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");    	
+        	        	
 	    	//obtain a free page of physical memory
-	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage(pid);
+	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage();
+	    	
+	    	Lib.debug('s', "Obtained free memory (PID " + pid + ")");
 	    	
 	    	if(freeMemPage != null)
 	    	{ 

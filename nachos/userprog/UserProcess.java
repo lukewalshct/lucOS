@@ -115,7 +115,7 @@ public class UserProcess {
     	
     	for(int i = 0; i < this.numPages; i++)
     	{
-    		PageFrame frame = ((UserKernel)Kernel.kernel).getNextFreeMemPage(this.processID);
+    		PageFrame frame = ((UserKernel)Kernel.kernel).getNextFreeMemPage();
     		
     		if(frame == null) return false;
     		
