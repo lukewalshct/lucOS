@@ -76,6 +76,8 @@ public class VMKernel extends UserKernel {
      */
     public TranslationEntry loadPageFromSwap(int pid, int vpn)
     {   	
+    	Lib.assertTrue(UserProcess.currentProcess().getProcessID() == pid);
+    	
     	TranslationEntry entry = null;
     	
     	try
