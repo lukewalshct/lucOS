@@ -225,6 +225,8 @@ public class VMKernel extends UserKernel {
     {       	    	
     	Lib.debug('s', "Kernel creating new page (PID " + pid + " VPN " + vpn + ")");
     	
+    	Lib.assertTrue(UserProcess.currentProcess().getProcessID() == pid);
+    	
     	TranslationEntry entry = null;
     	
     	try

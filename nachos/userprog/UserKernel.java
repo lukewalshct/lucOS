@@ -90,9 +90,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public PageFrame getNextFreeMemPage(int processID)
     {
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
-    	Lib.assertTrue(UserProcess.currentProcess().getProcessID() == processID);
+    	Lib.assertTrue(Machine.interrupt().disabled());    	    	
     	
     	Lib.debug('s', "Process requesting free memory (PID " + processID + ")");
     	
