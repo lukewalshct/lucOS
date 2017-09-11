@@ -191,37 +191,7 @@ public class VMKernel extends UserKernel {
     	}
     	
     	return entry;    	
-    }
-
-    /*
-     * Called when main memory is full but a process needs a 
-     * free page of memory. Frees up a page in main memory by
-     * writing the page to the swap file (if applicable) and 
-     * returns a PageFrame that represents the new empty slot in 
-     * main memory.
-     */        
-    protected PageFrame freeUpMemory(int processID)
-    {    	
-    
-    	Lib.debug('s', "Attempting to free up memory (PID " + processID + ")");
-    	
-    	int freePageNum = evictPage();
-    	
-    	Lib.assertTrue(freePageNum >= 0, "Failed to free memory (PID " + processID + ")");    	
-    	
-    	int pageSize = Machine.processor().pageSize;   	
-    	
-		PageFrame frame = new PageFrame();
-		
-		frame.startIndex = freePageNum * pageSize;
-		
-		frame.endIndex = frame.startIndex + pageSize - 1;
-    	
-		Lib.debug('s', "Memory freed, returning (PID " + processID + ")");
-		
-    	return frame;
-    }
-    
+    }    
 
     /**
      * Creates a new page and translation entry for that page..
