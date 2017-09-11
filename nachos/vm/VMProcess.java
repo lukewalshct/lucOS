@@ -171,7 +171,7 @@ public class VMProcess extends UserProcess {
     	invalidateTLBEntries();
     	
     	//return physical memory, page table entries, swap entries in use    	   
-    	((VMKernel)Kernel.kernel).deallocateProcessMemory(this.processID);
+    	//((VMKernel)Kernel.kernel).deallocateProcessMemory(this.processID);
     	
     	Machine.interrupt().enable();
     }
