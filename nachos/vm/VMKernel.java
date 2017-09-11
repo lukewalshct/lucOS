@@ -358,9 +358,7 @@ public class VMKernel extends UserKernel {
     protected void deallocateProcessMemory(int processID)
     {    
     	Lib.assertTrue(Machine.interrupt().disabled());
-    	
-    	//free up any pages in swap file
-    	
+    	    	
     	//remove translations from core map
     	TranslationEntry[] entries = this._globalPageTable.getAll(processID);
     	
@@ -376,6 +374,8 @@ public class VMKernel extends UserKernel {
     	
     	//remove translations from global page table
     	this._globalPageTable.removeAll(processID);
+    	
+    	Lib.debug('d', "Removed core map and page table entries for process " + processID);
     }
     
     /**
