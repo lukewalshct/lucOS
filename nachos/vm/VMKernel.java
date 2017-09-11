@@ -25,8 +25,7 @@ public class VMKernel extends UserKernel {
 	
 	private SwapFileAccess _globalSwapFileAccess;
 	
-	//ensures only one eviction can  be happneing at once
-	//private Lock _evictionLock;
+	private int _evictionPointer;
 	
     /**
      * Allocate a new VM kernel.
@@ -272,7 +271,8 @@ public class VMKernel extends UserKernel {
     	while(mapEntry == null || mapEntry.entry == null || pageInUse(mapEntry.entry.ppn))
     	{    		
     		//Currently chooses page at random. TODO: implement nth chance algorithm
-    		physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    		//physPageNum = ThreadLocalRandom.current().nextInt(0, _globalCoreMap.length);
+    		physPageNum = this._evictionPointer = (++this._evictionPointer) % (this._globalCoreMap.length);
     	
     		mapEntry = this._globalCoreMap[physPageNum];
     	}
