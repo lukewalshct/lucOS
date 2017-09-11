@@ -804,7 +804,8 @@ public class VMKernel extends UserKernel {
     		//get page to be written from main memory
     		byte[] pageToWrite = new byte[Machine.processor().pageSize];
     		    		
-    		System.arraycopy(memory, ppn, pageToWrite, 0, Machine.processor().pageSize);
+    		System.arraycopy(memory, ppn * Machine.processor().pageSize, 
+    				pageToWrite, 0, Machine.processor().pageSize);
     		
     		int bytesWritten;    		    			    									
     			
