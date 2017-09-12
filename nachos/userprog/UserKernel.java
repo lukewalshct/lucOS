@@ -11,10 +11,10 @@ import nachos.vm.*; //TODO: remove once static method calls removed
  */
 public class UserKernel extends ThreadedKernel {
 	
-	private List<PageFrame> freeMemory;
+	protected List<PageFrame> freeMemory;
 	
 	//a lock protecting access to free memory
-	private nachos.threads.Lock freeMemLock;
+	protected nachos.threads.Lock freeMemLock;
 	
 	
 	//pages (pyhiscal page numbers )in use and cannot be 

@@ -27,6 +27,8 @@ public class VMKernel extends UserKernel {
 	
 	private int _evictionPointer;
 	
+	private VMBackgroundMemMgr _VMBackgroundMemMgr;
+	
     /**
      * Allocate a new VM kernel.
      */
@@ -48,7 +50,12 @@ public class VMKernel extends UserKernel {
     	//set up global core map
     	Processor processor = Machine.processor();
     	
-    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];        	    	
+    	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];        
+    	
+    	this._VMBackgroundMemMgr = new VMBackgroundMemMgr(this.freeMemory, this.freeMemLock);
+    	
+    	//fork background mem manager
+    	new KThread(this._VMBackgroundMemMgr).fork();
     }
     
     /**
