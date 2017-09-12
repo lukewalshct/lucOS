@@ -26,7 +26,7 @@ threads =	ThreadedKernel KThread Alarm \
 
 userprog =	UserKernel UThread UserProcess SynchConsole
 
-vm =		VMKernel VMProcess
+vm =		VMKernel VMProcess VMBackgroundMemMgr
 
 network = 	NetKernel NetProcess PostOffice MailMessage
 
