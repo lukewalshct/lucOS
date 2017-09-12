@@ -66,6 +66,12 @@ public class VMKernel extends UserKernel {
     	return this._globalSwapFileAccess != null;
     }
     
+    @Override
+    public PageFrame getNextFreeMemPage()
+    {
+    	return super.getNextFreeMemPage();
+    }
+    
     /**
      * Loads the page from swap file on the file system and returns
      * the associated translation entry. 
