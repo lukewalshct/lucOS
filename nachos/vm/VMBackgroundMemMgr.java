@@ -33,6 +33,22 @@ public class VMBackgroundMemMgr implements Runnable {
 	{
 		Lib.debug('f', "VM BACKGROUND MEM MGR THREAD STARTING");
 		
+		manageFreeMemory();
+		
 		Lib.debug('f', "VM BACKGROUND MEM MGR THREAD TERMINATING");
+	}
+	
+	public void manageFreeMemory()
+	{
+		while(true){ 
+			
+			Lib.debug('f', "VM mem manager checking free memory...");
+			
+			//TODO: manage mem
+			
+			Lib.debug('f', "VM mem manager yielding");
+			
+			KThread.yield();					
+		}			
 	}
 }
