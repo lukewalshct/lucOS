@@ -22,11 +22,16 @@ public class VMBackgroundMemMgr implements Runnable {
 	
 	private Lock _freeMemLock;
 	
-	public VMBackgroundMemMgr(List<UserKernel.PageFrame> freeMemory, Lock freeMemLock)
+	private ICondition _freeMemAvailable;
+	
+	public VMBackgroundMemMgr(List<UserKernel.PageFrame> freeMemory, Lock freeMemLock,
+			ICondition freeMemAvailable)
 	{
 		this._freeMemory = freeMemory;
 		
 		this._freeMemLock = freeMemLock;
+		
+		this._freeMemAvailable = freeMemAvailable;
 	}
 	
 	public void run()

@@ -29,6 +29,8 @@ public class VMKernel extends UserKernel {
 	
 	private VMBackgroundMemMgr _VMBackgroundMemMgr;
 	
+	private ICondition _freeMemAvailable;
+	
     /**
      * Allocate a new VM kernel.
      */
@@ -52,7 +54,10 @@ public class VMKernel extends UserKernel {
     	
     	this._globalCoreMap = new CoreMapEntry[processor.getNumPhysPages()];        
     	
-    	this._VMBackgroundMemMgr = new VMBackgroundMemMgr(this.freeMemory, this.freeMemLock);
+    	this._freeMemAvailable = new Condition2(this.freeMemLock);
+    	
+    	this._VMBackgroundMemMgr = new VMBackgroundMemMgr(this.freeMemory, this.freeMemLock, 
+    			this._freeMemAvailable);
     	
     	//fork background mem manager
     	new KThread(this._VMBackgroundMemMgr).fork();
