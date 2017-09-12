@@ -107,22 +107,7 @@ public class VMKernel extends UserKernel {
     		
     		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");
     		
-	    	PageFrame targetFrame = getNextFreeMemPage();
-	    	
-	    	if(targetFrame != null) Lib.debug('s', "Obtained free memory (PID " + pid + ")");
-	    	
-	    	if(targetFrame == null)
-	    	{
-	    		int pageSize = Machine.processor().pageSize;
-	    		
-	    		int physPageNum = evictPage();
-	    		
-	    		targetFrame = new PageFrame();
-	    		
-	    		targetFrame.startIndex = physPageNum * pageSize;
-	    		
-	    		targetFrame.endIndex = (physPageNum * pageSize) + pageSize - 1;
-	    	}
+	    	PageFrame targetFrame = getNextFreeMemPage();	    	
 	    	
 	    	Lib.assertTrue(targetFrame != null);
 	    	
@@ -232,17 +217,12 @@ public class VMKernel extends UserKernel {
 	    	//obtain a free page of physical memory
 	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage();
 	    	
-	    	if(freeMemPage != null) Lib.debug('s', "Obtained free memory (PID " + pid + ")");
+	    	Lib.assertTrue(freeMemPage != null);
 	    	
-	    	if(freeMemPage != null)
-	    	{ 
-	    		physPageNum = freeMemPage.endIndex / Machine.processor().pageSize;
-	    	}
-	    	else
-	    	{
-	    		physPageNum = evictPage();
-	    	}
-	    	
+	    	if(freeMemPage != null) Lib.debug('s', "Obtained free memory (PID " + pid + ")");	    	
+	    	 
+	    	physPageNum = freeMemPage.endIndex / Machine.processor().pageSize;
+	    		    	
 	    	Lib.assertTrue(physPageNum >= 0, "Error creating new page: free page is null");	    	
 	    	
 	    	//create a translation entry
