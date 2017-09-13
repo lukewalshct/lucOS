@@ -81,7 +81,27 @@ public class VMKernel extends UserKernel {
     @Override
     public PageFrame getNextFreeMemPage()
     {
-    	return super.getNextFreeMemPage();
+    	PageFrame result = null;
+    	
+    	//enter critical section
+    	this.freeMemLock.acquire();    	
+    	
+    	try
+    	{
+    		//wait until free memory is available
+    		while(this.freeMemory.isEmpty())
+    		{
+    			this._freeMemAvailable.sleep();
+    		}
+    		
+    		result = this.freeMemory.remove(0);
+    	}
+    	finally
+    	{
+    		this.freeMemLock.release();
+    	}
+    	
+    	return result;
     }
     
     /**
