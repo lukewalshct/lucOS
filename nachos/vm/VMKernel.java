@@ -193,37 +193,22 @@ public class VMKernel extends UserKernel {
     	
     	Lib.debug('s', "Kernel putTranslation success (PID " + processID + " VPN " 
     			+ entry.vpn + ")"); 
-    }
-    
-    public TranslationEntry getTranslation(int processID, int virtualPageNumber)
-    {    	
-    	return getTranslation(processID, virtualPageNumber, false);    	
     }    
     
     public TranslationEntry getTranslation(int processID, 
     		int virtualPageNumber, boolean markPageInUse)
     {
     	TranslationEntry entry;
-
-  		entry = getTranslation(processID, virtualPageNumber, markPageInUse, true);
-    			
-    	return entry;    	
-    }
-    
-    public TranslationEntry getTranslation(int processID, 
-    		int virtualPageNumber, boolean markPageInUse, boolean shouldLock)
-    {
-    	TranslationEntry entry;
     	
     	try
     	{
-    		if(shouldLock) this._pageAccessLock.acquire();
+    		this._pageAccessLock.acquire();
     	
     		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);
     	}
     	finally
     	{
-    		if(shouldLock) this._pageAccessLock.release();
+    		this._pageAccessLock.release();
     	}
     	
     	return entry;    	
