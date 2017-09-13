@@ -56,8 +56,8 @@ public class VMKernel extends UserKernel {
     	
     	this._freeMemAvailable = new Condition2(this.freeMemLock);
     	
-    	this._VMBackgroundMemMgr = new VMBackgroundMemMgr(this.freeMemory, this.freeMemLock, 
-    			this._freeMemAvailable);
+    	this._VMBackgroundMemMgr = new VMBackgroundMemMgr(this, this.freeMemory, 
+    			this.freeMemLock, this._freeMemAvailable);
     	
     	//fork background mem manager
     	new KThread(this._VMBackgroundMemMgr).fork();
@@ -249,7 +249,7 @@ public class VMKernel extends UserKernel {
     		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");    	
         	        	
 	    	//obtain a free page of physical memory
-	    	UserKernel.PageFrame freeMemPage = getNextFreeMemPage();
+	    	PageFrame freeMemPage = getNextFreeMemPage();
 	    	
 	    	Lib.assertTrue(freeMemPage != null);
 	    	
@@ -292,9 +292,9 @@ public class VMKernel extends UserKernel {
      * complete. The calling code needs to ensure this is set as not
      * in use after it performs its critical operations.
      */
-    private int evictPage()
+    protected int evictPage()
     {   	    	
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
     	CoreMapEntry mapEntry = null;
     	

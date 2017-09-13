@@ -18,15 +18,21 @@ import java.util.*;
  */
 public class VMBackgroundMemMgr implements Runnable {
 
-	private List<UserKernel.PageFrame> _freeMemory;
+	private List<PageFrame> _freeMemory;
 	
 	private Lock _freeMemLock;
 	
 	private ICondition _freeMemAvailable;
 	
-	public VMBackgroundMemMgr(List<UserKernel.PageFrame> freeMemory, Lock freeMemLock,
-			ICondition freeMemAvailable)
+	private VMKernel _kernel;
+	
+	private static final int MIN_FREE_PAGES = 4;
+	
+	public VMBackgroundMemMgr(VMKernel kernel, List<PageFrame> freeMemory, 
+			Lock freeMemLock, ICondition freeMemAvailable)
 	{
+		this._kernel = kernel;
+		
 		this._freeMemory = freeMemory;
 		
 		this._freeMemLock = freeMemLock;
@@ -49,7 +55,42 @@ public class VMBackgroundMemMgr implements Runnable {
 			
 			Lib.debug('f', "VM mem manager checking free memory...");
 			
-			//TODO: manage mem
+			//enter critical section
+			this._freeMemLock.acquire();
+			
+			try
+			{
+				//ensure that there's at least MIN_FREE_PAGES available
+				while(this._freeMemory.size() < MIN_FREE_PAGES)
+				{
+					Lib.debug('f', "Not enough free mem available (" + this._freeMemory.size() +
+						" pages), freeing up memory...");
+					
+					int pageSize = Machine.processor().pageSize;
+					
+					int physPageNum = this._kernel.evictPage();
+					
+					PageFrame freeFrame = new PageFrame();
+					
+					freeFrame.startIndex = physPageNum * pageSize;
+					
+					freeFrame.endIndex = (physPageNum * pageSize) + pageSize -1;
+					
+					this._freeMemory.add(freeFrame);					
+							
+					this._kernel.setPageNotInUse(physPageNum);
+					
+					Lib.debug('f', "Freed page frame and added to free mem list (# free = " +
+						this._freeMemory.size() + ")");
+				}
+				
+				Lib.debug('f', "Free memory sufficient (" + this._freeMemory.size() + " pages)");
+			}
+			finally
+			{
+				//exit critical section
+				this._freeMemLock.release();
+			}			
 			
 			Lib.debug('f', "VM mem manager yielding");
 			

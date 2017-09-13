@@ -171,7 +171,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public void setPageInUse(int ppn)
     {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
     	Lib.debug('u', "Setting page in use - PPN: " + ppn);
 
@@ -185,7 +185,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public void setPageNotInUse(int ppn)
     {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
+    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
     	
     	Lib.debug('u', "Setting page not in use - PPN: " + ppn);    	    	
     	
@@ -199,7 +199,7 @@ public class UserKernel extends ThreadedKernel {
      */
     public boolean pageInUse(int ppn)
     {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());   	    	
+    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());   	    	
     	
     	return this._pagesInUse.contains(ppn);
     }
@@ -306,12 +306,5 @@ public class UserKernel extends ThreadedKernel {
     public static SynchConsole console;
 
     // dummy variables to make javac smarter
-    private static Coff dummy1 = null;
-    
-    public class PageFrame
-    {
-    	public int startIndex;
-    	
-    	public int endIndex;
-    }
+    private static Coff dummy1 = null;    
 }
