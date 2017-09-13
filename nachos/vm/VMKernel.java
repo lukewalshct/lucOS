@@ -83,23 +83,37 @@ public class VMKernel extends UserKernel {
     {
     	PageFrame result = null;
     	
+    	Lib.debug('s', "Requesting free mem page");
+    	
     	//enter critical section
-    	this.freeMemLock.acquire();    	
+    	this.freeMemLock.acquire();
+    	
+    	Lib.debug('s', "FreeMemLock acquired");
     	
     	try
     	{
     		//wait until free memory is available
     		while(this.freeMemory.isEmpty())
     		{
+    			Lib.debug('s', "No free memory available, process sleeping");
+    			
     			this._freeMemAvailable.sleep();
+    			
+    			Lib.debug('s', "Process awoken from freeMemAvailable.sleep()");
     		}
+    		
+    		Lib.debug('s', "Free memory available to process");
     		
     		result = this.freeMemory.remove(0);
     	}
     	finally
     	{
     		this.freeMemLock.release();
+    		
+    		Lib.debug('s', "Released free memory lock");
     	}
+    	
+    	Lib.debug('s', "Returning free page frame");
     	
     	return result;
     }
