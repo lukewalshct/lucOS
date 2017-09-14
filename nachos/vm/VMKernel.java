@@ -195,8 +195,7 @@ public class VMKernel extends UserKernel {
     			+ entry.vpn + ")"); 
     }    
     
-    public TranslationEntry getTranslation(int processID, 
-    		int virtualPageNumber, boolean markPageInUse)
+    public TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
     	TranslationEntry entry;
     	
@@ -204,7 +203,7 @@ public class VMKernel extends UserKernel {
     	{
     		this._pageAccessLock.acquire();
     	
-    		entry = this._globalPageTable.get(processID, virtualPageNumber, markPageInUse);
+    		entry = this._globalPageTable.get(processID, virtualPageNumber);
     	}
     	finally
     	{
@@ -484,7 +483,7 @@ public class VMKernel extends UserKernel {
     	 * @param virtualPageNumber
     	 * @return
     	 */
-    	public TranslationEntry get(int processID, int virtualPageNumber, boolean markPageInUse)
+    	public TranslationEntry get(int processID, int virtualPageNumber)
     	{
     		TranslationEntry entry = null;
     		    		
@@ -503,9 +502,12 @@ public class VMKernel extends UserKernel {
 	    			entry = processPageTable.get(virtualPageNumber);	    		
 	    		}   			    
 	    		
-	    		if(entry != null) Lib.assertTrue(!this._kernel.pageInUse(entry.ppn));
-	    		
-	    		if(entry != null && markPageInUse) this._kernel.setPageInUse(entry.ppn);
+	    		if(entry != null)
+	    		{
+	    			Lib.assertTrue(!this._kernel.pageInUse(entry.ppn));
+	    				
+	    			this._kernel.setPageInUse(entry.ppn);
+	    		}	    			    		 
     		}
     		finally
     		{

@@ -78,19 +78,6 @@ public class VMProcess extends UserProcess {
     @Override
     protected void initializeTranslations()
     {   	
-    	Lib.assertTrue(Machine.interrupt().disabled());
-    	
-    	VMKernel kernel = (VMKernel) Kernel.kernel;
-    	
-		for (int i=0; i<this.numPages; i++)
-		{
-			int physPageNum = this.physMemPages[i].endIndex / pageSize;								
-			
-			kernel.putTranslation(this.processID,
-					new TranslationEntry(i,physPageNum, true,false,false,false));
-		}    	
-		
-		super.initializeTranslations();
     }
     
     /**
@@ -285,16 +272,8 @@ public class VMProcess extends UserProcess {
     @Override
     protected TranslationEntry getTranslation(int vpn)
     {    	
-    	return getTranslation(vpn, false);
-    }
-    
-    @Override
-    protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
-    {    	
-    	Lib.debug('s', "VMProcess retrieving translation, nonEvictable = " + nonEvictable);
-    	
-    	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn, nonEvictable);
-    }
+    	return ((VMKernel)Kernel.kernel).getTranslation(this.processID, vpn);
+    }    
     
     /**
      * Handle a user exception. Called by
