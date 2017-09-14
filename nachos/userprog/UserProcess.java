@@ -739,7 +739,7 @@ public class UserProcess {
     			
         int bytesRead = readVirtualMemory(bufferVirtualAddress, bytes);
         
-        Lib.assertTrue(bytesRead > 0);
+        Lib.assertTrue(bytesRead == size);
     	
         //get open file
         OpenFile file = getOpenFile(fHandle);
