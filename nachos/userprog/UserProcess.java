@@ -737,7 +737,9 @@ public class UserProcess {
     	
     	byte[] bytes = new byte[size]; 
     			
-        readVirtualMemory(bufferVirtualAddress, bytes);   	    	
+        int bytesRead = readVirtualMemory(bufferVirtualAddress, bytes);
+        
+        Lib.assertTrue(bytesRead > 0);
     	
         //get open file
         OpenFile file = getOpenFile(fHandle);
@@ -773,7 +775,9 @@ public class UserProcess {
     	int bytesRead = file.read(0, readBuffer, 0, size);
     	
     	//need to add protections for reading/writing size limits    	
-    	writeVirtualMemory(bufferVAddr, readBuffer);
+    	int bytesWritten = writeVirtualMemory(bufferVAddr, readBuffer);
+    	
+    	Lib.assertTrue(bytesRead == size && bytesWritten == size);
     	
     	return bytesRead;
     }
