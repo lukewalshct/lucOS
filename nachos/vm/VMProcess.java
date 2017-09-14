@@ -258,9 +258,7 @@ public class VMProcess extends UserProcess {
     	entry.used = false;
     	
     	for(int i = 0; i < processor.getTLBSize(); i++)
-    	{
-    		TranslationEntry existing = processor.readTLBEntry(i);
-    		
+    	{    		
     		//for now, just choose random index of TLB to overwrite
     		//TODO: add better TLB eviction policy
         	int randIndex = ThreadLocalRandom.current().nextInt(0, 4);        	
