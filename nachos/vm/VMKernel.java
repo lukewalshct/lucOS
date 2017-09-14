@@ -161,9 +161,7 @@ public class VMKernel extends UserKernel {
     }
     
     public void putTranslation(int processID, TranslationEntry entry)
-    {
-    	Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
-    	
+    {    	
     	if(entry == null || entry.ppn < 0 || 
     			entry.ppn >= Machine.processor().getMemory().length)
     	{
@@ -421,9 +419,7 @@ public class VMKernel extends UserKernel {
     	 * @return
     	 */
     	public TranslationEntry put(int processID, TranslationEntry entry)
-    	{
-    		Lib.assertTrue(Machine.interrupt().disabled());
-    		
+    	{   		
     		try
     		{
     			this._pageTableLock.acquire();
