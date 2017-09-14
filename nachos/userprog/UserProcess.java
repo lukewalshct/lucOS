@@ -382,6 +382,10 @@ public class UserProcess {
 	
 	TranslationEntry entry = getTranslation(vpn);
 	
+	Lib.assertTrue(entry != null, "Translation entry is null");
+	
+	Lib.assertTrue(!entry.readOnly, "Translation entry is readOnly");
+	
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
 	{
@@ -394,8 +398,10 @@ public class UserProcess {
 	
 	int paddr = (entry.ppn*pageSize) + addressOffset;
 	
+	Lib.assertTrue(paddr >=0 && paddr < memory.length);
+	
 	// for now, just assume that virtual addresses equal physical addresses
-	if (paddr < 0 || paddr >= memory.length)
+	if (paddr < 0 || paddr >= memory.length)	
 	{
 		if(entry != null) kernel.setPageUse(entry.ppn, false);		
 		
