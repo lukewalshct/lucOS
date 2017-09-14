@@ -772,7 +772,8 @@ public class UserProcess {
     	//need to add protections for reading/writing size limits    	
     	int bytesWritten = writeVirtualMemory(bufferVAddr, readBuffer);
     	
-    	Lib.assertTrue(bytesRead == size && bytesWritten == size);
+    	Lib.assertTrue(bytesRead == size && bytesWritten == size,
+    			"Size: " + size + " Read: " + bytesRead + " Written: " + bytesWritten);
     	
     	return bytesRead;
     }
