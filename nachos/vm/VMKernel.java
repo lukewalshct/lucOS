@@ -130,43 +130,32 @@ public class VMKernel extends UserKernel {
     	Lib.assertTrue(UserProcess.currentProcess().getProcessID() == pid);
     	
     	TranslationEntry entry = null;
+	    	
+    	//get a free page frame where the new page can go, mark
+    	//it as in-use
+		
+		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");
+		
+    	PageFrame targetFrame = getNextFreeMemPage();	    	
     	
-    	try
+    	Lib.assertTrue(targetFrame != null);
+    	
+    	entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
+    	
+    	if(entry != null)
     	{
-    		//enter criical section
-    		this._pageAccessLock.acquire();
-	    	
-	    	//get a free page frame where the new page can go, mark
-	    	//it as in-use
+    		entry.valid = true;    		
     		
-    		Lib.debug('s', "Process requesting free memory (PID " + pid + ")");
-    		
-	    	PageFrame targetFrame = getNextFreeMemPage();	    	
-	    	
-	    	Lib.assertTrue(targetFrame != null);
-	    	
-	    	entry = this._globalSwapFileAccess.loadPage(pid, vpn, targetFrame);
-	    	
-	    	if(entry != null)
-	    	{
-	    		entry.valid = true;    		
-	    		
-	    		putTranslation(pid, entry);    		
-	    	}
-	    	else
-	    	{        	
-	    		//load failed - return the target frame to pool of free mem
-	    		returnFreeMemPage(targetFrame);
-	    	}    	
-	
-	    	//load attempt complete - mark the target page frame as not in use
-	    	setPageUse(targetFrame.startIndex / Machine.processor().pageSize, false);
+    		putTranslation(pid, entry);    		
     	}
-    	finally
-    	{
-    		//exit critical section
-    		this._pageAccessLock.release();
-    	}
+    	else
+    	{        	
+    		//load failed - return the target frame to pool of free mem
+    		returnFreeMemPage(targetFrame);
+    	}    	
+
+    	//load attempt complete - mark the target page frame as not in use
+    	setPageUse(targetFrame.startIndex / Machine.processor().pageSize, false);
     	
     	return entry;
     }
@@ -197,20 +186,7 @@ public class VMKernel extends UserKernel {
     
     public TranslationEntry getTranslation(int processID, int virtualPageNumber)
     {
-    	TranslationEntry entry;
-    	
-    	try
-    	{
-    		this._pageAccessLock.acquire();
-    	
-    		entry = this._globalPageTable.get(processID, virtualPageNumber);
-    	}
-    	finally
-    	{
-    		this._pageAccessLock.release();
-    	}
-    	
-    	return entry;    	
+    	return this._globalPageTable.get(processID, virtualPageNumber);	
     }    
 
     /**
@@ -626,6 +602,9 @@ public class VMKernel extends UserKernel {
     		
     		//the translation to retrun (non-null if successful load)
     		TranslationEntry translation = null;
+    		
+    		Lib.assertTrue(targetFrame != null && 
+    				!pageInUse(targetFrame.endIndex/Machine.processor().pageSize));
     		
     		//the swap entry that references where the page is in the swap file
     		SwapEntry entry = null;
