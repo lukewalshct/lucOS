@@ -3,7 +3,6 @@ package nachos.userprog;
 import nachos.machine.*;
 import nachos.threads.*;
 import nachos.userprog.*;
-import nachos.userprog.UserKernel.PageFrame;
 
 import java.io.EOFException;
 import java.nio.ByteBuffer;
@@ -137,7 +136,7 @@ public class UserProcess {
     	
     	Lib.debug('s', "Process deallocating memory...");
     	
-    	for(int i= 0; i < this.physMemPages.length; i++)
+    	for(int i= 0; i < this.physMemPages.length; i++) 
     	{
     		PageFrame frameToReturn = this.physMemPages[i];
     		
@@ -327,7 +326,7 @@ public class UserProcess {
 	}
 	finally
 	{
-		((UserKernel)Kernel.kernel).setPageNotInUseAndLock(entry.ppn);	
+		((UserKernel)Kernel.kernel).setPageUse(entry.ppn, false);	
 		
 		Lib.debug('r', "Reading complete from phys addr " + paddr);
 		
@@ -384,7 +383,7 @@ public class UserProcess {
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
 	{
-		if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);		
+		if(entry != null) kernel.setPageUse(entry.ppn, false);		
 		
 		return 0;
 	}
@@ -396,7 +395,7 @@ public class UserProcess {
 	// for now, just assume that virtual addresses equal physical addresses
 	if (paddr < 0 || paddr >= memory.length)
 	{
-		if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);		
+		if(entry != null) kernel.setPageUse(entry.ppn, false);		
 		
 		return 0;
 	}	    
@@ -409,7 +408,7 @@ public class UserProcess {
 	
 	System.arraycopy(data, offset, memory, paddr, amount);
 
-	if(entry != null) kernel.setPageNotInUseAndLock(entry.ppn);			
+	if(entry != null) kernel.setPageUse(entry.ppn, false);			
 
 	Lib.debug('w', "Writing complete to phys addr " + paddr);
 	

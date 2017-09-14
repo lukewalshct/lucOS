@@ -140,7 +140,13 @@ public class UserKernel extends ThreadedKernel {
         }
     }
     
-    public void setPageNotInUseAndLock(int ppn)
+    /**
+     * Sets a page as in use or not in use. If a page is set
+     * as in use, it cannot be evicted by the memory manager.
+     * @param ppn
+     * @param inUse
+     */
+    public void setPageUse(int ppn, boolean inUse)
     {    	    
     	Lib.debug('u', "Acquiring page in use lock for ppn " + ppn);
     	
@@ -150,11 +156,14 @@ public class UserKernel extends ThreadedKernel {
     	
     	try
     	{
-    		Lib.debug('u', "Setting page not in use (AND LOCK) - PPN: " + ppn);
+    		Lib.debug('u', "Setting page " + (inUse ? "" : "not") + " in use (AND LOCK) - PPN: " + ppn);
     		
-    		setPageNotInUse(ppn);
+    		if(inUse)
+    			this._pagesInUse.add(ppn);
+    		else 
+    			this._pagesInUse.remove(ppn); 
     		
-    		Lib.debug('u', "Successfuly set page not in use (AND LOCK) - PPN: " + ppn);
+    		Lib.debug('u', "Successfuly set page " + (inUse ? "" : "not") + " in use (AND LOCK) - PPN: " + ppn);
     	}
     	finally
     	{
@@ -164,44 +173,27 @@ public class UserKernel extends ThreadedKernel {
     		
     		Lib.debug('u', "Released page in use lock for ppn " + ppn);
     	}    	
-    }
-        
-    /*
-     * Sets a physical page as in use and cannot be evicted.
-     */
-    public void setPageInUse(int ppn)
-    {
-    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
-    	
-    	Lib.debug('u', "Setting page in use - PPN: " + ppn);
-
-    	this._pagesInUse.add(ppn);	
-    	
-    	printPagesInUse('u');
-    }
-    
-    /*
-     * Sets a physical page to be not in use and OK to be evicted.
-     */
-    public void setPageNotInUse(int ppn)
-    {
-    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());
-    	
-    	Lib.debug('u', "Setting page not in use - PPN: " + ppn);    	    	
-    	
-    	this._pagesInUse.remove(ppn);
-    	
-    	printPagesInUse('u');
-    }
+    } 
     
     /*
      *  Returuns whether physical page is in use and cannot be evicted.
      */
     public boolean pageInUse(int ppn)
     {
-    	//Lib.assertTrue(this._pageAccessLock.isHeldByCurrentThread());   	    	
+    	this._pageAccessLock.acquire();
     	
-    	return this._pagesInUse.contains(ppn);
+    	boolean result;
+    	
+    	try
+    	{
+    		result = this._pagesInUse.contains(ppn);
+    	}
+    	finally
+    	{
+    		this._pageAccessLock.release();
+    	}
+    	
+    	return result;
     }
     
     public void printPagesInUse(char dbgFlag)

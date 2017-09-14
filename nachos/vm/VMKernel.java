@@ -160,7 +160,7 @@ public class VMKernel extends UserKernel {
 	    	}    	
 	
 	    	//load attempt complete - mark the target page frame as not in use
-	    	setPageNotInUse(targetFrame.startIndex / Machine.processor().pageSize);
+	    	setPageUse(targetFrame.startIndex / Machine.processor().pageSize, false);
     	}
     	finally
     	{
@@ -260,7 +260,7 @@ public class VMKernel extends UserKernel {
 	    	
 	    	//add the entry to the global inverted page table
 	    	putTranslation(pid, entry);     
-    	}
+    	} 
     	finally
     	{
     		this._pageAccessLock.release();
@@ -300,7 +300,7 @@ public class VMKernel extends UserKernel {
     			" VPN: " + mapEntry.entry.vpn + ")");
     	
     	//mark the page as in use so it can't be evicted by other processes
-    	setPageInUse(mapEntry.entry.ppn);    	
+    	setPageUse(mapEntry.entry.ppn, true);    	
     	
     	//write old page to the swap file
     	this._globalSwapFileAccess.writePage(mapEntry.processID, mapEntry.entry);
@@ -506,7 +506,7 @@ public class VMKernel extends UserKernel {
 	    		{
 	    			Lib.assertTrue(!this._kernel.pageInUse(entry.ppn));
 	    				
-	    			this._kernel.setPageInUse(entry.ppn);
+	    			this._kernel.setPageUse(entry.ppn, true);
 	    		}	    			    		 
     		}
     		finally

@@ -121,7 +121,7 @@ public class VMProcess extends UserProcess {
     			section.loadPage(i, entry.ppn);    		
     			
     			//load complete - set page to not in use
-    			kernel.setPageNotInUseAndLock(entry.ppn);
+    			kernel.setPageUse(entry.ppn, false);
     			
     			Lib.debug('s', "Finished loading page " + i + " of " + section.getLength() +
     	    			", section " + s + " of " + coff.getNumSections() + "(PID " + 
@@ -138,7 +138,7 @@ public class VMProcess extends UserProcess {
     	TranslationEntry stackEntry = kernel.newPage(this.processID, 
     			this.getInitialSP() / pageSize, true, false, false, false);
     	
-    	kernel.setPageNotInUseAndLock(stackEntry.ppn);
+    	kernel.setPageUse(stackEntry.ppn, false);
     	
     	return true;    	
     }
@@ -198,7 +198,7 @@ public class VMProcess extends UserProcess {
     	Lib.debug('t', "Handled TLB Miss, enabling interrupt (PID " + 
     			this.processID + " VPN " + entry.vpn + ")");    	
     	
-    	((VMKernel)Kernel.kernel).setPageNotInUseAndLock(entry.ppn);
+    	((VMKernel)Kernel.kernel).setPageUse(entry.ppn, false);
     	
     	Machine.interrupt().enable();   	    	
     }
@@ -229,7 +229,7 @@ public class VMProcess extends UserProcess {
     		{
     			entry = kernel.newPage(this.processID, vpn, true, false, false, false);
     			
-    			kernel.setPageNotInUseAndLock(entry.ppn);
+    			kernel.setPageUse(entry.ppn, false);
     		}    			
     	}    	    	     	 
     	
