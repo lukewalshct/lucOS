@@ -184,7 +184,7 @@ public class VMProcess extends UserProcess {
     	
     	int vpn = badVAddr / pageSize;
     	
-    	TranslationEntry entry = getTranslation(vpn, true);    	
+    	TranslationEntry entry = getTranslation(vpn);    	
     	    	
     	//if there's no entry or if it's invalid, handle page fault
     	if(entry == null || !entry.valid)

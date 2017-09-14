@@ -301,7 +301,7 @@ public class UserProcess {
 	//get virtual page number
 	int vpn = vaddr / pageSize;		
 	
-	TranslationEntry entry = getTranslation(vpn, true);	
+	TranslationEntry entry = getTranslation(vpn);	
 	
 	if (entry == null) return 0;
 	
@@ -378,7 +378,7 @@ public class UserProcess {
 	//get virtual page number
 	int vpn = vaddr / pageSize;
 	
-	TranslationEntry entry = getTranslation(vpn, true);
+	TranslationEntry entry = getTranslation(vpn);
 	
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
@@ -415,11 +415,6 @@ public class UserProcess {
 	kernel.printPagesInUse('w');
 	
 	return amount;
-    }
-    
-    protected TranslationEntry getTranslation(int vpn, boolean nonEvictable)
-    {
-    	return getTranslation(vpn);
     }
     
     protected TranslationEntry getTranslation(int vpn)
