@@ -301,7 +301,9 @@ public class UserProcess {
 	//get virtual page number
 	int vpn = vaddr / pageSize;		
 	
-	TranslationEntry entry = getTranslation(vpn);	
+	TranslationEntry entry = getTranslation(vpn);
+	
+	Lib.assertTrue(entry != null, "Error reading virtual memory: translation is null");
 	
 	if (entry == null) return 0;
 	
@@ -772,10 +774,12 @@ public class UserProcess {
     	//need to add protections for reading/writing size limits    	
     	int bytesWritten = writeVirtualMemory(bufferVAddr, readBuffer);
     	
-    	Lib.assertTrue(bytesRead == size && bytesWritten == size,
+    	Lib.assertTrue((bytesRead == size || size > 0) && 
+    			bytesWritten == size,
     			"Size: " + size + " Read: " + bytesRead + " Written: " + bytesWritten);
     	
     	return bytesRead;
+    	
     }
     
     private int handleUnlink(int pathNameVAddress)
