@@ -78,7 +78,7 @@ public class VMBackgroundMemMgr implements Runnable {
 					
 					this._freeMemory.add(freeFrame);					
 							
-					this._kernel.setPageNotInUse(physPageNum);
+					this._kernel.setPageUse(physPageNum, false);
 					
 					Lib.debug('f', "Freed page frame and added to free mem list (# free = " +
 						this._freeMemory.size() + ")");
