@@ -382,10 +382,6 @@ public class UserProcess {
 	
 	TranslationEntry entry = getTranslation(vpn);
 	
-	Lib.assertTrue(entry != null, "Translation entry is null");
-	
-	Lib.assertTrue(!entry.readOnly, "Translation entry is readOnly");
-	
 	//check to ensure there's a valid virtual page and it's not read only
 	if(entry == null || entry.readOnly)
 	{
@@ -778,11 +774,7 @@ public class UserProcess {
     	int bytesRead = file.read(0, readBuffer, 0, size);
     	
     	//need to add protections for reading/writing size limits    	
-    	int bytesWritten = writeVirtualMemory(bufferVAddr, readBuffer);
-    	
-    	Lib.assertTrue((bytesRead == size || size > 0) && 
-    			bytesWritten == size,
-    			"Size: " + size + " Read: " + bytesRead + " Written: " + bytesWritten);
+    	int bytesWritten = writeVirtualMemory(bufferVAddr, readBuffer);    	
     	
     	return bytesRead;
     	
